@@ -2,13 +2,20 @@
 
 import { startRegistration } from "@simplewebauthn/browser";
 import { useState, useTransition } from "react";
-import { Button } from "@/components/ui";
+import { Button, type ButtonLook } from "@/components/ui";
 import { finishAddPasskey, signOut, startAddPasskey } from "@/lib/auth/actions";
 import styles from "./Auth.module.css";
 import { passkeyProblem } from "./errors";
 
-/** Add a passkey on this device, so a laptop or a second phone can sign in too. */
-export function AddPasskeyButton() {
+/**
+ * Add a passkey on this device, so a laptop or a second phone can sign in too. With onAdded, that
+ * runs instead of showing "Passkey added".
+ */
+export function AddPasskeyButton({
+  onAdded,
+  className,
+  ...look
+}: Omit<ButtonLook, "icon"> & { onAdded?: () => void; className?: string }) {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -24,15 +31,15 @@ export function AddPasskeyButton() {
         return;
       }
       const result = await finishAddPasskey(response);
-      setMessage(
-        "error" in result ? result.error : "Passkey added. This device can sign in with it now.",
-      );
+      if ("error" in result) setMessage(result.error);
+      else if (onAdded) onAdded();
+      else setMessage("Passkey added. This device can sign in with it now.");
     });
   }
 
   return (
     <div className={styles.stack}>
-      <Button icon="passkey" onClick={add} disabled={pending}>
+      <Button icon="passkey" onClick={add} disabled={pending} className={className} {...look}>
         {pending ? "Making a passkey…" : "Add a passkey on this device"}
       </Button>
       <p role="status" className={styles.note}>

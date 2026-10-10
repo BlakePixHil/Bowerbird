@@ -21,3 +21,11 @@ export function passkeyButtonLabel(userAgent: string | null): string {
   if (/Macintosh/.test(ua)) return "Sign in with Touch ID";
   return "Sign in with your fingerprint or screen lock";
 }
+
+/** The phone's way back from "Check your email" to the passkey: "Use Face ID instead" and so on. */
+export function passkeyInsteadLabel(userAgent: string | null): string {
+  const ua = userAgent ?? "";
+  if (/iPhone|iPad/.test(ua)) return "Use Face ID instead";
+  if (/Macintosh/.test(ua)) return "Use Touch ID instead";
+  return "Use your passkey instead";
+}

@@ -3,11 +3,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { RunningTotalChart } from "@/components/charts";
 import { DemoSignIn } from "@/components/auth/DemoSignIn";
-import { PasskeySignIn } from "@/components/auth/PasskeySignIn";
+import { SignInFlow } from "@/components/auth/SignInFlow";
 import { Card, Icon, Logo, LogoMark, Well } from "@/components/ui";
 import { APP_NAME } from "@/config/app";
 import { currentMember, safeNext } from "@/lib/auth";
-import { passkeyButtonLabel } from "@/lib/auth/device";
+import { passkeyButtonLabel, passkeyInsteadLabel } from "@/lib/auth/device";
 import { hasUsers } from "@/lib/auth/setup";
 import { getDb } from "@/lib/db";
 import styles from "./page.module.css";
@@ -24,33 +24,42 @@ export default async function SignInPage({
   const next = safeNext(Array.isArray(raw) ? raw[0] : raw);
   if (!(await hasUsers(getDb()))) redirect("/setup");
   if (await currentMember()) redirect(next);
-  const phoneLabel = passkeyButtonLabel((await headers()).get("user-agent"));
+  const userAgent = (await headers()).get("user-agent");
   const promise = `No passwords. ${APP_NAME} only reads your bank data and never moves money.`;
 
   return (
     <div className={styles.layout}>
       <section aria-label={`Sign in to ${APP_NAME}`} className={styles.card}>
-        <div className={styles.phoneIntro}>
-          <LogoMark size={76} className={styles.bigMark} />
-          <h1 className={styles.appName}>{APP_NAME}</h1>
-          <p className={styles.tagline}>All your money in one place.</p>
-        </div>
-        <div className={styles.desktopIntro}>
-          <p className="mono muted">WELCOME BACK</p>
-          <h1 className="h1">Sign in to {APP_NAME}</h1>
-          <p className="sub">
-            Use the passkey on this computer or your phone. Face ID, Touch ID and Windows Hello all
-            work.
-          </p>
-        </div>
-        <div className={styles.actions}>
-          <PasskeySignIn phoneLabel={phoneLabel} next={next} />
-          {process.env.NODE_ENV === "development" && <DemoSignIn />}
-          <p className={styles.promise}>
-            <Icon name="lock" size="sm" />
-            <span>{promise}</span>
-          </p>
-        </div>
+        <SignInFlow
+          phoneLabel={passkeyButtonLabel(userAgent)}
+          insteadLabel={passkeyInsteadLabel(userAgent)}
+          next={next}
+          actionsClassName={styles.actions}
+          intro={
+            <>
+              <div className={styles.phoneIntro}>
+                <LogoMark size={76} className={styles.bigMark} />
+                <h1 className={styles.appName}>{APP_NAME}</h1>
+                <p className={styles.tagline}>All your money in one place.</p>
+              </div>
+              <div className={styles.desktopIntro}>
+                <p className="mono muted">WELCOME BACK</p>
+                <h1 className="h1">Sign in to {APP_NAME}</h1>
+                <p className="sub">
+                  Use the passkey on this computer or your phone. Face ID, Touch ID and Windows
+                  Hello all work.
+                </p>
+              </div>
+            </>
+          }
+          extra={process.env.NODE_ENV === "development" && <DemoSignIn />}
+          promise={
+            <p className={styles.promise}>
+              <Icon name="lock" size="sm" />
+              <span>{promise}</span>
+            </p>
+          }
+        />
       </section>
 
       <section aria-label={`About ${APP_NAME}`} className={styles.about}>

@@ -29,6 +29,8 @@ Signed-in pages live in `src/app/(app)` and sit inside the frame from `src/compo
 
 Sign-in uses passkeys (Face ID, a fingerprint or a screen lock), so there are no passwords. The first visit to a new database opens **Set up Bowerbird**, which makes the owner, the household and their passkey, then closes for good. On your own computer, **Developer: sign in as the demo household** on the sign-in page signs in as the seeded demo household; it only exists in `pnpm dev`.
 
+When a passkey isn't handy, **Email me a sign-in link** sends a link through the `SMTP_*` settings in `.env.local` (a Gmail app password works). Without SMTP settings, `pnpm dev` prints the link in its terminal instead, so you can try it without a mail server.
+
 The code is in `src/lib/auth`. `src/proxy.ts` sends anyone without a session cookie to sign in (or answers 401 for `/api` routes), but it only looks at the cookie: every signed-in page, server action and route handler checks the session itself with `requireMember()` (or `getShell()`, which calls it), or `apiMember()` in a route handler.
 
 ## Source of truth
