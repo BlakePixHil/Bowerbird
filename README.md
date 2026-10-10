@@ -4,14 +4,18 @@ All your money in one place. A private web app that brings a household's bank ac
 
 ## Run it locally
 
-You need Node 22 and pnpm (`corepack enable`).
+You need Node 22, pnpm (`corepack enable`) and a local Postgres 16.
 
 ```sh
 pnpm install
 cp .env.example .env.local   # fill in the values you need
+pnpm db:migrate              # create the tables
+pnpm db:seed:demo            # optional: a made-up household with three months of data
 pnpm dev                     # http://localhost:3000
 pnpm check                   # typecheck, lint, format and unit tests
 ```
+
+After changing `src/lib/db/schema.ts`, run `pnpm db:generate` to write a new migration into `drizzle/`. The demo seed only runs against a database on your own computer.
 
 ## Source of truth
 
