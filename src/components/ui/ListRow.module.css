@@ -1,0 +1,93 @@
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+}
+
+.text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+.detail {
+  display: block;
+  color: var(--text-3);
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The title link covers the whole row, so the row is one big tap target with a short name. */
+.stretched::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+}
+
+.stretched:focus-visible {
+  outline: none;
+}
+
+.stretched:focus-visible::after {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.trailing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--surface-3);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.lg {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  font-size: 15px;
+}
+
+.accent {
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+}
+
+.good {
+  background: var(--good-tint);
+  color: var(--good-ink);
+}

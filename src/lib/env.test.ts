@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appUrl } from "./env";
+import { appUrl, devPagesAllowed } from "./env";
 
 describe("appUrl", () => {
   it("uses APP_URL when it's set, without a trailing slash", () => {
@@ -19,5 +19,17 @@ describe("appUrl", () => {
 
   it("falls back to localhost", () => {
     expect(appUrl({})).toBe("http://localhost:3000");
+  });
+});
+
+describe("devPagesAllowed", () => {
+  it("allows developer pages locally and on previews", () => {
+    expect(devPagesAllowed({ NODE_ENV: "development" })).toBe(true);
+    expect(devPagesAllowed({ NODE_ENV: "production", VERCEL_ENV: "preview" })).toBe(true);
+  });
+
+  it("hides them on the live app and in a local production build", () => {
+    expect(devPagesAllowed({ NODE_ENV: "production", VERCEL_ENV: "production" })).toBe(false);
+    expect(devPagesAllowed({ NODE_ENV: "production" })).toBe(false);
   });
 });

@@ -1,0 +1,48 @@
+.tip {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  min-width: 184px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-3);
+  border: 1px solid var(--line-2);
+  box-shadow: var(--pop);
+  font-size: 12px;
+  line-height: 1.55;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.title {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-2);
+}
+
+.key {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.line {
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.value {
+  margin-left: auto;
+  padding-left: 16px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--text);
+}

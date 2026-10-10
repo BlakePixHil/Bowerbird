@@ -1,6 +1,199 @@
-/* Placeholder. The design system tokens arrive with BUD-8. */
-html,
+/*
+ * Base styles and the shared type utilities from the design canvas. Colours come only from
+ * src/styles/tokens.css (imported first in the root layout). Each component keeps its own styles in
+ * a CSS Module next to it in src/components/ui.
+ */
+
+:root {
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* The smallest tap area: 36px with a mouse, 44px on a phone or any touch screen. */
+  --hit: 36px;
+}
+
+@media (max-width: 760px), (pointer: coarse) {
+  :root {
+    --hit: 44px;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* An area that forces a theme also takes that theme's text colour. */
+[data-theme] {
+  color: var(--text);
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Gives a control an invisible tap area of at least --hit, without changing how it looks. */
+.hit {
+  position: relative;
+}
+
+.hit::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--hit));
+  height: max(100%, var(--hit));
+  transform: translate(-50%, -50%);
+}
+
+/* Hidden on screen, still read by screen readers. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Type scale */
+.hero {
+  font-size: 46px;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.big {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.mid {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.3;
+}
+
+.h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--text-2);
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.sub {
+  color: var(--text-2);
+}
+
+.muted {
+  color: var(--text-3);
+}
+
+.small {
+  font-size: 12.5px;
+}
+
+.tiny {
+  font-size: 11.5px;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+/* Status inks for a change in a number. Plain amounts stay in the text colour. */
+.up {
+  color: var(--good-ink);
+}
+
+.down {
+  color: var(--crit-ink);
+}
+
+/* Layout helpers used across the boards */
+.grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.amt {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  white-space: nowrap;
 }
