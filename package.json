@@ -16,7 +16,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed:demo": "tsx scripts/seed-demo.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "vercel-build": "pnpm db:migrate --if-configured && next build"
   },
   "dependencies": {
     "@vercel/functions": "^3.9.11",
