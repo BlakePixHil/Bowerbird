@@ -40,7 +40,7 @@ import {
 } from "@/components/ui";
 import { formatMoney } from "@/lib/money";
 import { devPagesAllowed } from "@/lib/env";
-import styles from "./page.module.css";
+import styles from "../dev.module.css";
 import { SheetDemo } from "./SheetDemo";
 
 export const metadata: Metadata = {

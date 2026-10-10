@@ -1,0 +1,230 @@
+/* Shared marks for every chart, from the design canvas. The SVG stretches to the card's width,
+   while dots, labels and the tooltip are HTML placed in percent so they never stretch. */
+
+.chart {
+  min-width: 0;
+}
+
+.plot {
+  position: relative;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.svg * {
+  vector-effect: non-scaling-stroke;
+}
+
+.grid {
+  stroke: var(--grid);
+  stroke-width: 1;
+  fill: none;
+  shape-rendering: crispEdges;
+}
+
+.axis {
+  stroke: var(--axis);
+  stroke-width: 1;
+  fill: none;
+  shape-rendering: crispEdges;
+}
+
+.alert {
+  stroke: var(--warn);
+  stroke-width: 1;
+  opacity: 0.7;
+  fill: none;
+}
+
+.line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hairline {
+  fill: none;
+  stroke: var(--text-3);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+
+/* Dotted always means a forecast. */
+.forecast {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1 5;
+}
+
+.label {
+  position: absolute;
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--text-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.right {
+  right: 0;
+}
+
+.centred {
+  transform: translateX(-50%);
+}
+
+.dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--surface);
+  pointer-events: none;
+}
+
+.dotSm {
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+}
+
+.crosshair {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  margin-left: -0.5px;
+  background: var(--axis);
+  pointer-events: none;
+}
+
+.tip {
+  top: 0;
+}
+
+/* Axis labels under a chart, in Geist Mono. */
+.axisRow {
+  position: relative;
+  height: 14px;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+
+.axisRow > span {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+
+.axisSlots {
+  display: grid;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+.axisOn {
+  color: var(--text-2);
+}
+
+.axisSlots .axisOn {
+  color: var(--text);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.legend > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.key {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.keyLine {
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.keyHairline {
+  width: 12px;
+  height: 1px;
+  border-radius: 0;
+}
+
+.keyDotted {
+  width: 12px;
+  height: 0;
+  border-radius: 0;
+  border-top: 2px dotted;
+}
+
+.keyDot {
+  border-radius: 50%;
+}
+
+.keyTick {
+  width: 2px;
+  height: 12px;
+  border-radius: 1px;
+}
+
+.table {
+  margin-top: 16px;
+}
+
+/* Room above the plot for labels such as paydays and today's total. */
+.room {
+  padding-top: 28px;
+}
+
+.legendGap {
+  margin-top: 16px;
+}
+
+/* A label that sits over bars gets the card colour behind it so it stays readable. */
+.onTop {
+  z-index: 1;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--surface);
+}
