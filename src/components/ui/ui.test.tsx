@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { IconButton } from "./Button";
 import { Pill } from "./Chip";
+import { EmptyState } from "./EmptyState";
 import { Icon } from "./Icon";
 import { BarMeter, StackedBar } from "./Meter";
 import { Money } from "./Money";
@@ -72,5 +73,22 @@ describe("StackedBar", () => {
       />,
     );
     expect(out).toContain('aria-label="What you own: Home 75%, Shares 25%"');
+  });
+});
+
+describe("EmptyState", () => {
+  it("names what's missing as a heading and offers the next step", () => {
+    const out = html(
+      <EmptyState icon="list" title="No transactions yet" action={<a href="/import">Import</a>}>
+        Every transaction will be listed here.
+      </EmptyState>,
+    );
+    expect(out).toMatch(/<h2[^>]*>No transactions yet<\/h2>/);
+    expect(out).toContain("Every transaction will be listed here.");
+    expect(out).toContain('href="/import"');
+  });
+
+  it("can sit lower in the page outline", () => {
+    expect(html(<EmptyState icon="list" title="Nothing" level={3} />)).toMatch(/<h3[^>]*>Nothing/);
   });
 });

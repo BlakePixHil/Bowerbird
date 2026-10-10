@@ -12,6 +12,7 @@ export {
 export { Card, Divider, Well } from "./Card";
 export { ChartTooltip, type TooltipRow } from "./ChartTooltip";
 export { Chip, Kbd, Pill, Tag, type PillTone } from "./Chip";
+export { EmptyState } from "./EmptyState";
 export { cx } from "./cx";
 export { Checkbox, Switch, TextField } from "./Field";
 export { Icon, type IconSize } from "./Icon";
