@@ -1,0 +1,171 @@
+.page {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 560px), 1fr));
+  gap: 1px;
+  min-height: 100dvh;
+  background: var(--line);
+}
+
+.panel {
+  min-width: 0;
+  padding: 32px 24px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--bg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.section {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.wrapRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.typeRow {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.typeRow:first-of-type {
+  border-top: 0;
+}
+
+.swatchGroup {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 6px;
+}
+
+.swatch {
+  width: 54px;
+}
+
+.chip {
+  display: block;
+  height: 30px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+
+.icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 4px;
+}
+
+.iconCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 4px 8px;
+  border-radius: 10px;
+  color: var(--text-2);
+}
+
+.iconName {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-3);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.wellRows {
+  padding: 0 12px;
+}
+
+.note {
+  padding: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.spark {
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+.tipFrame {
+  position: relative;
+  height: 112px;
+}
+
+.sideFrame {
+  display: flex;
+  height: 420px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.sideFrame > nav {
+  max-width: none;
+}
+
+@media (max-width: 760px) {
+  .panel {
+    padding: 24px 16px 40px;
+  }
+
+  .section {
+    padding: 16px;
+  }
+
+  .sideFrame {
+    height: auto;
+  }
+}
+
+.logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+}

@@ -10,3 +10,11 @@ export function appUrl(env: Record<string, string | undefined> = process.env): s
   if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`;
   return "http://localhost:3000";
 }
+
+/**
+ * Developer pages such as /dev/ui show on your own computer and on Vercel previews, never on the
+ * live app.
+ */
+export function devPagesAllowed(env: Record<string, string | undefined> = process.env): boolean {
+  return env.NODE_ENV !== "production" || env.VERCEL_ENV === "preview";
+}

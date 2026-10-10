@@ -1,0 +1,211 @@
+/*
+ * Bowerbird design tokens, ported one to one from the design canvas stylesheet.
+ * Dark is the default. Light applies when the device asks for it, and data-theme="light" or
+ * data-theme="dark" on any element forces one theme for that element and everything inside it.
+ * src/styles/tokens.test.ts checks this list against 03 · Design system.
+ */
+
+:root,
+[data-theme="dark"] {
+  --bg: #08090b;
+  --surface: #0f1013;
+  --surface-2: #15161a;
+  --surface-3: #1c1d22;
+  --line: #1e2025;
+  --line-2: #2b2d33;
+  --grid: #1c1e23;
+  --axis: #34363d;
+  --track: #202227;
+  --ghost: #44464e;
+  --text: #edeef0;
+  --text-2: #a4a7af;
+  --text-3: #80838c;
+
+  --accent: #3987e5;
+  --accent-ink: #7db1f5;
+  --accent-btn: #2f6fd6;
+  --accent-tint: rgba(57, 135, 229, 0.14);
+  --accent-wash: rgba(57, 135, 229, 0.1);
+
+  /* money: positive (in, kept, saved, balances) is green, negative (out, spent, owed) is red */
+  --pos: #3bb04e;
+  --neg: #c22929;
+  --pos-wash: rgba(59, 176, 78, 0.14);
+  --neg-wash: rgba(194, 41, 41, 0.16);
+  --in: var(--pos);
+  --out: var(--neg);
+  --left: var(--pos);
+
+  /* ownership: you, partner, shared */
+  --you: #3987e5;
+  --partner: #d55181;
+  --shared: #c98500;
+
+  /* categories, pinned in this order to the household's biggest categories */
+  --c1: #14a3b8;
+  --c2: #d95926;
+  --c3: #199e70;
+  --c4: #c98500;
+  --c5: #d55181;
+  --c6: #008300;
+  --c7: #3987e5;
+  --c-other: #4a4d56;
+
+  /* parts of a whole, strongest first: green for what you own, red for what you owe or plan to spend */
+  --seq1: #93dca0;
+  --seq2: #3bb04e;
+  --seq3: #2a8439;
+  --seq4: #1f6129;
+  --debt1: #e07070;
+  --debt2: #8a2020;
+
+  /* status: always shown with an icon and words */
+  --good: #0ca30c;
+  --good-ink: #3fbf5f;
+  --good-tint: rgba(12, 163, 12, 0.14);
+  --warn: #fab219;
+  --warn-ink: #e8b030;
+  --warn-tint: rgba(250, 178, 25, 0.12);
+  --crit: #d03b3b;
+  --crit-ink: #f07070;
+  --crit-tint: rgba(208, 59, 59, 0.15);
+
+  --raise: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  --pop: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --glass: rgba(19, 20, 24, 0.84);
+  --scrim: rgba(3, 4, 6, 0.66);
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --surface-2: #f3f3f5;
+    --surface-3: #eaeaee;
+    --line: #e6e6ea;
+    --line-2: #d8d9de;
+    --grid: #eeeef1;
+    --axis: #c9cad0;
+    --track: #ececf0;
+    --ghost: #c9cacf;
+    --text: #111216;
+    --text-2: #55585f;
+    --text-3: #6b6e76;
+
+    --accent: #2a78d6;
+    --accent-ink: #1f5fb4;
+    --accent-btn: #2463c2;
+    --accent-tint: rgba(42, 120, 214, 0.1);
+    --accent-wash: rgba(42, 120, 214, 0.08);
+
+    --pos: #2ea043;
+    --neg: #b42323;
+    --pos-wash: rgba(46, 160, 67, 0.12);
+    --neg-wash: rgba(180, 35, 35, 0.1);
+    --in: var(--pos);
+    --out: var(--neg);
+    --left: var(--pos);
+    --you: #2a78d6;
+    --partner: #e87ba4;
+    --shared: #eda100;
+
+    --c1: #0a8aa6;
+    --c2: #eb6834;
+    --c3: #1baf7a;
+    --c4: #eda100;
+    --c5: #e87ba4;
+    --c6: #008300;
+    --c7: #2a78d6;
+    --c-other: #c4c6cc;
+    --seq1: #134f22;
+    --seq2: #1f7a33;
+    --seq3: #2ea043;
+    --seq4: #6cc07a;
+    --debt1: #b42323;
+    --debt2: #e58585;
+
+    --good-ink: #006300;
+    --good-tint: rgba(12, 163, 12, 0.1);
+    --warn-ink: #8a5c00;
+    --warn-tint: rgba(250, 178, 25, 0.16);
+    --crit-ink: #b42323;
+    --crit-tint: rgba(208, 59, 59, 0.1);
+
+    --raise: 0 1px 2px rgba(17, 18, 22, 0.04);
+    --pop: 0 16px 40px rgba(17, 18, 22, 0.14), 0 0 0 1px rgba(17, 18, 22, 0.06);
+    --glass: rgba(255, 255, 255, 0.86);
+    --scrim: rgba(17, 18, 22, 0.38);
+
+    color-scheme: light;
+  }
+}
+
+[data-theme="light"] {
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --surface-2: #f3f3f5;
+  --surface-3: #eaeaee;
+  --line: #e6e6ea;
+  --line-2: #d8d9de;
+  --grid: #eeeef1;
+  --axis: #c9cad0;
+  --track: #ececf0;
+  --ghost: #c9cacf;
+  --text: #111216;
+  --text-2: #55585f;
+  --text-3: #6b6e76;
+
+  --accent: #2a78d6;
+  --accent-ink: #1f5fb4;
+  --accent-btn: #2463c2;
+  --accent-tint: rgba(42, 120, 214, 0.1);
+  --accent-wash: rgba(42, 120, 214, 0.08);
+
+  --pos: #2ea043;
+  --neg: #b42323;
+  --pos-wash: rgba(46, 160, 67, 0.12);
+  --neg-wash: rgba(180, 35, 35, 0.1);
+  --in: var(--pos);
+  --out: var(--neg);
+  --left: var(--pos);
+  --you: #2a78d6;
+  --partner: #e87ba4;
+  --shared: #eda100;
+
+  --c1: #0a8aa6;
+  --c2: #eb6834;
+  --c3: #1baf7a;
+  --c4: #eda100;
+  --c5: #e87ba4;
+  --c6: #008300;
+  --c7: #2a78d6;
+  --c-other: #c4c6cc;
+  --seq1: #134f22;
+  --seq2: #1f7a33;
+  --seq3: #2ea043;
+  --seq4: #6cc07a;
+  --debt1: #b42323;
+  --debt2: #e58585;
+
+  --good-ink: #006300;
+  --good-tint: rgba(12, 163, 12, 0.1);
+  --warn-ink: #8a5c00;
+  --warn-tint: rgba(250, 178, 25, 0.16);
+  --crit-ink: #b42323;
+  --crit-tint: rgba(208, 59, 59, 0.1);
+
+  --raise: 0 1px 2px rgba(17, 18, 22, 0.04);
+  --pop: 0 16px 40px rgba(17, 18, 22, 0.14), 0 0 0 1px rgba(17, 18, 22, 0.06);
+  --glass: rgba(255, 255, 255, 0.86);
+  --scrim: rgba(17, 18, 22, 0.38);
+
+  color-scheme: light;
+}
+
+/* The logo's own colours. They stay the same in both themes. */
+:root {
+  --brand-top: #4a90f0;
+  --brand-bottom: #1e5bc8;
+}
