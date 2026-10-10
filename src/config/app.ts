@@ -32,3 +32,15 @@ export const STARTING_CATEGORIES = [
   { name: "Transfers", kind: "transfer" },
   { name: "Other", kind: "spending" },
 ] as const satisfies readonly { name: string; kind: "spending" | "income" | "transfer" }[];
+
+/**
+ * Live sync goes through Redbark, a SimpleFIN provider over the Consumer Data Right. It's optional
+ * and paid to Redbark (agreed by Blake, see 04 · Decisions and cost rules in Linear).
+ */
+export const LIVE_SYNC_PROVIDER = {
+  name: "Redbark",
+  url: "https://redbark.com",
+  plan: "Developer plan",
+  price: "A$16 a month",
+  connections: 6,
+} as const;
