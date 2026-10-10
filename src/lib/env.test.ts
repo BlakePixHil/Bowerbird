@@ -17,6 +17,18 @@ describe("appUrl", () => {
     expect(appUrl(env)).toBe("https://bowerbird-git-bud-8-blake.vercel.app");
   });
 
+  it("uses the project's production address on the live app", () => {
+    const env = {
+      VERCEL_ENV: "production",
+      VERCEL_PROJECT_PRODUCTION_URL: "bowerbird-team.vercel.app",
+      VERCEL_URL: "bowerbird-abc123.vercel.app",
+    };
+    expect(appUrl(env)).toBe("https://bowerbird-team.vercel.app");
+    expect(appUrl({ ...env, APP_URL: "https://money.example.com" })).toBe(
+      "https://money.example.com",
+    );
+  });
+
   it("falls back to localhost", () => {
     expect(appUrl({})).toBe("http://localhost:3000");
   });
