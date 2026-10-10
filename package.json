@@ -12,21 +12,33 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test"
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:seed:demo": "tsx scripts/seed-demo.ts",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@vercel/functions": "^3.9.11",
+    "drizzle-orm": "^0.45.4",
     "next": "16.3.8",
+    "pg": "^8.23.1",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@next/env": "16.3.8",
     "@types/node": "^22",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
     "eslint-config-prettier": "^10",
     "prettier": "^3",
+    "tsx": "^4.23.15",
     "typescript": "~5.9.3",
     "vitest": "^4.1.11"
   },
