@@ -25,6 +25,12 @@ Colours live in `src/styles/tokens.css` and nowhere else. Shared components are 
 
 Signed-in pages live in `src/app/(app)` and sit inside the frame from `src/components/shell`: a sidebar on desktop and a floating tab bar on a phone (760px and narrower). Each page starts with `<PageHeader>`. The menus come from `src/components/shell/nav.ts`, and features from later phases stay hidden until they are switched on in `src/config/features.ts`. A test fails if a menu item points at a page that doesn't exist.
 
+## Signing in
+
+Sign-in uses passkeys (Face ID, a fingerprint or a screen lock), so there are no passwords. The first visit to a new database opens **Set up Bowerbird**, which makes the owner, the household and their passkey, then closes for good. On your own computer, **Developer: sign in as the demo household** on the sign-in page signs in as the seeded demo household; it only exists in `pnpm dev`.
+
+The code is in `src/lib/auth`. `src/proxy.ts` sends anyone without a session cookie to sign in (or answers 401 for `/api` routes), but it only looks at the cookie: every signed-in page, server action and route handler checks the session itself with `requireMember()` (or `getShell()`, which calls it), or `apiMember()` in a route handler.
+
 ## Source of truth
 
 The plan, architecture, design rules and decisions live in Linear. Read [00 · Start here](https://linear.app/budgetteam/document/00-start-here-read-first-a2617b8c803a) before picking up any work. Where this repo and those documents disagree, the documents win.

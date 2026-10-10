@@ -1,0 +1,55 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* The board's large sign-in buttons are 48px on desktop and 50px on a phone. */
+.tall {
+  height: 48px;
+  font-size: 15px;
+}
+
+.problem,
+.note {
+  margin: 0;
+  font-size: 12.5px;
+  text-wrap: pretty;
+}
+
+.problem {
+  color: var(--crit-ink);
+}
+
+.note {
+  color: var(--text-2);
+}
+
+.problem:empty,
+.note:empty {
+  display: none;
+}
+
+.phoneOnly {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .tall {
+    height: 50px;
+  }
+
+  .phoneOnly {
+    display: inline;
+  }
+
+  .desktopOnly {
+    display: none;
+  }
+}

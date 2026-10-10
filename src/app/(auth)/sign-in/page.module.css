@@ -1,0 +1,194 @@
+/* The "Sign in" and "Desktop: Sign in" boards. */
+
+.layout {
+  position: relative;
+  width: 100%;
+  max-width: 1060px;
+  display: flex;
+  flex-direction: row-reverse;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 20px;
+}
+
+.card {
+  flex: 1 1 360px;
+  min-width: 0;
+  padding: clamp(22px, 3vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--raise);
+}
+
+.desktopIntro p {
+  margin: 0;
+}
+
+.desktopIntro :global(.h1) {
+  margin-top: 8px;
+}
+
+.desktopIntro :global(.sub) {
+  margin-top: 8px;
+  text-wrap: pretty;
+}
+
+.phoneIntro {
+  display: none;
+}
+
+.actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.promise {
+  margin: 12px 0 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  text-wrap: pretty;
+}
+
+.promise svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.about {
+  flex: 1.35 1 420px;
+  min-width: 0;
+  padding: clamp(22px, 3vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(90% 70% at 0% 0%, var(--accent-wash) 0%, transparent 70%), var(--surface-2);
+}
+
+.bigLine {
+  margin: 0;
+  font-size: clamp(24px, 2.6vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.aboutText {
+  margin: 10px 0 0;
+  max-width: 460px;
+  color: var(--text-2);
+  font-size: 15px;
+  text-wrap: pretty;
+}
+
+.preview {
+  margin-top: auto;
+  padding: 16px 18px 14px;
+}
+
+.previewHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 12px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.chip {
+  flex: 1 1 120px;
+  min-width: 0;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chipValue {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* On a phone: the logo in the middle, the buttons at the bottom, no card and no preview. */
+@media (max-width: 760px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .card {
+    flex: 1 1 auto;
+    padding: 0;
+    gap: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .desktopIntro,
+  .about {
+    display: none;
+  }
+
+  .phoneIntro {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 0;
+    text-align: center;
+  }
+
+  .actions {
+    margin-top: 0;
+  }
+
+  .promise {
+    justify-content: center;
+  }
+}
+
+.bigMark {
+  border-radius: 19px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 18px 44px var(--accent-tint);
+}
+
+.appName {
+  margin: 22px 0 0;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.tagline {
+  margin: 12px 0 0;
+  max-width: 300px;
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.45;
+  text-wrap: balance;
+}

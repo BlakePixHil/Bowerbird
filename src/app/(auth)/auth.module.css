@@ -1,0 +1,30 @@
+.page {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px clamp(16px, 4vw, 40px);
+}
+
+.glow {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 520px;
+  background: radial-gradient(70% 55% at 50% 38%, var(--accent-wash) 0%, transparent 72%);
+  pointer-events: none;
+}
+
+@media (min-width: 761px) {
+  .glow {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    align-items: stretch;
+    padding: calc(env(safe-area-inset-top, 0px) + 24px) 20px
+      calc(env(safe-area-inset-bottom, 0px) + 34px);
+  }
+}
