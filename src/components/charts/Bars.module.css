@@ -1,0 +1,57 @@
+.columns {
+  position: absolute;
+  inset: 0;
+  display: grid;
+}
+
+.column {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+}
+
+button.column {
+  cursor: pointer;
+}
+
+.selected {
+  background: var(--surface-3);
+}
+
+.bar {
+  position: absolute;
+  left: 50%;
+  width: min(18px, 52%);
+  transform: translateX(-50%);
+}
+
+.daily {
+  width: min(16px, 60%);
+}
+
+.up {
+  border-radius: 4px 4px 0 0;
+}
+
+.down {
+  border-radius: 0 0 4px 4px;
+}
+
+.rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--grid);
+  pointer-events: none;
+}
+
+.zero {
+  background: var(--axis);
+  z-index: 1;
+}
