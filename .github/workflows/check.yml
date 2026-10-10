@@ -1,0 +1,24 @@
+name: Check
+
+# One light job on pull requests only: typecheck, lint, format and unit tests.
+# Keep it this small to stay inside GitHub's free minutes. No builds, no end-to-end tests.
+on:
+  pull_request:
+
+concurrency:
+  group: check-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
