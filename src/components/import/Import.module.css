@@ -1,0 +1,1500 @@
+/* "Import 1, 2 and 3" and "Desktop: Import a bank file". Phone is 760px and narrower. */
+
+.phone {
+  display: none;
+}
+
+.desktop {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 760px) {
+  .phone {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .desktop {
+    display: none;
+  }
+}
+
+.phone h1:focus {
+  outline: none;
+}
+
+.block {
+  display: block;
+}
+
+.centre {
+  text-align: center;
+}
+
+.num {
+  text-align: right;
+}
+
+/* Phone header and steps ---------------------------------------------------- */
+
+.phoneBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 44px;
+  margin-left: -12px;
+}
+
+.lead {
+  margin: 6px 0 0;
+  text-wrap: pretty;
+}
+
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 2px;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+/* The line to the next step fills the space between. */
+.step:not(:last-child) {
+  flex: 1 1 auto;
+}
+
+.step:not(:last-child)::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  margin-left: 2px;
+  background: var(--line-2);
+}
+
+.allDone .step::after {
+  background: var(--accent);
+}
+
+.stepDot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1.5px solid var(--line-2);
+  color: var(--text-3);
+}
+
+.stepDot svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.6;
+}
+
+.done {
+  color: var(--text-2);
+}
+
+.done .stepDot {
+  background: var(--accent-btn);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.now .stepDot {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.next {
+  color: var(--text-3);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 4px 0;
+}
+
+.sectionHead > :last-child:not(h2) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.listCard {
+  padding: 0 14px;
+}
+
+.padded {
+  padding: 16px;
+}
+
+.splitHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 4px 4px 0;
+  text-wrap: pretty;
+}
+
+.note > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--text-3);
+}
+
+/* The main button stays in reach, just above the tab bar. */
+.actionBar {
+  position: sticky;
+  z-index: 5;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px -16px 0;
+  padding: 24px 16px 12px;
+  background: linear-gradient(180deg, transparent 0%, var(--bg) 30%);
+}
+
+.actionNote {
+  margin: -2px 0 0;
+  text-align: center;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* Accounts ------------------------------------------------------------------- */
+
+.choices {
+  display: flex;
+  flex-direction: column;
+}
+
+.choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.choiceName {
+  display: block;
+  font-weight: 500;
+}
+
+.radio {
+  position: relative;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-2);
+  background: var(--surface-2);
+}
+
+.radio::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.choice:has(input:checked) .radio {
+  border-color: var(--accent-btn);
+  background: var(--accent-btn);
+}
+
+.choice:has(input:checked) .radio::after {
+  background: #ffffff;
+}
+
+.choice:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+.onPhone .choice {
+  min-height: 54px;
+}
+
+.onPhone .choice + .choice {
+  border-top: 1px solid var(--line);
+}
+
+.onDesktop .choices {
+  gap: 2px;
+  margin: 0 -8px;
+}
+
+.onDesktop .choice {
+  min-height: 48px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+.onDesktop .choice:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.onDesktop .radio {
+  width: 18px;
+  height: 18px;
+}
+
+.onDesktop .radio::after {
+  width: 6px;
+  height: 6px;
+}
+
+@media (hover: hover) {
+  .onDesktop .choice:not(:has(input:checked)):hover {
+    background: var(--surface-2);
+  }
+}
+
+.newAccount {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px 0 16px;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.onDesktop .newAccount {
+  margin-top: 8px;
+  padding-bottom: 4px;
+}
+
+/* The file ------------------------------------------------------------------- */
+
+.drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  text-wrap: pretty;
+  border: 1.5px dashed var(--line-2);
+  color: var(--text);
+}
+
+.dropPhone {
+  padding: 26px 16px 22px;
+  border-radius: 16px;
+  background: var(--surface);
+  font: inherit;
+  cursor: pointer;
+}
+
+.dropDesktop {
+  padding: 28px 20px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.dropIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--surface-3);
+  color: var(--accent-ink);
+}
+
+.dropDesktop .dropIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+}
+
+.dropTitle {
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.dropPhone .dropTitle {
+  font-size: 16px;
+}
+
+.dropButton {
+  margin-top: 6px;
+}
+
+.fileArea {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fileCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface);
+}
+
+.fileCard.onPhone {
+  padding: 14px;
+  border: 1px solid var(--accent);
+  border-radius: 16px;
+  box-shadow: var(--raise);
+}
+
+.fileCard.onDesktop {
+  gap: 10px;
+  padding: 12px;
+  border: 1.5px dashed var(--accent);
+  border-radius: 14px;
+  background: var(--accent-wash);
+}
+
+.fileCard.onDesktop.fileDone {
+  border-style: solid;
+  border-color: var(--line-2);
+  background: var(--surface-2);
+}
+
+.fileTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fileIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+}
+
+.fileName {
+  font-weight: 600;
+}
+
+.remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  margin-right: -8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.onDesktop .remove {
+  width: 34px;
+  height: 34px;
+  margin-right: 0;
+  border-radius: 9px;
+}
+
+@media (hover: hover) {
+  .remove:hover {
+    background: var(--surface-3);
+    color: var(--text);
+  }
+}
+
+.another {
+  align-self: center;
+  color: var(--accent-ink);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0 2px;
+  text-wrap: pretty;
+}
+
+.status > svg {
+  flex: none;
+}
+
+.good {
+  color: var(--good-ink);
+}
+
+.problem {
+  align-items: flex-start;
+  color: var(--crit-ink);
+}
+
+.problem > svg {
+  margin-top: 2px;
+}
+
+.warnInk {
+  color: var(--warn-ink);
+}
+
+.mismatch {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--warn-tint);
+  text-wrap: pretty;
+}
+
+.mismatch > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--warn-ink);
+}
+
+.mismatch strong {
+  font-weight: 600;
+  color: var(--warn-ink);
+}
+
+.warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desktop .warnings {
+  margin-top: 12px;
+}
+
+.nothingNew {
+  margin-top: 4px;
+}
+
+.desktop .nothingNew {
+  margin-top: 14px;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Where do I get the file? --------------------------------------------------- */
+
+.helpTitle {
+  padding: 10px 4px 0;
+}
+
+.desktop .helpTitle {
+  margin-top: 6px;
+  padding: 0;
+}
+
+.helpItem + .helpItem {
+  border-top: 1px solid var(--line);
+}
+
+.desktop .help {
+  border-top: 1px solid var(--line);
+}
+
+.desktop .helpItem {
+  border-bottom: 1px solid var(--line);
+}
+
+.desktop .helpItem + .helpItem {
+  border-top: 0;
+}
+
+.helpSummary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+.desktop .helpSummary {
+  min-height: 52px;
+}
+
+.helpSummary::-webkit-details-marker {
+  display: none;
+}
+
+.helpSummary .muted {
+  font-weight: 400;
+}
+
+.chevron {
+  flex: none;
+  color: var(--text-3);
+}
+
+.helpItem[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.helpSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0 0 14px 42px;
+  list-style: none;
+}
+
+.helpSteps li {
+  display: flex;
+  gap: 8px;
+  text-wrap: pretty;
+}
+
+.helpSteps .mono {
+  padding-top: 2px;
+  color: var(--text-3);
+}
+
+/* Columns -------------------------------------------------------------------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.chip svg {
+  color: var(--good-ink);
+  stroke-width: 2.2;
+}
+
+.chipsSmall {
+  margin-top: 8px;
+}
+
+.chipsSmall .chip {
+  height: 28px;
+  padding: 0 10px 0 8px;
+  font-size: 12.5px;
+}
+
+.padded .status,
+.divided .status {
+  margin-top: 12px;
+}
+
+.roleSelect {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--line-2);
+  background: var(--surface-2);
+}
+
+.roleSelect:has(select:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.roleSelect select {
+  height: 100%;
+  padding: 0 30px 0 12px;
+  border: 0;
+  outline: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  appearance: none;
+  cursor: pointer;
+}
+
+.roleCheck + select {
+  padding-left: 30px;
+}
+
+.roleCheck {
+  position: absolute;
+  left: 10px;
+  color: var(--good-ink);
+  stroke-width: 2.2;
+  pointer-events: none;
+}
+
+.roleChevron {
+  position: absolute;
+  right: 10px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+.unused select {
+  color: var(--text-3);
+}
+
+.roleSelect.onDesktop {
+  display: flex;
+  width: 100%;
+  height: 30px;
+}
+
+.roleSelect.onDesktop select {
+  width: 100%;
+  padding-left: 10px;
+}
+
+.sheetLead {
+  margin: 2px 0 8px;
+  text-wrap: pretty;
+}
+
+.sheetColumns {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sheetColumns li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  border-top: 1px solid var(--line);
+}
+
+.sheetColumn {
+  min-width: 0;
+}
+
+.sample {
+  margin-top: 3px;
+  color: var(--text-3);
+}
+
+.notUsed {
+  margin: 0;
+  padding: 12px 0 14px;
+  border-top: 1px solid var(--line);
+  text-wrap: pretty;
+}
+
+.columnTable {
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.columnTable table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+}
+
+.columnTable th {
+  padding: 12px 12px 8px 0;
+  color: var(--text-3);
+  font-size: 12.5px;
+  font-weight: 400;
+  text-align: left;
+}
+
+.columnTable td {
+  height: 40px;
+  padding: 4px 12px 4px 0;
+  border-top: 1px solid var(--line);
+  color: var(--text);
+}
+
+.columnTable th:first-child,
+.columnTable td:first-child {
+  padding-left: 14px;
+  width: 30%;
+}
+
+.columnTable th:last-child,
+.columnTable td:last-child {
+  width: 150px;
+  padding-right: 14px;
+}
+
+.columnTable .sample {
+  margin: 0;
+  max-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Rows from the file ---------------------------------------------------------- */
+
+.rowCard {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fileRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.fileRow + .fileRow {
+  border-top: 1px solid var(--line);
+}
+
+.fileRow > :first-child {
+  margin-top: 2px;
+}
+
+.fileRowText {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fileRowTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rowName {
+  font-weight: 500;
+}
+
+.raw {
+  color: var(--text-3);
+}
+
+.rowMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  color: var(--text-2);
+  min-width: 0;
+}
+
+.hereRows .fileRow > :first-child {
+  opacity: 0.5;
+}
+
+.hereRows .fileRowTop {
+  opacity: 0.55;
+}
+
+.hereRows .raw {
+  opacity: 0.7;
+}
+
+.hereRows .rowMeta {
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dotCheck {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--text-3);
+}
+
+/* Summary and numbers ---------------------------------------------------------- */
+
+.summary {
+  padding: 16px;
+  margin-top: 4px;
+}
+
+.bigCount {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 18px 0 4px;
+}
+
+.stack {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+  margin-top: 14px;
+}
+
+.stack > span {
+  display: block;
+  flex-basis: 0;
+  min-width: 2px;
+  height: 100%;
+  border-radius: 2px;
+}
+
+.stack > span:first-child {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.stack > span:last-child {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.stack.thin {
+  height: 8px;
+  margin-top: 10px;
+}
+
+.checkPart {
+  box-shadow: inset 0 0 0 1.5px var(--text-3);
+}
+
+.summaryRows {
+  display: flex;
+  flex-direction: column;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.summaryRows li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+
+.summaryRows li + li {
+  align-items: flex-start;
+  padding: 10px 0 8px;
+  border-top: 1px solid var(--line);
+}
+
+.summaryRows li + li > :first-child {
+  margin-top: 6px;
+}
+
+.summaryRows li + li > svg:first-child {
+  margin: 3px -3px 0;
+}
+
+.summaryRows .muted {
+  text-wrap: pretty;
+}
+
+.rowIcon {
+  flex: none;
+  color: var(--text-2);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendValue {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.key {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.kpiLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kpiIcon {
+  width: 12px;
+  height: 12px;
+}
+
+.barBlock {
+  margin-top: 16px;
+}
+
+.barBlock .stack {
+  margin-top: 0;
+}
+
+.divided {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+/* Done --------------------------------------------------------------------- */
+
+.doneHead {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.doneHead p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.doneRows {
+  display: flex;
+  flex-direction: column;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.doneRows li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+}
+
+.doneRows li + li {
+  border-top: 1px solid var(--line);
+}
+
+.doneIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+.toneGood {
+  background: var(--good-tint);
+  color: var(--good-ink);
+}
+
+.toneWarn {
+  background: var(--warn-tint);
+  color: var(--warn-ink);
+}
+
+.toneQuiet {
+  background: var(--surface-3);
+  color: var(--text-2);
+}
+
+.doneLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.doneValue {
+  font-size: 15px;
+}
+
+.safeNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  text-wrap: pretty;
+}
+
+.safeNote > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--text-2);
+}
+
+/* Desktop -------------------------------------------------------------------- */
+
+.flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.w1 {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.w2 {
+  flex: 2 1 560px;
+  min-width: 0;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setup {
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px 20px;
+}
+
+.desktop .padded {
+  padding: 18px 20px 20px;
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.split {
+  margin: 6px 0 2px;
+}
+
+.waiting,
+.empty {
+  margin-top: 16px;
+  padding: 22px 20px 24px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.ghostRows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(100%, 280px);
+  margin-bottom: 6px;
+}
+
+.ghostRows > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ghostDot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line-2);
+}
+
+.ghostBar,
+.ghostAmount {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--track);
+}
+
+.ghostBar {
+  flex: 0 0 auto;
+}
+
+.ghostAmount {
+  flex: 0 0 18%;
+  margin-left: auto;
+}
+
+.emptyTitle {
+  margin: 0;
+  font-weight: 600;
+}
+
+.emptyText {
+  max-width: 440px;
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  margin-top: 16px;
+}
+
+.divided.actions {
+  margin-top: 18px;
+  padding-top: 16px;
+}
+
+.divided.actions > .status {
+  flex: 1 1 100%;
+  margin-top: 0;
+}
+
+.actionsNote {
+  flex: 1 1 220px;
+  text-wrap: pretty;
+}
+
+.doneWell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 16px;
+}
+
+.doneWell .stack {
+  margin-top: 0;
+}
+
+.doneWell .actions {
+  margin-top: 0;
+  gap: 8px;
+}
+
+.doneWellHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.doneWellTitle {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.doneStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 10px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.doneStats li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.doneStats .link {
+  height: auto;
+  font-size: 12px;
+}
+
+.recent {
+  padding: 4px 20px 8px;
+}
+
+.recentHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  min-height: 52px;
+}
+
+.recentList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recentList li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  min-height: 56px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.recentText {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.recentCounts {
+  display: flex;
+  gap: 16px;
+}
+
+.recentCounts strong {
+  font-weight: 500;
+}
+
+.recentEmpty {
+  margin: 0;
+  padding: 12px 0 14px;
+  border-top: 1px solid var(--line);
+}
+
+.previewCard {
+  padding-top: 4px;
+  overflow: hidden;
+}
+
+.previewHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 18px 20px 14px;
+}
+
+.scrollX {
+  overflow-x: auto;
+}
+
+.previewTable {
+  width: 100%;
+  min-width: 960px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.previewTable th {
+  padding: 0 7px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-3);
+  font-size: 12.5px;
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.previewTable td {
+  height: 58px;
+  padding: 8px 7px;
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.previewTable tr + tr td {
+  border-top: 1px solid var(--line);
+}
+
+.previewTable th:first-child,
+.previewTable td:first-child {
+  width: 104px;
+  padding-left: 20px;
+}
+
+.previewTable th:nth-child(2) {
+  width: 32%;
+}
+
+.previewTable th:nth-child(5) {
+  width: 112px;
+}
+
+.previewTable th:last-child,
+.previewTable td:last-child {
+  width: 210px;
+  padding-right: 20px;
+}
+
+.previewTable .num {
+  text-align: right;
+}
+
+/* Rows already here are faded, all but their status. The row's own colour stays solid. */
+.hereRow {
+  background: var(--surface-2);
+}
+
+.hereRow td:not(:last-child) {
+  opacity: 0.5;
+}
+
+.categoryCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.previewFoot {
+  margin: 0;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+  text-wrap: pretty;
+}

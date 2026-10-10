@@ -1,15 +1,19 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  closingBalance,
   dedupeKey,
   dedupeKeys,
+  matchRows,
   MAX_FILE_BYTES,
   NOT_A_BANK_FILE,
   normaliseDescription,
   parseBankAmount,
   parseBankDate,
   parseBankFile,
+  type ExistingRow,
   type ParsedFile,
+  type ParsedRow,
   type ParseResult,
 } from ".";
 
@@ -300,7 +304,7 @@ describe("files that aren't bank exports", () => {
       "We couldn't find any transactions in this file.",
     );
     expect(error(new Uint8Array(MAX_FILE_BYTES + 1).fill(65), "huge.csv")).toBe(
-      "This file is bigger than 10 MB. Export a shorter date range and try again.",
+      "This file is bigger than 4 MB. Export a shorter date range and try again.",
     );
   });
 
@@ -387,5 +391,89 @@ describe("dedupeKey", () => {
       "2026-09-01|-450|COFFEE CART#2",
       "2026-09-01|-450|COFFEE CART#3",
     ]);
+  });
+});
+
+describe("matchRows", () => {
+  const coffee: ParsedRow = { date: "2026-09-01", amountCents: -450, description: "Coffee Cart" };
+  const old = (row: ParsedRow, extra: Partial<ExistingRow> = {}): ExistingRow => ({
+    date: row.date,
+    amountCents: row.amountCents,
+    descriptionRaw: row.description,
+    externalId: null,
+    dedupeKey: dedupeKey(row),
+    source: "file",
+    ...extra,
+  });
+  const statuses = (rows: ParsedRow[], existing: ExistingRow[]) =>
+    matchRows(rows, existing).map((m) => (m.status === "new" ? m.dedupeKey : "here"));
+
+  it("gives a new account the same keys as dedupeKeys", () => {
+    const rows = [coffee, { ...coffee, description: "Tea" }, coffee];
+    expect(statuses(rows, [])).toEqual(dedupeKeys(rows));
+  });
+
+  it("skips one row per match, so real repeats still come in", () => {
+    expect(statuses([coffee, coffee, coffee], [old(coffee)])).toEqual([
+      "here",
+      "2026-09-01|-450|COFFEE CART#2",
+      "2026-09-01|-450|COFFEE CART#3",
+    ]);
+  });
+
+  it("matches synced rows by their text too, and never reuses a key the account has", () => {
+    const synced = old(coffee, { dedupeKey: null, source: "sync" });
+    expect(statuses([coffee, coffee], [synced])).toEqual(["here", "2026-09-01|-450|COFFEE CART#2"]);
+    // An earlier import saved #2 and its first row has since gone. The new row skips past #2.
+    const lone = old(coffee, { dedupeKey: "2026-09-01|-450|COFFEE CART#2" });
+    expect(statuses([coffee, coffee], [lone])).toEqual(["here", "2026-09-01|-450|COFFEE CART#3"]);
+  });
+
+  it("matches the bank's ids from earlier files, and drops ids another row already uses", () => {
+    const tagged = { ...coffee, externalId: "FIT-1" };
+    const renamed = { ...tagged, description: "COFFEE CART NEWTOWN" };
+    expect(statuses([renamed], [old(tagged, { externalId: "FIT-1" })])).toEqual(["here"]);
+
+    const fromSync = old({ ...coffee, amountCents: -999 }, { externalId: "FIT-1", source: "sync" });
+    const [match] = matchRows([tagged], [fromSync]);
+    expect(match).toMatchObject({ status: "new", externalId: null });
+
+    const twice = matchRows([tagged, { ...tagged, description: "Tea" }], []);
+    expect(twice.map((m) => m.status === "new" && m.externalId)).toEqual(["FIT-1", null]);
+  });
+});
+
+describe("closingBalance", () => {
+  const row = (date: string, amountCents: number, balanceCents?: number): ParsedRow => ({
+    date,
+    amountCents,
+    description: "x",
+    balanceCents,
+  });
+
+  it("takes the balance the file states", () => {
+    const file = parsed(parseBankFile(fixture("statement-sgml.ofx"), "a.ofx"));
+    expect(closingBalance(file)).toEqual({ date: "2026-09-03", balanceCents: 1904_35 });
+  });
+
+  it("takes the latest row's balance, whichever way the file runs", () => {
+    const newestFirst = [row("2026-09-03", -10, 90), row("2026-09-01", -5, 100)];
+    expect(closingBalance({ rows: newestFirst })).toEqual({ date: "2026-09-03", balanceCents: 90 });
+    const oldestFirst = [...newestFirst].reverse();
+    expect(closingBalance({ rows: oldestFirst })).toEqual({ date: "2026-09-03", balanceCents: 90 });
+    const westpac = parsed(parseBankFile(fixture("westpac.csv"), "w.csv"));
+    expect(closingBalance(westpac)).toEqual({ date: "2026-09-03", balanceCents: 1904_35 });
+  });
+
+  it("works out the order from the balances when every row is on one day", () => {
+    const oldestFirst = [row("2026-09-01", -10, 90), row("2026-09-01", -5, 85)];
+    expect(closingBalance({ rows: oldestFirst })?.balanceCents).toBe(85);
+    const newestFirst = [row("2026-09-01", -5, 85), row("2026-09-01", -10, 90)];
+    expect(closingBalance({ rows: newestFirst })?.balanceCents).toBe(85);
+  });
+
+  it("is null when the file has no balances", () => {
+    expect(closingBalance({ rows: [row("2026-09-01", -5)] })).toBeNull();
+    expect(closingBalance({ rows: [] })).toBeNull();
   });
 });

@@ -14,7 +14,7 @@ export { ChartTooltip, type TooltipRow } from "./ChartTooltip";
 export { Chip, Kbd, Pill, Tag, type PillTone } from "./Chip";
 export { EmptyState } from "./EmptyState";
 export { cx } from "./cx";
-export { Checkbox, Switch, TextField } from "./Field";
+export { Checkbox, SelectField, Switch, TextField } from "./Field";
 export { Icon, type IconSize } from "./Icon";
 export { ICONS, type IconName } from "./icons";
 export { Kpi, KpiGrid } from "./Kpi";
