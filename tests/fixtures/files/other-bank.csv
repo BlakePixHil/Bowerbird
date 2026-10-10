@@ -1,0 +1,4 @@
+Transaction Date,Details,Money Out,Money In,Running Balance,Reference
+2026-09-03,Coffee Cart Newtown,$4.50,,$120.00,R-1001
+2026-09-02,Transfer from savings,,$200.00,$124.50,R-1000
+2026-09-01,"Rent, September","$1,200.00",,-$75.50,R-0999
