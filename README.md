@@ -19,7 +19,11 @@ After changing `src/lib/db/schema.ts`, run `pnpm db:generate` to write a new mig
 
 ## Design system
 
-Colours live in `src/styles/tokens.css` and nowhere else. Shared components are in `src/components/ui`, each with its own CSS Module. Open [localhost:3000/dev/ui](http://localhost:3000/dev/ui) to see every component in both themes. That page also works on Vercel previews and never on the live app.
+Colours live in `src/styles/tokens.css` and nowhere else. Shared components are in `src/components/ui` and charts in `src/components/charts`, each with its own CSS Module. Open [localhost:3000/dev/ui](http://localhost:3000/dev/ui) and [localhost:3000/dev/charts](http://localhost:3000/dev/charts) to see them in both themes. Those pages also work on Vercel previews and never on the live app.
+
+## App shell
+
+Signed-in pages live in `src/app/(app)` and sit inside the frame from `src/components/shell`: a sidebar on desktop and a floating tab bar on a phone (760px and narrower). Each page starts with `<PageHeader>`. The menus come from `src/components/shell/nav.ts`, and features from later phases stay hidden until they are switched on in `src/config/features.ts`. A test fails if a menu item points at a page that doesn't exist.
 
 ## Source of truth
 

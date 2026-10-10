@@ -1,7 +1,9 @@
 .tabbar {
   height: 66px;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  /* One equal column per tab, so it still fits while Goals is hidden. */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   align-items: center;
   margin: 0;
   padding: 0 6px;
