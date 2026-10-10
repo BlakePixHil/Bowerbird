@@ -1,3 +1,5 @@
+import { APP_NAME } from "@/config/app";
+
 /**
  * The app's public address, used in sign-in links and as the passkey domain.
  * Production sets APP_URL. Vercel previews work out their own address, and local development
@@ -27,4 +29,19 @@ export function sessionSecret(env: Record<string, string | undefined> = process.
   if (env.SESSION_SECRET) return env.SESSION_SECRET;
   if (env.NODE_ENV === "development" || env.NODE_ENV === "test") return "local-development-only";
   throw new Error("SESSION_SECRET is not set");
+}
+
+export type SmtpSettings = { host: string; port: number; user: string; pass: string; from: string };
+
+/**
+ * The SMTP server that sends sign-in emails, or null until SMTP_HOST, SMTP_USER and SMTP_PASS are
+ * set. Port 465 uses TLS from the start; any other port upgrades with STARTTLS.
+ */
+export function smtpSettings(
+  env: Record<string, string | undefined> = process.env,
+): SmtpSettings | null {
+  const { SMTP_HOST: host, SMTP_USER: user, SMTP_PASS: pass } = env;
+  if (!host || !user || !pass) return null;
+  const port = Number(env.SMTP_PORT) || 465;
+  return { host, port, user, pass, from: env.SMTP_FROM || `${APP_NAME} <${user}>` };
 }

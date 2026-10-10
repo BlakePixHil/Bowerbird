@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { APP_NAME } from "@/config/app";
 import { getDb } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { sessionSecret } from "@/lib/env";
@@ -17,6 +19,8 @@ import {
 } from "./cookies";
 import { requireMember } from "./current";
 import { deviceLabel } from "./device";
+import { cleanEmail, createEmailLink, redeemEmailLink } from "./email-links";
+import { sendSignInEmail } from "./mail";
 import {
   checkRegistration,
   checkSignIn,
@@ -42,6 +46,8 @@ type Pending =
   | { purpose: "add"; challenge: string; userId: string };
 
 const TRY_AGAIN = "That didn't work. Try again, and if it keeps happening, use another device.";
+const BAD_EMAIL = "That email doesn't look right.";
+const SET_UP_ALREADY = `${APP_NAME} is already set up. Sign in instead.`;
 
 async function request() {
   const h = await headers();
@@ -78,10 +84,9 @@ function cleanSetup(input: {
   email: string;
 }): Failure | { name: string; email: string } {
   const name = input.name.trim().replace(/\s+/g, " ");
-  const email = input.email.trim().toLowerCase();
+  const email = cleanEmail(input.email);
   if (!name || name.length > 60) return { error: "Add your name, up to 60 letters." };
-  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    return { error: "That email doesn't look right." };
+  if (!email) return { error: BAD_EMAIL };
   return { name, email };
 }
 
@@ -89,7 +94,7 @@ function cleanSetup(input: {
 export async function startSetup(input: { name: string; email: string }) {
   const clean = cleanSetup(input);
   if ("error" in clean) return clean;
-  if (await hasUsers(getDb())) return { error: "Bowerbird is already set up. Sign in instead." };
+  if (await hasUsers(getDb())) return { error: SET_UP_ALREADY };
   const { rp } = await request();
   const userId = randomUUID();
   const options = await registrationOptions(rp, { id: userId, ...clean });
@@ -111,7 +116,7 @@ export async function finishSetup(response: RegistrationResponseJSON): Promise<F
     passkey,
     label: deviceLabel(userAgent),
   });
-  if (!created) return { error: "Bowerbird is already set up. Sign in instead." };
+  if (!created) return { error: SET_UP_ALREADY };
   await startSession(pending.userId);
   redirect("/");
 }
@@ -135,12 +140,47 @@ export async function finishSignIn(
   const userId = await checkSignIn(getDb(), response, pending.challenge, rp);
   if (!userId) {
     return {
-      error:
-        "That passkey isn't set up for Bowerbird. Try another one on this device or your phone.",
+      error: `That passkey isn't set up for ${APP_NAME}. Try another one on this device or your phone.`,
     };
   }
   await startSession(userId);
   redirect(safeNext(next));
+}
+
+/**
+ * Emails a sign-in link. The answer is the same whether or not the email belongs to a member,
+ * and the link is made and sent after the answer goes back, so the wait doesn't give it away
+ * either. Links open /sign-in/email with the token after the #, so it never reaches a server log.
+ */
+export async function sendSignInLink(input: {
+  email: string;
+  next?: string;
+}): Promise<Failure | { sentTo: string }> {
+  const email = cleanEmail(input.email);
+  if (!email) return { error: BAD_EMAIL };
+  const { rp } = await request();
+  const next = safeNext(input.next);
+  after(async () => {
+    try {
+      const link = await createEmailLink(getDb(), email);
+      if (link.kind !== "made") return;
+      const url = new URL("/sign-in/email", rp.origin);
+      if (next !== "/") url.searchParams.set("next", next);
+      url.hash = `t=${link.token}`;
+      await sendSignInEmail(email, { name: link.name, url: url.toString() });
+    } catch {
+      console.error("Sign-in email not sent: couldn't make the link.");
+    }
+  });
+  return { sentTo: email };
+}
+
+/** The email link's landing page: use the link and start a session. */
+export async function finishEmailSignIn(token: string): Promise<Failure | { signedIn: true }> {
+  const userId = await redeemEmailLink(getDb(), token);
+  if (!userId) return { error: "expired" };
+  await startSession(userId);
+  return { signedIn: true };
 }
 
 /** Add a passkey on this device for the signed-in member, step 1. */
