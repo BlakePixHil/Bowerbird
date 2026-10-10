@@ -23,6 +23,10 @@ type PageHeaderProps = {
   actions?: ReactNode;
   /** Icon buttons before the avatar in the phone's header. */
   phoneActions?: ReactNode;
+  /** False when the page draws its own phone header, such as a flow with steps. */
+  phone?: boolean;
+  /** A line under the desktop title, saying what the page is for. */
+  intro?: string;
 };
 
 /**
@@ -37,6 +41,8 @@ export async function PageHeader({
   line,
   actions,
   phoneActions,
+  phone = true,
+  intro,
 }: PageHeaderProps) {
   const shell = await getShell();
   const dateLine = `${formatShortDate(shell.today)} · ${syncLabel(shell.sync, shell.now, shell.timeZone)}`;
@@ -53,37 +59,43 @@ export async function PageHeader({
 
   return (
     <header>
-      <div className={styles.phone}>
-        <div className={cx(styles.phoneBar, back && styles.phoneBack)}>
-          {home ? (
-            <>
-              <h1 className="sr-only">{title}</h1>
-              <div className={styles.household}>
-                <LogoMark size={28} />
-                <span className={styles.phoneHousehold}>{shell.householdName}</span>
-              </div>
-              <div className={styles.tools}>
-                <SyncNowButton compact />
-                {account}
-              </div>
-            </>
-          ) : back ? (
-            <>
-              <IconButtonLink icon="arrow-left" label={`Back to ${back.label}`} href={back.href} />
-              <h1 className={cx("h1", styles.subTitle)}>{title}</h1>
-            </>
-          ) : (
-            <>
-              <h1 className="h1">{title}</h1>
-              <div className={styles.tools}>
-                {phoneActions}
-                {account}
-              </div>
-            </>
-          )}
+      {phone && (
+        <div className={styles.phone}>
+          <div className={cx(styles.phoneBar, back && styles.phoneBack)}>
+            {home ? (
+              <>
+                <h1 className="sr-only">{title}</h1>
+                <div className={styles.household}>
+                  <LogoMark size={28} />
+                  <span className={styles.phoneHousehold}>{shell.householdName}</span>
+                </div>
+                <div className={styles.tools}>
+                  <SyncNowButton compact />
+                  {account}
+                </div>
+              </>
+            ) : back ? (
+              <>
+                <IconButtonLink
+                  icon="arrow-left"
+                  label={`Back to ${back.label}`}
+                  href={back.href}
+                />
+                <h1 className={cx("h1", styles.subTitle)}>{title}</h1>
+              </>
+            ) : (
+              <>
+                <h1 className="h1">{title}</h1>
+                <div className={styles.tools}>
+                  {phoneActions}
+                  {account}
+                </div>
+              </>
+            )}
+          </div>
+          {home && <p className={cx("mono", styles.line)}>{dateLine}</p>}
         </div>
-        {home && <p className={cx("mono", styles.line)}>{dateLine}</p>}
-      </div>
+      )}
 
       <div className={styles.desktop}>
         <div className={styles.titles}>
@@ -96,6 +108,7 @@ export async function PageHeader({
             <p className={cx("mono", styles.line)}>{line ?? dateLine}</p>
           )}
           <h1 className="h1">{title}</h1>
+          {intro && <p className={cx("sub", styles.intro)}>{intro}</p>}
         </div>
         {actions !== null && (
           <div className={styles.actions}>

@@ -44,6 +44,39 @@
   color: var(--text-3);
 }
 
+/* The chevron sits over the select's right edge, so the whole box opens the list. */
+.select {
+  position: relative;
+  padding: 0;
+}
+
+.select:has(select:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.select select {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0 36px 0 12px;
+  border: 0;
+  outline: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.select svg {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+}
+
 .invalid {
   border-color: var(--crit);
 }

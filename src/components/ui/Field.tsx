@@ -62,6 +62,41 @@ export function TextField({
   );
 }
 
+type SelectFieldProps = Omit<ComponentProps<"select">, "id" | "children"> & {
+  label: string;
+  options: readonly { value: string; label: string }[];
+  hint?: ReactNode;
+  className?: string;
+};
+
+/** A labelled 44px choice of a few options, drawn like a text box. A real select underneath. */
+export function SelectField({ label, options, hint, className, ...rest }: SelectFieldProps) {
+  const id = useId();
+  const hintId = hint ? `${id}-hint` : undefined;
+  return (
+    <div className={cx(styles.wrap, className)}>
+      <label htmlFor={id} className={styles.label}>
+        {label}
+      </label>
+      <div className={cx(styles.field, styles.select)}>
+        <select id={id} aria-describedby={hintId} {...rest}>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <Icon name="chevron-down" size="sm" />
+      </div>
+      {hint && (
+        <span id={hintId} className={styles.hint}>
+          {hint}
+        </span>
+      )}
+    </div>
+  );
+}
+
 type ChoiceProps = Omit<ComponentProps<"input">, "type" | "children"> & {
   /** The words next to the control. They're its label. */
   children: ReactNode;

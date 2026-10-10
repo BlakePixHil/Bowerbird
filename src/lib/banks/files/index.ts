@@ -3,8 +3,11 @@ import { looksLikeOfx, readOfx } from "./ofx";
 import { looksLikeQif, readQif } from "./qif";
 import type { ColumnRole, FileFormat, ParseResult } from "./types";
 
+export { closingBalance } from "./balance";
 export { missingColumns } from "./csv";
 export { dedupeKey, dedupeKeys, normaliseDescription } from "./dedupe";
+export { matchRows, type ExistingRow, type RowMatch } from "./match";
+export { COLUMN_ROLES } from "./types";
 export { parseBankAmount, parseBankDate } from "./values";
 export type {
   ColumnRole,
@@ -17,13 +20,16 @@ export type {
   ParseResult,
 } from "./types";
 
-/** Bigger than any bank export of a few years, and small enough to read in one request. */
-export const MAX_FILE_BYTES = 10 * 1024 * 1024;
+/**
+ * Bigger than any bank export of a few years, and small enough to send in one request: Vercel
+ * functions take at most 4.5 MB, and the upload needs a little room around the file.
+ */
+export const MAX_FILE_BYTES = 4 * 1024 * 1024;
 
 export const NOT_A_BANK_FILE =
   "This file doesn't look like a bank export. Download a CSV, OFX or QIF file from your bank's website and try again.";
 const EMPTY = "This file is empty. Download it from your bank again and try once more.";
-const TOO_BIG = "This file is bigger than 10 MB. Export a shorter date range and try again.";
+export const TOO_BIG = "This file is bigger than 4 MB. Export a shorter date range and try again.";
 const NO_ROWS = "We couldn't find any transactions in this file.";
 
 /**

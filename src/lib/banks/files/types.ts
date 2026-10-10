@@ -24,9 +24,17 @@ export type ParsedRow = {
   externalId?: string;
 };
 
-/** What a CSV column holds. */
-export type ColumnRole =
-  "date" | "description" | "amount" | "debit" | "credit" | "balance" | "ignore";
+/** What a CSV column can hold. */
+export const COLUMN_ROLES = [
+  "date",
+  "description",
+  "amount",
+  "debit",
+  "credit",
+  "balance",
+  "ignore",
+] as const;
+export type ColumnRole = (typeof COLUMN_ROLES)[number];
 
 /** One column (or OFX/QIF field) as the app understood it, for the "Which column is which" sheet. */
 export type DetectedColumn = {

@@ -89,9 +89,16 @@ const SHORT_MONTHS = [
   "Dec",
 ];
 
-/** "Sat 10 Oct", the date style used on screen. Adds the year when asked: "Sat 10 Oct 2026". */
-export function formatShortDate(date: PlainDate, options: { year?: boolean } = {}): string {
+/**
+ * "Sat 10 Oct", the date style used on screen. Adds the year when asked, "Sat 10 Oct 2026", and
+ * leaves out the day of the week for tight spaces, "10 Oct".
+ */
+export function formatShortDate(
+  date: PlainDate,
+  options: { year?: boolean; weekday?: boolean } = {},
+): string {
   const p = parts(date);
-  const text = `${SHORT_DAYS[dayOfWeek(date)]} ${p.day} ${SHORT_MONTHS[p.month - 1]}`;
+  const dayMonth = `${p.day} ${SHORT_MONTHS[p.month - 1]}`;
+  const text = options.weekday === false ? dayMonth : `${SHORT_DAYS[dayOfWeek(date)]} ${dayMonth}`;
   return options.year ? `${text} ${p.year}` : text;
 }

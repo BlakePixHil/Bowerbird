@@ -201,6 +201,11 @@
   gap: 8px;
 }
 
+.intro {
+  margin: 6px 0 0;
+  text-wrap: pretty;
+}
+
 @media (max-width: 760px) {
   .phone {
     display: flex;

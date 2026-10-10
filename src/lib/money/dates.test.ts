@@ -62,5 +62,6 @@ describe("plain dates", () => {
   it("formats the on-screen date style", () => {
     expect(formatShortDate("2026-10-10")).toBe("Sat 10 Oct");
     expect(formatShortDate("2026-07-17", { year: true })).toBe("Fri 17 Jul 2026");
+    expect(formatShortDate("2026-07-17", { weekday: false })).toBe("17 Jul");
   });
 });
