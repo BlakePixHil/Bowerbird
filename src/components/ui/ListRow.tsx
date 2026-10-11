@@ -15,6 +15,8 @@ type ListRowProps = {
   trailing?: ReactNode;
   /** Makes the whole row open this page. The link's name is the title. */
   href?: string;
+  /** The link downloads a file, such as Export everything, rather than opening a page. */
+  download?: boolean;
   as?: "div" | "li";
   className?: string;
 };
@@ -26,6 +28,7 @@ export function ListRow({
   detail,
   trailing,
   href,
+  download = false,
   as: Tag = "div",
   className,
 }: ListRowProps) {
@@ -34,7 +37,12 @@ export function ListRow({
       {leading}
       <div className={styles.text}>
         {href ? (
-          <Link href={href} className={cx(styles.title, styles.stretched)}>
+          <Link
+            href={href}
+            download={download || undefined}
+            prefetch={download ? false : undefined}
+            className={cx(styles.title, styles.stretched)}
+          >
             {title}
           </Link>
         ) : (

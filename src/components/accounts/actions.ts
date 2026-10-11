@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { changeAccount, viewerOf, type AccountChanged } from "@/lib/access";
-import { requireMember } from "@/lib/auth";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { changeAccount, deleteHousehold, viewerOf, type AccountChanged } from "@/lib/access";
+import { requireMember, SESSION_COOKIE } from "@/lib/auth";
 import { removePasskey, type PasskeyRemoved } from "@/lib/auth/passkeys";
 import { getDb } from "@/lib/db";
 
@@ -40,4 +42,16 @@ export async function forgetPasskey(id: string): Promise<PasskeyRemoved> {
   const removed = await removePasskey(getDb(), me.user.id, id);
   if (removed.ok) revalidatePath("/accounts", "layout");
   return removed;
+}
+
+/**
+ * Delete the household and everything in it, for good (Owner only, with its name typed). Everyone
+ * is signed out, and this device goes to a goodbye page that forgets what it kept offline.
+ */
+export async function deleteEverything(input: { name: string }): Promise<{ error: string }> {
+  const me = await requireMember();
+  const deleted = await deleteHousehold(getDb(), viewerOf(me), input?.name);
+  if (!deleted.ok) return { error: deleted.error };
+  (await cookies()).delete(SESSION_COOKIE);
+  redirect(deleted.hadLiveSync ? "/goodbye?live=1" : "/goodbye");
 }

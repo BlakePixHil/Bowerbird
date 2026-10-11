@@ -447,3 +447,102 @@
   max-width: 640px;
   padding: 18px 20px;
 }
+
+/* Export everything and the Danger zone. */
+.exportRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.exportRow h2 {
+  margin: 0;
+}
+
+.exportRow p {
+  margin: 2px 0 0;
+}
+
+.dangerCard {
+  border-color: color-mix(in srgb, var(--crit) 35%, transparent);
+}
+
+.dangerZone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.dangerZone svg {
+  color: var(--crit-ink);
+}
+
+.dangerBox {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--crit-tint);
+}
+
+.dangerBox p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.dangerHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.dangerTitle {
+  font-weight: 500;
+}
+
+.dangerHead .danger,
+.dangerActions .dangerGo {
+  color: var(--crit-ink);
+  border-color: color-mix(in srgb, var(--crit) 45%, transparent);
+}
+
+.dangerForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.goes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.dangerActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.dangerRow a,
+.dangerTile {
+  color: var(--crit-ink);
+}
+
+.deleteCard {
+  max-width: 640px;
+  padding: 18px 20px;
+}
+
+@media (max-width: 760px) {
+  .deleteCard {
+    padding: 14px;
+  }
+}

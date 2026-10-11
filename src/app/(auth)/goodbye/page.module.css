@@ -1,0 +1,50 @@
+/* After deleting a household: what happened, and live sync's own connections to remove. */
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  padding: clamp(22px, 3vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--raise);
+}
+
+.words :global(.sub) {
+  margin-top: 8px;
+  text-wrap: pretty;
+}
+
+.live {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.live p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.liveHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--warn-ink);
+}
+
+@media (max-width: 760px) {
+  .card {
+    max-width: none;
+    padding: 4px 0 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+}

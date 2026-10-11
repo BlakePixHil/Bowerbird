@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { AccountsList } from "@/components/accounts/AccountsList";
+import { DeleteHousehold } from "@/components/accounts/DeleteHousehold";
 import { LiveSyncCard } from "@/components/accounts/LiveSyncCard";
 import { accountItems, lastImport, passkeyItems, sortingCounts } from "@/components/accounts/load";
 import { Passkeys } from "@/components/accounts/Passkeys";
@@ -33,7 +34,7 @@ import styles from "@/components/accounts/Accounts.module.css";
 export const metadata: Metadata = { title: "Accounts and sharing" };
 
 /* Investing apps, Household members and AI help join both lists below when their projects ship
-   (projects 10, 07 and 12), as do Export everything and Delete the household with their actions. */
+   (projects 10, 07 and 12). */
 
 /** Notifications join the install row in project 08. */
 const HOME_SCREEN = FEATURES.notifications
@@ -69,6 +70,7 @@ export default async function AccountsPage() {
       : keys.length === 1
         ? `1 passkey, on ${keys[0].label}. Add another device, or remove one.`
         : `${keys.length} passkeys: ${new Intl.ListFormat("en-AU").format(keys.map((key) => key.label))}. Add another device, or remove one.`;
+  const owner = me.member.role === "owner";
   const sections: { id: string; label: string; icon: IconName; className?: string }[] = [
     { id: "sync", label: "Bank connections", icon: "sync" },
     { id: "accounts", label: "Your accounts", icon: "bank" },
@@ -81,6 +83,8 @@ export default async function AccountsPage() {
       icon: HOME_SCREEN.icon,
       className: FEATURES.notifications ? undefined : "not-installed",
     },
+    { id: "export", label: "Export everything", icon: "download" },
+    ...(owner ? [{ id: "danger", label: "Danger zone", icon: "trash" as IconName }] : []),
   ];
 
   return (
@@ -239,6 +243,26 @@ export default async function AccountsPage() {
                 trailing={<Icon name="chevron-right" size="sm" className={styles.quiet} />}
                 href="/accounts/passkeys"
               />
+              <ListRow
+                as="li"
+                leading={<Tile icon="download" size="sm" />}
+                title="Export everything"
+                detail="Every account and transaction as CSV, in a zip"
+                trailing={<Icon name="download" size="sm" className={styles.quiet} />}
+                href="/api/export"
+                download
+              />
+              {owner && (
+                <ListRow
+                  as="li"
+                  leading={<Tile icon="trash" size="sm" className={styles.dangerTile} />}
+                  title="Delete the household"
+                  detail="Erases all of its data for good"
+                  trailing={<Icon name="chevron-right" size="sm" className={styles.quiet} />}
+                  href="/accounts/delete"
+                  className={styles.dangerRow}
+                />
+              )}
             </ul>
           </Card>
           <div className={cx(styles.signOut, styles.phoneOnly)}>
@@ -299,6 +323,44 @@ export default async function AccountsPage() {
               href="/install"
             />
           </Card>
+          <Card
+            as="section"
+            id="export"
+            aria-labelledby="export-title"
+            className={cx(styles.card, styles.padded, styles.wideOnly)}
+          >
+            <div className={styles.exportRow}>
+              <Tile icon="download" size="sm" />
+              <div className="grow">
+                <h2 id="export-title" className="h2">
+                  Export everything
+                </h2>
+                <p className="muted small">
+                  Every account and transaction as CSV, in a zip. Only what you can see.
+                </p>
+              </div>
+              <ButtonLink href="/api/export" download prefetch={false} icon="download">
+                Export CSV
+              </ButtonLink>
+            </div>
+          </Card>
+          {owner && (
+            <Card
+              as="section"
+              id="danger"
+              aria-labelledby="danger-title"
+              className={cx(styles.card, styles.padded, styles.dangerCard, styles.wideOnly)}
+            >
+              <h2 id="danger-title" className={cx("h2", styles.dangerZone)}>
+                <Icon name="alert" size="sm" />
+                Danger zone
+              </h2>
+              <DeleteHousehold
+                householdName={shell.householdName}
+                liveSync={shell.live.connections > 0}
+              />
+            </Card>
+          )}
         </div>
       </div>
     </>

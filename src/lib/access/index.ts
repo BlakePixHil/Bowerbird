@@ -160,3 +160,15 @@ export {
   type AccountChanged,
   type OwnAccount,
 } from "./settings";
+export {
+  exportData,
+  type ExportAccount,
+  type ExportBalance,
+  type ExportBudget,
+  type ExportCategory,
+  type ExportData,
+  type ExportSplit,
+  type ExportTransaction,
+} from "./export";
+export { sameName } from "./confirm";
+export { deleteHousehold, type HouseholdDeleted } from "./household";

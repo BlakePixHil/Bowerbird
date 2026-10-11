@@ -2,9 +2,19 @@
  * Who may open a path before signing in. Everything is private except the sign-in and setup
  * pages, the email link landing page (under /sign-in), the cron route (it checks its own secret),
  * the health check (it says nothing but ok), the developer pages (never on the live app), and the
- * service worker and its offline page (the same for everyone, with nothing of anyone's in them).
+ * service worker, its offline page and the goodbye page after deleting a household (the same for
+ * everyone, with nothing of anyone's in them).
  */
-const PUBLIC = ["/sign-in", "/setup", "/api/cron", "/api/health", "/dev", "/serwist", "/~offline"];
+const PUBLIC = [
+  "/sign-in",
+  "/setup",
+  "/goodbye",
+  "/api/cron",
+  "/api/health",
+  "/dev",
+  "/serwist",
+  "/~offline",
+];
 
 export type Access = "public" | "page" | "api";
 

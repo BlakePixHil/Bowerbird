@@ -2,11 +2,16 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { signInWords } from "@/lib/auth/device";
 import { AccountsList, type AccountItem } from "./AccountsList";
+import { DeleteHousehold } from "./DeleteHousehold";
 import { Passkeys } from "./Passkeys";
 import { accountLine, categoriesLine, importLine, roleLine } from "./words";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }) }));
-vi.mock("./actions", () => ({ saveAccount: vi.fn(), forgetPasskey: vi.fn() }));
+vi.mock("./actions", () => ({
+  saveAccount: vi.fn(),
+  forgetPasskey: vi.fn(),
+  deleteEverything: vi.fn(),
+}));
 vi.mock("@/lib/auth/actions", () => ({
   finishAddPasskey: vi.fn(),
   signOut: vi.fn(),
@@ -118,5 +123,31 @@ describe("Passkeys", () => {
     const html = renderToStaticMarkup(<Passkeys keys={keys.slice(0, 1)} />);
     expect(html).not.toContain("Remove the passkey");
     expect(html).toContain("This is your only passkey");
+  });
+});
+
+describe("DeleteHousehold", () => {
+  it("starts as a button, with a reminder to export first", () => {
+    const html = renderToStaticMarkup(<DeleteHousehold householdName="Home" liveSync={false} />);
+    expect(html).toContain("Erases all of its data for good.");
+    expect(html).toMatch(/<a[^>]*download=""[^>]*href="\/api\/export"/);
+    expect(html).toContain(">Delete the household</button>");
+    expect(html).not.toContain("Type Home to confirm");
+  });
+
+  it("says what goes and waits for the household's name", () => {
+    const html = renderToStaticMarkup(<DeleteHousehold householdName="Home" liveSync open />);
+    expect(html).toContain("Type Home to confirm");
+    expect(html).toContain("still has your banks connected afterwards");
+    expect(html).toContain("There&#x27;s no undo.");
+    expect(html).toMatch(/<button[^>]*type="submit"[^>]*disabled/);
+    expect(html).toMatch(/<a[^>]*href="\/accounts"[^>]*>Keep it/);
+  });
+
+  it("leaves out the live sync step when there isn't any", () => {
+    const html = renderToStaticMarkup(
+      <DeleteHousehold householdName="Home" liveSync={false} open />,
+    );
+    expect(html).not.toContain("still has your banks connected");
   });
 });
