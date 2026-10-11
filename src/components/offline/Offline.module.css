@@ -1,0 +1,64 @@
+/* The quiet offline banner at the top of every signed-in page (BUD-40). */
+
+.live {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.live:empty {
+  display: none;
+}
+
+.banner,
+.refused {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+
+.banner {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+}
+
+.banner svg {
+  flex: none;
+  color: var(--text-3);
+}
+
+.waiting {
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.refused {
+  justify-content: space-between;
+  background: var(--crit-tint);
+  color: var(--crit-ink);
+}
+
+.dismiss {
+  flex: none;
+  padding: 4px 8px;
+  margin: -4px -6px -4px 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dismiss:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}

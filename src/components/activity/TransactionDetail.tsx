@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { WAITING_WORDS } from "@/components/offline/words";
 import { colourVar, cx, Icon, Pill, Tag, Tile, Well, type IconName } from "@/components/ui";
 import type { ActivityRow, CategoryChoice, TagRef } from "@/lib/access";
 import { formatShortDate } from "@/lib/money";
@@ -45,8 +46,8 @@ export function TransactionDetail({
   categories: readonly CategoryChoice[];
   tagChoices: readonly TagRef[];
   onChanged: (change: RowsChanged) => void;
-  /** One row's own details changed: its parts, tags or note. */
-  onRowChanged: (row: ActivityRow) => void;
+  /** One row's own details changed: its parts, tags or note. `waiting` when made with no signal. */
+  onRowChanged: (row: ActivityRow, waiting: boolean) => void;
   /** Told when the split editor opens or closes, so the phone sheet can say so. */
   onSplitting?: (splitting: boolean) => void;
 }) {
@@ -61,11 +62,16 @@ export function TransactionDetail({
   };
 
   function splitDone(done: SplitDone) {
-    onRowChanged({ ...row, parts: done.split ? done.parts : [], category: done.category });
+    onRowChanged(
+      { ...row, parts: done.split ? done.parts : [], category: done.category },
+      done.waiting,
+    );
     setSaid(
-      done.split
-        ? "Split saved. Each part now counts in its own budget and report."
-        : "Split removed. It counts as one payment again.",
+      done.waiting
+        ? WAITING_WORDS
+        : done.split
+          ? "Split saved. Each part now counts in its own budget and report."
+          : "Split removed. It counts as one payment again.",
     );
     split(false);
   }

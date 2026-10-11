@@ -1,0 +1,36 @@
+/* Shown by the service worker for a page it never kept, with no signal. */
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: clamp(22px, 3vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--raise);
+}
+
+.words :global(.sub) {
+  margin-top: 8px;
+  text-wrap: pretty;
+}
+
+.pages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 760px) {
+  .card {
+    max-width: none;
+    padding: 4px 0 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+}

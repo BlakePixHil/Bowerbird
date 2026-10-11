@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { isWaiting, sendChange } from "@/components/offline/send";
+import { WAITING_WORDS } from "@/components/offline/words";
 import {
   BottomSheet,
   Button,
@@ -67,7 +69,7 @@ function RuleWords({ rule }: { rule: RuleRow }) {
   );
 }
 
-function OnSwitch({ rule, onSaved }: { rule: RuleRow; onSaved: () => void }) {
+function OnSwitch({ rule, onSaved }: { rule: RuleRow; onSaved: (waiting: boolean) => void }) {
   const [on, setOn] = useState(rule.enabled);
   const [busy, start] = useTransition();
   return (
@@ -79,13 +81,13 @@ function OnSwitch({ rule, onSaved }: { rule: RuleRow; onSaved: () => void }) {
         const next = event.target.checked;
         setOn(next);
         start(async () => {
-          const result = await updateRule({
-            id: crypto.randomUUID(),
-            ruleId: rule.id,
-            enabled: next,
-          }).catch(() => null);
+          const result = await sendChange(
+            "rule",
+            { id: crypto.randomUUID(), ruleId: rule.id, enabled: next },
+            updateRule,
+          );
           if (!result?.ok) setOn(!next);
-          else onSaved();
+          else onSaved(isWaiting(result));
         });
       }}
     >
@@ -110,7 +112,8 @@ function RuleEditor({
   /** Tags the person has used, offered as they type. */
   tags: readonly TagRef[];
   wide: boolean;
-  onDone: (message: string, deleted?: boolean) => void;
+  /** `waiting` when the change was made with no signal and waits on this device. */
+  onDone: (message: string, deleted?: boolean, waiting?: boolean) => void;
 }) {
   const [categoryId, setCategoryId] = useState(rule.category.id);
   const [tag, setTag] = useState(rule.tag?.name ?? "");
@@ -125,13 +128,18 @@ function RuleEditor({
   function save() {
     setError(null);
     start(async () => {
-      const result = await updateRule({
-        id: crypto.randomUUID(),
-        ruleId: rule.id,
-        categoryId,
-        ...(tagChanged ? { tag: tidyTag } : {}),
-      }).catch(() => null);
+      const result = await sendChange(
+        "rule",
+        {
+          id: crypto.randomUUID(),
+          ruleId: rule.id,
+          categoryId,
+          ...(tagChanged ? { tag: tidyTag } : {}),
+        },
+        updateRule,
+      );
       if (!result?.ok) setError(result?.error ?? failed);
+      else if (isWaiting(result)) onDone(WAITING_WORDS, false, true);
       else
         onDone(
           `New ${ruleMatch(rule)} transactions now go in ${target?.name ?? "it"}${
@@ -144,10 +152,13 @@ function RuleEditor({
   function remove() {
     setError(null);
     start(async () => {
-      const result = await removeRule({ id: crypto.randomUUID(), ruleId: rule.id }).catch(
-        () => null,
+      const result = await sendChange(
+        "rule-removed",
+        { id: crypto.randomUUID(), ruleId: rule.id },
+        removeRule,
       );
       if (!result?.ok) setError(result?.error ?? failed);
+      else if (isWaiting(result)) onDone(WAITING_WORDS, true, true);
       else onDone(`The ${ruleMatch(rule)} rule is deleted.`, true);
     });
   }
@@ -287,11 +298,12 @@ export function RulesTab({
     if (!wide) setSheet(true);
   }
 
-  function done(message: string, deleted = false) {
+  function done(message: string, deleted = false, waiting = false) {
     setNotice(message);
     setSheet(false);
     if (deleted) change({ rule: null });
-    router.refresh();
+    // With no signal the server can't be asked. The page refreshes once the change is sent.
+    if (!waiting) router.refresh();
   }
 
   const empty =
@@ -386,7 +398,7 @@ export function RulesTab({
                 <OnSwitch
                   key={`${rule.id}|${rule.enabled}`}
                   rule={rule}
-                  onSaved={() => router.refresh()}
+                  onSaved={(waiting) => !waiting && router.refresh()}
                 />
               </div>
             ))}
@@ -489,7 +501,7 @@ export function RulesTab({
                         <OnSwitch
                           key={`${rule.id}|${rule.enabled}`}
                           rule={rule}
-                          onSaved={() => router.refresh()}
+                          onSaved={(waiting) => !waiting && router.refresh()}
                         />
                       </td>
                     </tr>

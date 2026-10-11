@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { isWaiting, sendChange } from "@/components/offline/send";
 import { Button, Chip, colourVar, cx, Icon, IconButton, Pill, Well } from "@/components/ui";
 import { APP_NAME } from "@/config/app";
 import type { ActivityCategory, ActivityRow, CategoryChoice, SplitPart } from "@/lib/access";
@@ -9,6 +10,7 @@ import { formatMoney, parseMoney } from "@/lib/money";
 import { categoryColour } from "@/lib/sorting/colour";
 import styles from "./Activity.module.css";
 import { saveSplit, unsplit } from "./actions";
+import { asCategory } from "./Categorise";
 import {
   backLabel,
   countsLine,
@@ -23,9 +25,11 @@ import {
 
 const failed = "Couldn't save that. Check your connection and try again.";
 
-export type SplitDone =
+/** The split as saved, or as it will be once a change made with no signal goes through. */
+export type SplitDone = (
   | { split: true; parts: SplitPart[]; category: ActivityCategory }
-  | { split: false; category: ActivityCategory | null };
+  | { split: false; category: ActivityCategory | null }
+) & { waiting: boolean };
 
 /**
  * Split one transaction across categories, from the "Split a transaction" boards: a list of parts,
@@ -70,31 +74,52 @@ export function SplitEditor({
   function save() {
     if (state.why || busy) return;
     setError(null);
+    // As the server will save it: biggest first, signed like the row, in its biggest part's category.
+    const sign = row.amountCents < 0 ? -1 : 1;
+    const shown: SplitPart[] = parts
+      .map((part) => ({
+        category: asCategory(byId.get(part.categoryId!)!),
+        cents: sign * part.cents,
+      }))
+      .sort((a, b) => Math.abs(b.cents) - Math.abs(a.cents));
     start(async () => {
-      const result = await saveSplit({
-        id: crypto.randomUUID(),
-        transactionId: row.id,
-        parts: parts.map((part) => ({ categoryId: part.categoryId!, cents: part.cents })),
-      }).catch(() => null);
-      if (!result?.ok) {
-        setError(result?.error ?? failed);
-        return;
-      }
-      onDone({ split: true, parts: result.parts, category: result.category });
-    });
-  }
-
-  function remove() {
-    setError(null);
-    start(async () => {
-      const result = await unsplit({ id: crypto.randomUUID(), transactionId: row.id }).catch(
-        () => null,
+      const result = await sendChange(
+        "split",
+        {
+          id: crypto.randomUUID(),
+          transactionId: row.id,
+          parts: parts.map((part) => ({ categoryId: part.categoryId!, cents: part.cents })),
+        },
+        saveSplit,
+        { id: row.id, patch: { parts: shown, category: shown[0].category } },
       );
       if (!result?.ok) {
         setError(result?.error ?? failed);
         return;
       }
-      onDone({ split: false, category: result.category });
+      if (isWaiting(result))
+        onDone({ split: true, parts: shown, category: shown[0].category, waiting: true });
+      else onDone({ split: true, parts: result.parts, category: result.category, waiting: false });
+    });
+  }
+
+  function remove() {
+    setError(null);
+    // The row keeps its biggest part's category.
+    const kept = row.parts[0]?.category ?? row.category;
+    start(async () => {
+      const result = await sendChange(
+        "unsplit",
+        { id: crypto.randomUUID(), transactionId: row.id },
+        unsplit,
+        { id: row.id, patch: { parts: [], category: kept } },
+      );
+      if (!result?.ok) {
+        setError(result?.error ?? failed);
+        return;
+      }
+      if (isWaiting(result)) onDone({ split: false, category: kept, waiting: true });
+      else onDone({ split: false, category: result.category, waiting: false });
     });
   }
 

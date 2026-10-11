@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { isWaiting, sendChange } from "@/components/offline/send";
+import { WAITING_WORDS } from "@/components/offline/words";
 import { Button, Chip, cx, Icon, Pill, StackedBar, type IconName } from "@/components/ui";
 import type { ActivityRow, TagRef } from "@/lib/access";
 import { NOTE_MAX, TAG_NAME_MAX } from "@/lib/access/limits";
@@ -10,6 +12,10 @@ import { changeNote, changeTags } from "./actions";
 import { partsLine } from "./look";
 
 const failed = "Couldn't save that. Check your connection and try again.";
+
+/** A tag added with no signal has no id from the server yet, so it can't come off until it does. */
+const WAITING_TAG = "waiting:";
+const isWaitingTag = (tag: TagRef) => tag.id.startsWith(WAITING_TAG);
 
 /** How many tags you've used show as quick picks. */
 const OFFERED = 8;
@@ -77,9 +83,11 @@ export function MoreDetails({
   /** Tags the person has used, most used first. */
   tagChoices: readonly TagRef[];
   onSplit: () => void;
-  onChanged: (row: ActivityRow) => void;
+  /** The row with its new tags or note, and whether the change waits for a signal. */
+  onChanged: (row: ActivityRow, waiting: boolean) => void;
 }) {
   const [open, setOpen] = useState<Open>(null);
+  const [noteWaits, setNoteWaits] = useState(false);
   const toggle = (which: Exclude<Open, null>) => setOpen((now) => (now === which ? null : which));
   const why = cantSplit(row);
   const split = row.parts.length > 0;
@@ -120,7 +128,7 @@ export function MoreDetails({
         <TagsEditor
           row={row}
           choices={tagChoices}
-          onSaved={(tags) => onChanged({ ...row, tags })}
+          onSaved={(tags, waiting) => onChanged({ ...row, tags }, waiting)}
         />
       )}
       <DetailRow
@@ -134,12 +142,18 @@ export function MoreDetails({
       {open === "note" && (
         <NoteEditor
           row={row}
-          onSaved={(note) => {
-            onChanged({ ...row, note });
+          onSaved={(note, waiting) => {
+            onChanged({ ...row, note }, waiting);
             setOpen(null);
+            setNoteWaits(waiting);
           }}
           onCancel={() => setOpen(null)}
         />
+      )}
+      {noteWaits && open !== "note" && (
+        <Pill tone="good" className={styles.saidPill}>
+          <span role="status">{WAITING_WORDS}</span>
+        </Pill>
       )}
     </div>
   );
@@ -153,9 +167,10 @@ function TagsEditor({
 }: {
   row: ActivityRow;
   choices: readonly TagRef[];
-  onSaved: (tags: TagRef[]) => void;
+  onSaved: (tags: TagRef[], waiting: boolean) => void;
 }) {
   const [text, setText] = useState("");
+  const [said, setSaid] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
   const have = new Set(row.tags.map((tag) => tag.name.toLowerCase()));
@@ -165,20 +180,36 @@ function TagsEditor({
     .filter((tag) => !words || tag.name.toLowerCase().includes(words))
     .slice(0, OFFERED);
 
+  /** The row's tags once this change is made, for showing it while it waits for a signal. */
+  function after(change: { add: string } | { remove: string }, id: string): TagRef[] {
+    if ("remove" in change) return row.tags.filter((tag) => tag.id !== change.remove);
+    const name = change.add.replace(/\s+/g, " ").trim();
+    if (row.tags.some((tag) => tag.name.toLowerCase() === name.toLowerCase())) return row.tags;
+    const used = choices.find((tag) => tag.name.toLowerCase() === name.toLowerCase());
+    return [...row.tags, used ?? { id: `${WAITING_TAG}${id}`, name }];
+  }
+
   function send(change: { add: string } | { remove: string }) {
     setError(null);
+    setSaid(null);
+    const id = crypto.randomUUID();
+    const tags = after(change, id);
     start(async () => {
-      const result = await changeTags({
-        id: crypto.randomUUID(),
-        transactionId: row.id,
-        ...change,
-      }).catch(() => null);
+      const result = await sendChange(
+        "tags",
+        { id, transactionId: row.id, ...change },
+        changeTags,
+        { id: row.id, patch: { tags } },
+      );
       if (!result?.ok) {
         setError(result?.error ?? failed);
         return;
       }
       if ("add" in change) setText("");
-      onSaved(result.tags);
+      if (isWaiting(result)) {
+        setSaid(WAITING_WORDS);
+        onSaved(tags, true);
+      } else onSaved(result.tags, false);
     });
   }
 
@@ -194,7 +225,7 @@ function TagsEditor({
                 type="button"
                 className={styles.tagOff}
                 aria-label={`Take off ${tag.name}`}
-                disabled={busy}
+                disabled={busy || isWaitingTag(tag)}
                 onClick={() => send({ remove: tag.id })}
               >
                 <Icon name="close" size="sm" />
@@ -234,6 +265,11 @@ function TagsEditor({
           ))}
         </div>
       )}
+      {said && (
+        <Pill tone="good" className={styles.saidPill}>
+          <span role="status">{said}</span>
+        </Pill>
+      )}
       {error && (
         <Pill tone="crit" className={styles.saidPill}>
           <span role="alert">{error}</span>
@@ -250,7 +286,7 @@ function NoteEditor({
   onCancel,
 }: {
   row: ActivityRow;
-  onSaved: (note: string | null) => void;
+  onSaved: (note: string | null, waiting: boolean) => void;
   onCancel: () => void;
 }) {
   const [text, setText] = useState(row.note ?? "");
@@ -259,17 +295,20 @@ function NoteEditor({
 
   function save(note: string) {
     setError(null);
+    const tidy = note.replace(/\s+/g, " ").trim() || null;
     start(async () => {
-      const result = await changeNote({
-        id: crypto.randomUUID(),
-        transactionId: row.id,
-        note,
-      }).catch(() => null);
+      const result = await sendChange(
+        "note",
+        { id: crypto.randomUUID(), transactionId: row.id, note },
+        changeNote,
+        { id: row.id, patch: { note: tidy } },
+      );
       if (!result?.ok) {
         setError(result?.error ?? failed);
         return;
       }
-      onSaved(result.note);
+      if (isWaiting(result)) onSaved(tidy, true);
+      else onSaved(result.note, false);
     });
   }
 

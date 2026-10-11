@@ -583,3 +583,22 @@ export const savedViews = pgTable(
   },
   (t) => [uniqueIndex("saved_views_member_name_key").on(t.memberId, sql`lower(${t.name})`)],
 );
+
+/**
+ * Changes already saved, by the id the device made for each one (BUD-40). A change sent again,
+ * such as one from the offline queue whose answer was lost, finds its id here and is skipped.
+ * Rows go after 60 days (CHANGE_MEMORY_DAYS), long after any queue has emptied.
+ */
+export const appliedChanges = pgTable(
+  "applied_changes",
+  {
+    id: uuid().primaryKey(),
+    memberId: uuid()
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" }),
+    /** What kind of change it was, such as "category", to make sense of the table. */
+    kind: text().notNull(),
+    appliedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("applied_changes_applied_at_idx").on(t.appliedAt)],
+);

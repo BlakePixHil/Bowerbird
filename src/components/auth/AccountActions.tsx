@@ -2,6 +2,8 @@
 
 import { startRegistration } from "@simplewebauthn/browser";
 import { useState, useTransition } from "react";
+import { forgetThisDevice } from "@/components/offline/forget";
+import { useOnline } from "@/components/offline/online";
 import { Button, type ButtonLook } from "@/components/ui";
 import { finishAddPasskey, signOut, startAddPasskey } from "@/lib/auth/actions";
 import styles from "./Auth.module.css";
@@ -49,13 +51,19 @@ export function AddPasskeyButton({
   );
 }
 
-/** Sign out on this device. Works without JavaScript too. */
+/**
+ * Sign out on this device. Works without JavaScript too. It forgets the pages and changes this
+ * device kept for reading offline as it goes, and the sign-in page makes sure. With no signal it
+ * waits, since the server has to end the session.
+ */
 export function SignOutButton() {
+  const online = useOnline();
   return (
-    <form action={signOut}>
-      <Button type="submit" variant="ghost">
+    <form action={signOut} onSubmit={() => void forgetThisDevice()}>
+      <Button type="submit" variant="ghost" disabled={!online}>
         Sign out
       </Button>
+      {!online && <p className={styles.note}>Signing out needs a connection.</p>}
     </form>
   );
 }

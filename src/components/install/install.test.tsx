@@ -114,10 +114,10 @@ describe("Install the app", () => {
     expect(guide(UA.ipad)).toContain("Click File");
   });
 
-  it("leaves notifications and reading offline out until they're built", () => {
+  it("says it reads offline, and leaves notifications out until they're built", () => {
     for (const html of [guide(UA.iphoneSafari), guide(UA.androidChrome), guide(UA.macChrome)]) {
+      expect(html).toContain("Reads offline");
       expect(html).not.toContain("otifications");
-      expect(html).not.toContain("offline");
     }
   });
 

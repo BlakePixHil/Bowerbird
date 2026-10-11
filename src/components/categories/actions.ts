@@ -2,16 +2,14 @@
 
 import {
   addCategory,
-  changeRule,
   deleteCategory,
-  deleteRule,
   editCategory,
   mergeCategory,
   viewerOf,
   type CategoryChanged,
-  type RuleChanged,
 } from "@/lib/access";
 import { requireMember } from "@/lib/auth";
+import { applyFromAction, type RuleChange, type RuleRemoval } from "@/lib/changes";
 import { getDb } from "@/lib/db";
 import { renameShop, type RenameShop } from "@/lib/sorting/merchants";
 
@@ -21,8 +19,9 @@ const muddled = { ok: false as const, error: "That change didn't make sense. Try
 
 /*
  * Changes on Categories and rules. Each carries its own `id`, made on the device, like the changes
- * on Activity, so the offline queue (project 06) can hold them. Sending one twice is safe, except
- * that adding a category twice is refused the second time by its name.
+ * on Activity. Rule changes go through `applyChange`, which saves each id once, so the offline
+ * queue can hold them too. Sending a category change twice is safe, except that adding a category
+ * twice is refused the second time by its name.
  */
 
 export async function newCategory(change: { id: string; name: string }): Promise<CategoryChanged> {
@@ -64,28 +63,14 @@ export async function removeCategory(change: {
   return deleteCategory(getDb(), viewer, change.categoryId);
 }
 
-export async function updateRule(change: {
-  id: string;
-  ruleId: string;
-  enabled?: boolean;
-  categoryId?: string;
-  /** The tag it adds, by name, or "" for none. */
-  tag?: string;
-}): Promise<RuleChanged> {
-  const viewer = viewerOf(await requireMember());
-  if (!ids(change.id, change.ruleId) || (change.categoryId && !ids(change.categoryId)))
-    return muddled;
-  return changeRule(getDb(), viewer, change.ruleId, {
-    enabled: typeof change.enabled === "boolean" ? change.enabled : undefined,
-    categoryId: change.categoryId,
-    tag: typeof change.tag === "string" ? change.tag.slice(0, 200) : undefined,
-  });
+/** Turns a rule on or off, or changes where it puts things and the tag it adds. */
+export async function updateRule(change: RuleChange) {
+  return applyFromAction(getDb(), viewerOf(await requireMember()), "rule", change);
 }
 
-export async function removeRule(change: { id: string; ruleId: string }): Promise<RuleChanged> {
-  const viewer = viewerOf(await requireMember());
-  if (!ids(change.id, change.ruleId)) return muddled;
-  return deleteRule(getDb(), viewer, change.ruleId);
+/** Deletes a rule. What it sorted stays sorted. */
+export async function removeRule(change: RuleRemoval) {
+  return applyFromAction(getDb(), viewerOf(await requireMember()), "rule-removed", change);
 }
 
 export async function nameShop(change: {

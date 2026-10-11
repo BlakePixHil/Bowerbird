@@ -24,6 +24,7 @@ import {
   useWide,
   WIDE,
 } from "@/components/ui";
+import { waitingRowPatches } from "@/components/offline/send";
 import type { ActivityPage, ActivityRow, CategoryChoice, TagRef } from "@/lib/access";
 import type { Find } from "@/lib/access/find";
 import { formatShortDate, type PlainDate } from "@/lib/money";
@@ -39,6 +40,7 @@ import {
   rowIcon,
   rowLabel,
   whoseLook,
+  withPatches,
   type People,
 } from "./look";
 import { activityHref, type Show } from "./show";
@@ -142,7 +144,7 @@ export function ActivityList({
   // A change shows on every loaded row it moved, and on every row of that category, since its
   // colour may be new. The page then refreshes for the counts and totals.
   const changeRows = useCallback(
-    ({ ids, category, paired }: RowsChanged) => {
+    ({ ids, category, paired, waiting }: RowsChanged) => {
       const moved = new Set(ids);
       const look = (row: ActivityRow): ActivityRow => {
         if (moved.has(row.id)) {
@@ -164,14 +166,15 @@ export function ActivityList({
           return rows.some((row, i) => row !== day.rows[i]) ? { ...day, rows } : day;
         }),
       );
-      router.refresh();
+      // With no signal the server can't be asked. The page refreshes once the change is sent.
+      if (!waiting) router.refresh();
     },
     [router],
   );
 
   // One row's own details changed: its parts, tags or note.
   const changeRow = useCallback(
-    (next: ActivityRow) => {
+    (next: ActivityRow, waiting: boolean) => {
       setDays((shown) =>
         shown.map((day) =>
           day.date === next.date
@@ -179,10 +182,26 @@ export function ActivityList({
             : day,
         ),
       );
-      router.refresh();
+      if (!waiting) router.refresh();
     },
     [router],
   );
+
+  // Changes made with no signal show on their rows until they're sent, even on a page kept for
+  // reading offline that was drawn before they were made.
+  // The open transaction starts again with them too.
+  const [shownWaiting, setShownWaiting] = useState(false);
+  useEffect(() => {
+    let gone = false;
+    void waitingRowPatches().then((patches) => {
+      if (gone || patches.length === 0) return;
+      setDays((shown) => withPatches<ActivityRow>(shown, patches));
+      setShownWaiting(true);
+    });
+    return () => {
+      gone = true;
+    };
+  }, []);
 
   const pick = useCallback((id: string) => {
     setPicked(id);
@@ -283,7 +302,7 @@ export function ActivityList({
               </div>
             </div>
             <TransactionDetail
-              key={current.id}
+              key={`${current.id}|${shownWaiting}`}
               row={current}
               people={people}
               categories={categories}
@@ -308,7 +327,7 @@ export function ActivityList({
       >
         {current && !wide && (
           <TransactionDetail
-            key={`${current.id}|${sheetOpen}`}
+            key={`${current.id}|${sheetOpen}|${shownWaiting}`}
             row={current}
             people={people}
             categories={categories}

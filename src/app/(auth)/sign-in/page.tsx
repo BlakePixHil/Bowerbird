@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { RunningTotalChart } from "@/components/charts";
 import { DemoSignIn } from "@/components/auth/DemoSignIn";
 import { SignInFlow } from "@/components/auth/SignInFlow";
+import { ForgetThisDevice } from "@/components/offline/ForgetThisDevice";
 import { Card, Icon, Logo, LogoMark, Well, Wordmark } from "@/components/ui";
 import { APP_NAME } from "@/config/app";
 import { currentMember, safeNext } from "@/lib/auth";
@@ -86,6 +87,7 @@ export default async function SignInPage({
           <RunningTotalChart {...preview.chart} />
         </Card>
       </section>
+      <ForgetThisDevice />
     </div>
   );
 }

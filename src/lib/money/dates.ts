@@ -102,3 +102,16 @@ export function formatShortDate(
   const text = options.weekday === false ? dayMonth : `${SHORT_DAYS[dayOfWeek(date)]} ${dayMonth}`;
   return options.year ? `${text} ${p.year}` : text;
 }
+
+/** "9:12am", the time of day on a clock in a time zone, such as the household's. */
+export function formatClock(at: Date, timeZone: string): string {
+  const bits = new Intl.DateTimeFormat("en-AU", {
+    timeZone,
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).formatToParts(at);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    bits.find((bit) => bit.type === type)?.value ?? "";
+  return `${part("hour")}:${part("minute")}${part("dayPeriod").toLowerCase()}`;
+}

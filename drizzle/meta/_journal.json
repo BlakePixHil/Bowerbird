@@ -78,6 +78,13 @@
       "when": 1791703501087,
       "tag": "0010_install",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791705300025,
+      "tag": "0011_applied_changes",
+      "breakpoints": true
     }
   ]
 }

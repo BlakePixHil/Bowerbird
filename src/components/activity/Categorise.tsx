@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { Button, Checkbox, cx, Icon, Pill, type IconName } from "@/components/ui";
 import { ICONS } from "@/components/ui/icons";
+import { isWaiting, sendChange } from "@/components/offline/send";
+import { WAITING_WORDS } from "@/components/offline/words";
 import type { ActivityCategory, ActivityRow, CategoryChoice } from "@/lib/access";
 import styles from "./Activity.module.css";
 import { changeCategory, markTransfer, sortShop } from "./actions";
@@ -38,7 +40,24 @@ export type RowsChanged = {
   category: ActivityCategory | null;
   /** Set when the change paired rows as a transfer, or took them out of one. */
   paired?: boolean;
+  /** Made with no signal: it waits on this device, so the page can't refresh from the server. */
+  waiting?: boolean;
 };
+
+/** A category from the grid as a row carries it. */
+export const asCategory = ({
+  id,
+  name,
+  kind,
+  icon,
+  colourSlot,
+}: CategoryChoice): ActivityCategory => ({
+  id,
+  name,
+  kind,
+  icon,
+  colourSlot,
+});
 
 /**
  * The category grid in the transaction sheet. Picking one saves it at once, then asks whether to
@@ -73,14 +92,29 @@ export function Categorise({
     setSaid(null);
     setError(null);
     start(async () => {
-      const result = await changeCategory({
-        id: crypto.randomUUID(),
-        transactionId: row.id,
-        categoryId: category.id,
-      }).catch(() => null);
+      const picked = asCategory(category);
+      const result = await sendChange(
+        "category",
+        { id: crypto.randomUUID(), transactionId: row.id, categoryId: category.id },
+        changeCategory,
+        {
+          id: row.id,
+          patch: {
+            category: picked,
+            parts: [],
+            notCounted: row.paired || picked.kind === "transfer",
+          },
+        },
+      );
       if (!result?.ok) {
         setChosen(before);
         setError(result?.error ?? "Couldn't save that. Check your connection and try again.");
+        return;
+      }
+      // With no signal there's no shop to ask about yet. That waits for the next change.
+      if (isWaiting(result)) {
+        onChanged({ ids: [row.id], category: picked, waiting: true });
+        setSaid(WAITING_WORDS);
         return;
       }
       onChanged({ ids: [row.id], category: result.category });
@@ -98,14 +132,23 @@ export function Categorise({
     const earlier = past && question.earlier > 0;
     setError(null);
     start(async () => {
-      const result = await sortShop({
-        id: crypto.randomUUID(),
-        merchantId: question.shop.id,
-        categoryId: question.category.id,
-        earlier,
-      }).catch(() => null);
+      const result = await sendChange(
+        "shop-rule",
+        {
+          id: crypto.randomUUID(),
+          merchantId: question.shop.id,
+          categoryId: question.category.id,
+          earlier,
+        },
+        sortShop,
+      );
       if (!result?.ok) {
         setError(result?.error ?? "Couldn't save the rule. Check your connection and try again.");
+        return;
+      }
+      if (isWaiting(result)) {
+        setAsk(null);
+        setSaid(WAITING_WORDS);
         return;
       }
       onChanged({ ids: result.changed, category: result.category });
@@ -122,14 +165,24 @@ export function Categorise({
     setAsk(null);
     setSaid(null);
     setError(null);
+    // With no signal, it shows in Transfers, or with no category, until the server pairs it up.
+    const transfers = categories.find((c) => c.kind === "transfer");
+    const shown = on ? (transfers ? asCategory(transfers) : row.category) : null;
     start(async () => {
-      const result = await markTransfer({
-        id: crypto.randomUUID(),
-        transactionId: row.id,
-        transfer: on,
-      }).catch(() => null);
+      const result = await sendChange(
+        "transfer",
+        { id: crypto.randomUUID(), transactionId: row.id, transfer: on },
+        markTransfer,
+        { id: row.id, patch: { category: shown, parts: [], notCounted: on, paired: false } },
+      );
       if (!result?.ok) {
         setError(result?.error ?? "Couldn't save that. Check your connection and try again.");
+        return;
+      }
+      if (isWaiting(result)) {
+        setChosen(shown?.id ?? null);
+        onChanged({ ids: [row.id], category: shown, paired: false, waiting: true });
+        setSaid(WAITING_WORDS);
         return;
       }
       setChosen(result.category?.id ?? null);

@@ -24,7 +24,7 @@ export default async function InstallPage() {
         intro={
           phone
             ? "About 30 seconds and no app store. After that it opens like any other app."
-            : "Put it on this computer and on your phone. No app store, and it's free. It opens in its own window, like any other app."
+            : "Put it on this computer and on your phone. No app store, and it's free. It opens in its own window, and you can read the last sync offline."
         }
         back={{ href: "/accounts", label: "accounts and sharing" }}
         large

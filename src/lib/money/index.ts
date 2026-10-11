@@ -9,6 +9,7 @@ export {
   dayOfWeek,
   daysBetween,
   daysInMonth,
+  formatClock,
   formatShortDate,
   isPlainDate,
   parts,

@@ -34,9 +34,6 @@ import {
 } from "./store";
 import styles from "./Install.module.css";
 
-/** Reads offline turns on with BUD-40 · Work offline from the last sync. */
-const OFFLINE = false;
-
 type Line = { icon: IconName; title: string; text: string; when?: boolean };
 
 const shown = (lines: Line[]) => lines.filter((line) => line.when !== false);
@@ -249,7 +246,6 @@ function PhoneGuide({ device, browser }: { device: Device; browser: Browser }) {
       icon: "offline",
       title: "Reads offline",
       text: "Everything from the last sync, even with no signal.",
-      when: OFFLINE,
     },
   ]);
   return (
@@ -420,7 +416,6 @@ function ThisComputer({ browser, running }: { browser: Browser; running: boolean
       icon: "offline",
       title: "Reads offline",
       text: "Everything from the last sync, with no internet.",
-      when: OFFLINE,
     },
   ]);
 

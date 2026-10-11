@@ -15,8 +15,10 @@ export type Shell = {
   timeZone: string;
   now: Date;
   today: PlainDate;
-  member: { name: string; initials: string; owner: Owner };
+  member: { id: string; name: string; initials: string; owner: Owner };
   sync: SyncState;
+  /** When the last sync finished, even while another runs. Offline, the page shows this. */
+  lastSyncedAt: Date | null;
   /** The last sync started over an hour ago, so the page starts one once it's open. */
   syncDue: boolean;
   /** The household's live sync connections, and with just one, the banks behind it when known. */
@@ -54,6 +56,7 @@ export const getShell = cache(async (): Promise<Shell> => {
     now,
     today: todayIn(timeZone, now),
     member: {
+      id: me.member.id,
       name: me.member.displayName,
       initials: initialsOf(me.member.displayName),
       owner: "you",
@@ -64,6 +67,7 @@ export const getShell = cache(async (): Promise<Shell> => {
         : live.lastSyncedAt
           ? { kind: "synced", at: live.lastSyncedAt }
           : { kind: "never" },
+    lastSyncedAt: live.lastSyncedAt,
     syncDue: live.due && !live.running,
     live: { connections: live.connections, banks: live.banks },
     installed: me.member.installedAt !== null,

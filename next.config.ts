@@ -1,3 +1,4 @@
+import { withSerwist } from "@serwist/turbopack";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -8,6 +9,21 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "4.25mb",
     },
   },
+  async headers() {
+    return [
+      {
+        // The service worker (src/app/sw.ts) lives under /serwist but looks after the whole app.
+        // Browsers check for a new one on every visit, so it's never cached.
+        source: "/serwist/:path*",
+        headers: [
+          { key: "Service-Worker-Allowed", value: "/" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
+    ];
+  },
 };
 
-export default nextConfig;
+// Serwist builds the service worker with esbuild, which stays out of the server bundle.
+export default withSerwist(nextConfig);

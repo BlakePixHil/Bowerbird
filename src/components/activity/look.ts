@@ -98,3 +98,22 @@ export function byDay<T extends { date: PlainDate }>(
   }
   return days;
 }
+
+/**
+ * The days with changes still waiting to be sent shown on their rows, in the order they were
+ * made. Days and rows with nothing waiting stay as they were, so they don't draw again.
+ */
+export function withPatches<T extends { id: string }>(
+  days: readonly { date: PlainDate; rows: T[] }[],
+  patches: readonly { id: string; patch: Partial<T> }[],
+): { date: PlainDate; rows: T[] }[] {
+  const waiting = new Map<string, Partial<T>[]>();
+  for (const { id, patch } of patches) waiting.set(id, [...(waiting.get(id) ?? []), patch]);
+  return days.map((day) => {
+    if (!day.rows.some((row) => waiting.has(row.id))) return day;
+    const rows = day.rows.map((row) =>
+      (waiting.get(row.id) ?? []).reduce<T>((now, patch) => ({ ...now, ...patch }), row),
+    );
+    return { ...day, rows };
+  });
+}
