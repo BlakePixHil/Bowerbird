@@ -1,0 +1,420 @@
+/* Home, from the boards "Home" and "First run 4: You are set". Desktop Home is its own ticket, so
+   wider screens show the phone's cards in one column for now. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 640px;
+  min-width: 0;
+}
+
+.card {
+  position: relative;
+  padding: 16px;
+  min-width: 0;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.eyebrow {
+  margin: 0;
+}
+
+.hero {
+  margin: 12px 0 0;
+}
+
+.lead {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  text-wrap: pretty;
+}
+
+.tight {
+  margin-top: 6px;
+}
+
+.note {
+  margin: 12px 0 0;
+  text-wrap: pretty;
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.block {
+  display: block;
+}
+
+.quietIcon {
+  flex: none;
+  color: var(--text-3);
+}
+
+.plainStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Left to spend. */
+.meter {
+  margin-top: 18px;
+}
+
+.meterFoot {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.noEveryday {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.billsRule {
+  margin: 14px 0 4px;
+}
+
+.bills {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.bills:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Spending pace. */
+.chart {
+  margin-top: 16px;
+}
+
+/* A card that opens a page: its heading's link covers the whole card. */
+.linked {
+  cursor: pointer;
+}
+
+.stretched {
+  color: inherit;
+  text-decoration: none;
+}
+
+.stretched::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+}
+
+.stretched:focus-visible {
+  outline: none;
+}
+
+.stretched:focus-visible::after {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .linked:hover {
+    background: var(--surface-2);
+  }
+}
+
+/* Money in, money out. */
+.inOut {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 78px;
+  gap: 12px;
+  align-items: center;
+  margin: 16px 0 14px;
+}
+
+.inOut > .amt,
+.inOut > :nth-child(3n) {
+  text-align: right;
+}
+
+.inOutTrack {
+  display: block;
+  height: 12px;
+}
+
+.inBar,
+.outBar {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 0 4px 4px 0;
+}
+
+.inBar {
+  background: var(--in);
+}
+
+.outBar {
+  background: var(--out);
+}
+
+.leftOver {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Lists: Latest and the setup checklist. */
+.listCard {
+  padding: 4px 16px;
+  min-width: 0;
+}
+
+.listHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+}
+
+.rows,
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.row > :last-child {
+  flex: none;
+}
+
+.pending {
+  opacity: 0.6;
+}
+
+.rowTop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.rowName {
+  font-weight: 500;
+}
+
+.checkPill {
+  height: 22px;
+}
+
+.rowAmount {
+  min-width: 72px;
+  text-align: right;
+}
+
+.row .stretched::after {
+  border-radius: 10px;
+}
+
+/* First week: what's ready. */
+.setupTitle {
+  margin-top: 10px;
+  font-size: 24px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 92px;
+  padding: 12px;
+  min-width: 0;
+}
+
+.tileLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+}
+
+.tileDetail {
+  margin-top: auto;
+}
+
+.tileBar {
+  height: 4px;
+  margin-top: 4px;
+}
+
+/* First week: the checklist. */
+.stepsHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 12px;
+}
+
+.segments {
+  display: grid;
+  gap: 3px;
+  margin-top: 12px;
+}
+
+.segment {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--track);
+}
+
+.segmentOn {
+  background: var(--accent);
+}
+
+.steps {
+  margin-top: 8px;
+}
+
+.step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.steps > .step:first-child {
+  border-top: 0;
+}
+
+.stepDone {
+  min-height: 56px;
+}
+
+.stepTitle {
+  display: block;
+  font-weight: 500;
+  text-wrap: pretty;
+}
+
+.stepDone .stepTitle {
+  font-weight: 400;
+  color: var(--text-2);
+  text-decoration: line-through;
+  text-decoration-color: var(--text-3);
+}
+
+.step .stretched::after {
+  border-radius: 10px;
+}
+
+.check {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--line-2);
+  border-radius: 50%;
+}
+
+.checkOn {
+  border-color: transparent;
+  background: var(--accent-btn);
+  color: #ffffff;
+}
+
+.checkOn svg {
+  stroke-width: 2.4;
+}
+
+/* First week: what fills in later. */
+.fillsIn {
+  padding: 16px;
+  border: 1px dashed var(--line-2);
+  border-radius: 16px;
+}
+
+.fillsTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.fillsTop .note {
+  margin-top: 4px;
+}
+
+.ghostLines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.ghostLines > span {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--line);
+}
+
+.ghostLines > span:first-child {
+  width: 46%;
+  background: var(--line-2);
+}
+
+.ghostLines > span:last-child {
+  width: 72%;
+}

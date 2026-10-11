@@ -133,6 +133,12 @@ export type BudgetProgress = {
   next: Period | null;
   /** Plan vs reality: the period before this one. Null until there's a whole one to look back on. */
   review: Review | null;
+  /**
+   * Everyday spending on each day with any, oldest first, for Home's spending pace: this period up
+   * to today, and the whole period before. Bills on set dates are left out, as with `pace`.
+   * `previous` is null when that period started before the first data.
+   */
+  daily: { current: DaySpend[]; previous: DaySpend[] | null };
 };
 
 const kindOf = (budget: Budget): LineKind =>
@@ -279,6 +285,24 @@ function reviewOf(input: ProgressInput, before: Period | null): Review | null {
   return { period: before, periods: periods.length, rows };
 }
 
+/** Everyday spending on each day of `period` up to `today`, from the budgets that aren't bills. */
+function everydayOn(input: ProgressInput, period: Period, today: PlainDate): DaySpend[] {
+  const known = new Set(input.categories.map((category) => category.id));
+  const end = today < period.end ? today : period.end;
+  const totals = new Map<PlainDate, number>();
+  for (const budget of input.budgets) {
+    if (kindOf(budget) === "set" || !known.has(budget.categoryId)) continue;
+    const days = daysFor(specOf(budget), period);
+    if (!days) continue;
+    for (const day of input.days.get(budget.categoryId) ?? [])
+      if (day.date >= days.start && day.date <= days.end && day.date <= end)
+        totals.set(day.date, (totals.get(day.date) ?? 0) + day.cents);
+  }
+  return [...totals]
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([date, cents]) => ({ date, cents }));
+}
+
 /** Budgets in one period: each one's pace, the totals, and how the period before went. */
 export function progressOf(input: ProgressInput): BudgetProgress {
   const { spec, period, today } = input;
@@ -311,5 +335,12 @@ export function progressOf(input: ProgressInput): BudgetProgress {
     previous,
     next: following && following.start <= today ? following : null,
     review: reviewOf(input, previous),
+    daily: {
+      current: everydayOn(input, period, today),
+      previous:
+        previous && input.firstDay !== null && previous.start >= input.firstDay
+          ? everydayOn(input, previous, previous.end)
+          : null,
+    },
   };
 }

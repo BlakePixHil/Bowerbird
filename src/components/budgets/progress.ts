@@ -33,7 +33,7 @@ const MONTHS = [
 ];
 
 /** A calendar month exactly: the 1st to the day before the next 1st. */
-function isCalendarMonth(period: Period): boolean {
+export function isCalendarMonth(period: Period): boolean {
   const start = parts(period.start);
   return start.day === 1 && addMonths(period.start, 1) > period.end;
 }

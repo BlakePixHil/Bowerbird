@@ -319,6 +319,8 @@ export async function countActivity(
 export type ActivityCounts = {
   /** Every transaction the viewer can see. */
   all: number;
+  /** The day of the first one, or null with none. */
+  since: PlainDate | null;
   /** Rows with no category that aren't transfers. */
   toCheck: number;
   byWhose: Record<Whose, number>;
@@ -328,6 +330,7 @@ export type ActivityCounts = {
 export async function activityCounts(db: Db, viewer: Viewer): Promise<ActivityCounts> {
   const counts: ActivityCounts = {
     all: 0,
+    since: null,
     toCheck: 0,
     byWhose: { mine: 0, partner: 0, shared: 0 },
   };
@@ -337,6 +340,7 @@ export async function activityCounts(db: Db, viewer: Viewer): Promise<ActivityCo
     .select({
       accountId: transactions.accountId,
       rows: count(),
+      since: min(transactions.date),
       toCheck:
         sql<number>`count(*) filter (where ${transactions.categoryId} is null and ${transactions.transferGroupId} is null)`.mapWith(
           Number,
@@ -347,10 +351,43 @@ export async function activityCounts(db: Db, viewer: Viewer): Promise<ActivityCo
     .groupBy(transactions.accountId);
   for (const row of rows) {
     counts.all += row.rows;
+    if (row.since && (counts.since === null || row.since < counts.since)) counts.since = row.since;
     counts.toCheck += row.toCheck;
     counts.byWhose[seen.get(row.accountId)!.whose] += row.rows;
   }
   return counts;
+}
+
+export type InOut = {
+  /** Positive cents that came in, and went out. */
+  in: number;
+  out: number;
+};
+
+/**
+ * Money in and money out over some days in one view, both ends included. Transfers between the
+ * household's own accounts are left out and pending rows count, so it matches Activity filtered to
+ * the same days, money in or out, without transfers.
+ */
+export async function moneyInOut(
+  db: Db,
+  viewer: Viewer,
+  view: View,
+  range: { from: PlainDate; to: PlainDate },
+): Promise<InOut> {
+  const seen = await fullAccounts(db, viewer, view);
+  if (seen.size === 0) return { in: 0, out: 0 };
+  const amount = transactions.amountCents;
+  const [row] = await db
+    .select({
+      in: sql<number>`coalesce(sum(${amount}) filter (where ${amount} > 0), 0)`.mapWith(Number),
+      out: sql<number>`coalesce(sum(-${amount}) filter (where ${amount} < 0), 0)`.mapWith(Number),
+    })
+    .from(transactions)
+    .where(
+      matching(viewer, [...seen.keys()], { from: range.from, to: range.to, transfers: false }),
+    );
+  return { in: row?.in ?? 0, out: row?.out ?? 0 };
 }
 
 export type DailySpending = {

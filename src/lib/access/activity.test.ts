@@ -20,6 +20,7 @@ import {
   activityPage,
   countActivity,
   dailySpending,
+  moneyInOut,
   type ActivityFilters,
   type ActivityRow,
   type View,
@@ -318,8 +319,27 @@ describe("activity counts", () => {
     expect(counts.all).toBe(all);
     expect(counts.byWhose).toEqual({ mine: all - 6, shared: 5, partner: 1 });
     expect(counts.toCheck).toBe((await walk("household", { toCheck: true })).flat().length);
+    expect(counts.since).toBe(addDays(TODAY, -122));
+    expect((await activityCounts(db, zed)).since).not.toBeNull();
     expect(await countActivity(db, olive, "household", { search: "woolworths" })).toBe(1);
     expect(await countActivity(db, olive, "shared")).toBe(5);
+  });
+});
+
+describe("moneyInOut", () => {
+  it("adds up money in and out without transfers, matching the list for the same days", async () => {
+    const from = addDays(TODAY, -30);
+    const totals = await moneyInOut(db, olive, "household", { from, to: TODAY });
+    const rows = (await walk("household", { from, to: TODAY, transfers: false })).flat();
+    expect(rows.every((r) => !r.notCounted)).toBe(true);
+    expect(totals).toEqual({
+      in: sumCents(rows.filter((r) => r.amountCents > 0).map((r) => r.amountCents)),
+      out: sumCents(rows.map(spentBy)),
+    });
+    expect(totals.in).toBeGreaterThan(0);
+    expect(totals.out).toBeGreaterThan(0);
+    // Pat's private account and the other household stay out.
+    expect(await moneyInOut(db, zed, "household", { from, to: TODAY })).not.toEqual(totals);
   });
 });
 

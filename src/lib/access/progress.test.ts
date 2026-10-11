@@ -156,6 +156,26 @@ describe("one period of budgets", () => {
     expect(progress.next).toBeNull();
   });
 
+  it("gives everyday spending day by day, this period and the one before", () => {
+    expect(progress.daily.current).toEqual(
+      on(["2026-10-02", 5_000], ["2026-10-03", 21_400], ["2026-10-05", 22_600]),
+    );
+    const total = progress.daily.current.reduce((all, day) => all + day.cents, 0);
+    expect(total).toBe(progress.everyday.spent);
+    // Bills, rent and categories without a budget stay out.
+    expect(progress.daily.previous).toEqual(
+      on(
+        ["2026-09-03", 22_000],
+        ["2026-09-10", 22_000],
+        ["2026-09-12", 15_000],
+        ["2026-09-17", 22_000],
+        ["2026-09-24", 22_000],
+      ),
+    );
+    // No line for a period that began before the data did.
+    expect(progressOf({ ...input, firstDay: "2026-09-02" }).daily.previous).toBeNull();
+  });
+
   it("looks back at last month, biggest gaps first, with the 6-month average", () => {
     const review = progress.review!;
     expect(review.period).toEqual(SEPTEMBER);
