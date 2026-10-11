@@ -19,7 +19,7 @@ export { Icon, type IconSize } from "./Icon";
 export { ICONS, type IconName } from "./icons";
 export { Kpi, KpiGrid } from "./Kpi";
 export { ListRow, Tile } from "./ListRow";
-export { Logo, LogoMark } from "./Logo";
+export { Logo, LogoMark, MARK_PATH, Wordmark } from "./Logo";
 export { BarMeter, colourVar, StackedBar, type DataColour, type StackPart } from "./Meter";
 export { Money } from "./Money";
 export { isCurrent, type NavLink } from "./nav";

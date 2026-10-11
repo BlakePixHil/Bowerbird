@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { BRAND, PAGE } from "./colours";
 
 const css = readFileSync(join(__dirname, "tokens.css"), "utf8");
 
@@ -93,6 +94,18 @@ describe("design tokens", () => {
 
   it("uses the same light values for the device setting and the data-theme override", () => {
     expect([...deviceLight.entries()]).toEqual([...forcedLight.entries()]);
+  });
+});
+
+describe("colours outside CSS", () => {
+  const brand = block("/* The logo's own colours. They stay the same in both themes. */\n:root");
+
+  it("match the tokens they copy", () => {
+    expect(normalise(dark.get("--bg")!)).toBe(normalise(PAGE.dark));
+    expect(normalise(forcedLight.get("--bg")!)).toBe(normalise(PAGE.light));
+    expect(normalise(brand.get("--brand-top")!)).toBe(normalise(BRAND.top));
+    expect(normalise(brand.get("--brand-bottom")!)).toBe(normalise(BRAND.bottom));
+    expect(normalise(dark.get("--accent-btn")!)).toBe(normalise(BRAND.flat));
   });
 });
 

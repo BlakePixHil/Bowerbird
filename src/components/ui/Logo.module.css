@@ -24,7 +24,8 @@
 }
 
 .wordmark {
+  margin: 0;
+  font-family: var(--font-sans);
   font-weight: 600;
-  letter-spacing: -0.04em;
   line-height: 1;
 }

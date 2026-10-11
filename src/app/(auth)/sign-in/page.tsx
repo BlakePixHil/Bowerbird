@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { RunningTotalChart } from "@/components/charts";
 import { DemoSignIn } from "@/components/auth/DemoSignIn";
 import { SignInFlow } from "@/components/auth/SignInFlow";
-import { Card, Icon, Logo, LogoMark, Well } from "@/components/ui";
+import { Card, Icon, Logo, LogoMark, Well, Wordmark } from "@/components/ui";
 import { APP_NAME } from "@/config/app";
 import { currentMember, safeNext } from "@/lib/auth";
 import { passkeyButtonLabel, passkeyInsteadLabel } from "@/lib/auth/device";
@@ -39,7 +39,7 @@ export default async function SignInPage({
             <>
               <div className={styles.phoneIntro}>
                 <LogoMark size={76} className={styles.bigMark} />
-                <h1 className={styles.appName}>{APP_NAME}</h1>
+                <Wordmark as="h1" fontSize={34} className={styles.appName} />
                 <p className={styles.tagline}>All your money in one place.</p>
               </div>
               <div className={styles.desktopIntro}>
