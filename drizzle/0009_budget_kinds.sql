@@ -1,0 +1,3 @@
+ALTER TABLE "budgets" ADD COLUMN "on_set_dates" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "budgets_personal_category_key" ON "budgets" USING btree ("owner_member_id","category_id") WHERE "budgets"."scope" = 'personal';--> statement-breakpoint
+CREATE UNIQUE INDEX "budgets_household_category_key" ON "budgets" USING btree ("household_id","category_id") WHERE "budgets"."scope" = 'household';

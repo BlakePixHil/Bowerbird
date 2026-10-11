@@ -39,6 +39,18 @@ export const STARTING_CATEGORIES = [
 }[];
 
 /**
+ * Starting categories whose spending comes out on set dates, like bills. A new budget for one of
+ * these starts as the "Set date" kind, so it counts in full on its day instead of building up
+ * across the period (project 04 · Budgets and paydays, Pace). People can change the kind.
+ */
+export const SET_DATE_CATEGORIES: readonly string[] = [
+  "Housing",
+  "Bills and utilities",
+  "Insurance",
+  "Subscriptions",
+];
+
+/**
  * Live sync goes through Redbark, a SimpleFIN provider over the Consumer Data Right. It's optional
  * and paid to Redbark (agreed by Blake, see 04 · Decisions and cost rules in Linear).
  */

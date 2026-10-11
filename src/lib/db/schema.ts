@@ -540,6 +540,11 @@ export const budgets = pgTable(
     /** The second day of the month for twice-monthly budgets. */
     periodSecondDay: smallint(),
     rollover: boolean().notNull().default(false),
+    /**
+     * Comes out on set dates, like a bill, so it counts in full on its day rather than building up
+     * across the period. The "Set date" kind on Change the plan; rollover is the "Rolls over" one.
+     */
+    onSetDates: boolean().notNull().default(false),
     alert80: boolean("alert_80").notNull().default(true),
     alert100: boolean("alert_100").notNull().default(true),
     createdAt: createdAt(),
@@ -548,6 +553,13 @@ export const budgets = pgTable(
   (t) => [
     index("budgets_household_idx").on(t.householdId),
     index("budgets_category_idx").on(t.categoryId),
+    // One budget per category for each person, and one for the household.
+    uniqueIndex("budgets_personal_category_key")
+      .on(t.ownerMemberId, t.categoryId)
+      .where(sql`${t.scope} = 'personal'`),
+    uniqueIndex("budgets_household_category_key")
+      .on(t.householdId, t.categoryId)
+      .where(sql`${t.scope} = 'household'`),
   ],
 );
 

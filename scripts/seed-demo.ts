@@ -1,6 +1,7 @@
 /**
  * Fill a local database with one made-up household for development: four accounts (one of them
- * joint) and about 18 months of made-up transactions ending today, a little over 2,000 of them.
+ * joint), about 18 months of made-up transactions ending today (a little over 2,000 of them) and
+ * a few budgets.
  * Today's and yesterday's card and everyday rows are still pending. Run with `pnpm db:seed:demo`.
  *
  * It refuses to run against anything but a database on this computer. Never run it against
@@ -535,6 +536,35 @@ async function main() {
     }
     await tx.insert(t.balances).values(balanceRows);
     await assignColours(tx, household.id);
+
+    // Alex's budgets: a mix of periods and kinds, some under and some over what they usually spend.
+    const budget = (
+      category: string,
+      amountCents: number,
+      period: "weekly" | "monthly",
+      kind: "set" | "flex" | "roll" = "flex",
+    ) => ({
+      householdId: household.id,
+      ownerMemberId: member.id,
+      categoryId: categoryId.get(category)!,
+      amountCents,
+      period,
+      onSetDates: kind === "set",
+      rollover: kind === "roll",
+      alert80: kind !== "set",
+    });
+    await tx
+      .insert(t.budgets)
+      .values([
+        budget("Housing", 225_000, "monthly", "set"),
+        budget("Groceries", 25_000, "weekly"),
+        budget("Eating out", 60_000, "monthly"),
+        budget("Fuel", 7_000, "weekly"),
+        budget("Bills and utilities", 28_000, "monthly", "set"),
+        budget("Shopping", 20_000, "monthly"),
+        budget("Health", 6_000, "monthly", "roll"),
+        budget("Subscriptions", 3_500, "monthly", "set"),
+      ]);
 
     console.log(
       `Seeded "${DEMO_HOUSEHOLD}": 4 accounts, ${rows.length} transactions from ${start} to ${end}.`,

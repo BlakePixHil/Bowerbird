@@ -26,3 +26,9 @@ export const INCOME_NAME_MAX = 40;
 
 /** How many incomes one person can have. */
 export const INCOMES_MAX = 6;
+
+/** The most one budget can be for one period: $1,000,000. */
+export const BUDGET_MAX_CENTS = 100_000_000;
+
+/** The longest a custom budget can run, in days: two years. */
+export const CUSTOM_DAYS_MAX = 731;

@@ -1,14 +1,29 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/shell";
-import { EmptyState } from "@/components/ui";
+import { ButtonLink, EmptyState } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Budgets" };
 
 export default function BudgetsPage() {
   return (
     <>
-      <PageHeader title="Budgets" actions={null} />
-      <EmptyState icon="pie" title="No budgets yet">
+      <PageHeader
+        title="Budgets"
+        actions={
+          <ButtonLink href="/budgets/plan" icon="pencil">
+            Change the plan
+          </ButtonLink>
+        }
+      />
+      <EmptyState
+        icon="pie"
+        title="Set your budgets"
+        action={
+          <ButtonLink href="/budgets/plan" variant="primary" icon="plus">
+            Set a budget
+          </ButtonLink>
+        }
+      >
         Set an amount for the things you spend on, for each pay cycle or month, and see whether
         you&apos;re on pace as it goes.
       </EmptyState>

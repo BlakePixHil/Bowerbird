@@ -109,6 +109,15 @@ export {
   type SavedView,
   type ViewSaved,
 } from "./views";
+export { budgetsOf, savePlan, type PlanChange, type PlanSaved } from "./budgets";
+export {
+  budgetProblem,
+  specOf,
+  tidyBudget,
+  type Budget,
+  type BudgetDraft,
+  type BudgetScope,
+} from "./plan";
 export {
   BUDGETS_RUN,
   incomeProblem,

@@ -1,0 +1,1042 @@
+/* Set a budget and Change the plan, from the boards "Set a budget" and "Desktop: Change the plan". */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.phoneOnly {
+  display: none;
+}
+
+.key {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.keyLine {
+  display: inline-block;
+  flex: none;
+  width: 12px;
+  height: 1.5px;
+  border-radius: 1px;
+}
+
+.spread {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 8px;
+}
+
+.titled {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.note {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* The fields, shared by the phone sheet and the desktop editor. */
+.fields {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.amount {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 60px;
+  margin-top: 10px;
+  padding: 0 6px 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line-2);
+  background: var(--surface-2);
+}
+
+.amount:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.dollar {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.amount input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.per {
+  white-space: nowrap;
+}
+
+.step {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chips > button {
+  height: 34px;
+  padding: 0 12px;
+}
+
+.conversion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  font-weight: 500;
+}
+
+.conversion > svg {
+  flex: none;
+  color: var(--text-3);
+}
+
+.dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.weekHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.day {
+  height: 38px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.day[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--text);
+}
+
+.day:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.startLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-top: 14px;
+}
+
+.startLine > svg {
+  flex: none;
+  color: var(--text-3);
+}
+
+.inlineSelect {
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.inlineSelect:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* "Groceries, last 6 months": a bar a month against the budget and the average. */
+.historyHead {
+  margin-top: 24px;
+}
+
+.historyBox {
+  margin-top: 10px;
+  padding: 14px 14px 12px;
+}
+
+.plot {
+  position: relative;
+  height: 112px;
+}
+
+.bars,
+.lines,
+.axis {
+  position: absolute;
+  left: 0;
+  right: 96px;
+}
+
+.bars {
+  top: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+}
+
+.barCol {
+  position: relative;
+  display: block;
+}
+
+.bar {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 22px;
+  margin-left: -11px;
+  border-radius: 4px 4px 0 0;
+}
+
+.axis {
+  bottom: 0;
+  height: 1px;
+  background: var(--axis);
+}
+
+.lines {
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.lines > span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1.5px solid var(--text-3);
+}
+
+.lines > .averageLine {
+  border-top-color: var(--ghost);
+}
+
+.lab {
+  position: absolute;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--text-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.monthLabels {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  margin: 8px 96px 0 0;
+  text-align: center;
+}
+
+.monthLabels :global(.tiny) {
+  font-size: 10.5px;
+}
+
+.monthLabels > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.overLine {
+  margin-top: 12px;
+}
+
+.useAverage {
+  margin-top: 10px;
+  height: 42px;
+}
+
+.empty {
+  margin-top: 10px;
+  padding: 14px;
+}
+
+/* Rollover and alerts. */
+.rolloverRow {
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 10px 0;
+}
+
+.alerts {
+  margin-top: 4px;
+}
+
+.alerts > .switchRow {
+  border-bottom: 1px solid var(--line);
+}
+
+.strong {
+  font-weight: 500;
+}
+
+.kindSeg {
+  margin-top: 8px;
+}
+
+.kindNote {
+  margin-top: 8px;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--crit-ink);
+  font-size: 13px;
+  text-wrap: pretty;
+}
+
+/* The phone sheet. */
+.sheetHead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.sheetTile {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+
+.sheetName {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.sheetFields > :global(.h3) {
+  margin-top: 24px;
+}
+
+.sheetFields > .howOften > :global(.h3) {
+  margin-top: 18px;
+}
+
+.howOften {
+  display: flex;
+  flex-direction: column;
+}
+
+.confirm {
+  margin-top: 24px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirmTitle {
+  font-weight: 600;
+}
+
+.confirmButtons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.crit {
+  color: var(--crit-ink);
+}
+
+.remove {
+  margin-top: 8px;
+  height: 44px;
+}
+
+.pickList {
+  display: flex;
+  flex-direction: column;
+}
+
+/* A category to pick, on desktop's Add a budget and the phone's list of categories. */
+.pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pick:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pick > svg {
+  flex: none;
+  color: var(--text-3);
+}
+
+.pickName {
+  display: block;
+  font-weight: 500;
+}
+
+.pickSub {
+  display: block;
+  margin-top: 1px;
+}
+
+/* Desktop: the page's header buttons. */
+.headActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Add a budget. */
+.addCard {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.addHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.closeSmall {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.addGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+  gap: 8px;
+}
+
+/* The plan against money in. */
+.planCard {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 14px 28px;
+}
+
+.kpis :global(.big) {
+  margin-top: 6px;
+}
+
+.kpiSub {
+  margin-top: 6px;
+  text-wrap: pretty;
+}
+
+.planBar {
+  display: flex;
+  gap: 2px;
+}
+
+.planBar > div {
+  min-width: 0;
+}
+
+.planBar > div:last-child:not(:first-child) {
+  flex: 1 1 auto;
+}
+
+.barLabel {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.bracket {
+  height: 6px;
+  margin-top: 6px;
+  border: 1px solid var(--line-2);
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+}
+
+.stack {
+  display: flex;
+  gap: 2px;
+  height: 16px;
+  margin-top: 4px;
+}
+
+.stack > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+}
+
+.stack > span:first-child {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.stack > span:last-child {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+
+.legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend b {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* Saved, removed or added, with Undo. */
+.flash {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 10px 12px 10px 14px;
+}
+
+.flash > svg {
+  flex: none;
+  color: var(--good-ink);
+}
+
+.flash > button {
+  height: 30px;
+}
+
+/* Every budget. */
+.tableCard {
+  padding: 4px 0 8px;
+  container-type: inline-size;
+}
+
+.tableHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px 16px;
+  min-height: 52px;
+  padding: 8px 20px;
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+.table {
+  min-width: 1040px;
+  padding: 0 8px;
+}
+
+.cols {
+  display: grid;
+  grid-template-columns:
+    minmax(170px, 1.5fr) 104px minmax(104px, 1fr) 76px 84px 84px minmax(150px, 1.2fr)
+    92px 20px;
+  gap: 14px;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.colHead {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.num {
+  text-align: right;
+}
+
+.avgCol {
+  padding-left: 14px;
+}
+
+.row {
+  position: relative;
+  min-height: 58px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-size: 13px;
+}
+
+.row + .row,
+.editorRow + .row {
+  border-top: 1px solid var(--line);
+}
+
+/* The whole row opens its editor; the cells sit over the button and let clicks through. */
+.rowButton {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.rowButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .rowButton:hover {
+    background: var(--surface-2);
+  }
+}
+
+.rowButton[aria-expanded="true"] {
+  background: var(--accent-wash);
+}
+
+.cell {
+  position: relative;
+  min-width: 0;
+  pointer-events: none;
+}
+
+/* The first cell holds the row's button, so it isn't the button's box: the row is. */
+.firstCell {
+  min-width: 0;
+  pointer-events: none;
+}
+
+.firstCell > .cell {
+  display: flex;
+}
+
+.gap {
+  height: 16px;
+}
+
+.nameLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nameLine > span:last-child {
+  font-weight: 500;
+}
+
+.withIcon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+}
+
+.withIcon > svg {
+  flex: none;
+  color: var(--text-3);
+}
+
+.average {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.average > span {
+  min-width: 48px;
+}
+
+.spark {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+
+.spark polyline {
+  fill: none;
+  stroke: var(--text-3);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.spark circle {
+  fill: var(--text);
+}
+
+.chevron {
+  display: flex;
+  justify-content: flex-end;
+  color: var(--text-3);
+}
+
+.changedDot {
+  display: inline-block;
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* The editor under an open row stays in view when the table scrolls sideways. */
+.editorRow {
+  position: sticky;
+  left: 0;
+  width: calc(100cqw - 16px);
+  max-width: 100%;
+  padding: 0 0 12px;
+}
+
+.editor {
+  padding: 16px 18px 18px;
+  border-color: var(--line-2);
+}
+
+.editorHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.editorGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  gap: 20px 28px;
+  margin-top: 16px;
+}
+
+.editorGrid > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Inside the desktop editor, which sits in a well, boxes take the card colour and get smaller. */
+.wide .amount {
+  height: 52px;
+  margin-top: 8px;
+  padding: 0 5px 0 12px;
+  background: var(--surface);
+}
+
+.wide .dollar,
+.wide .amount input {
+  font-size: 20px;
+}
+
+.wide .step {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+}
+
+.wide .howOften > :global(.h3) {
+  margin-top: 16px;
+}
+
+.wide .chips {
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.wide .chips > button {
+  height: 30px;
+  padding: 0 11px;
+  font-size: 12.5px;
+}
+
+.wide .conversion {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 12.5px;
+}
+
+.wide .day {
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 12.5px;
+}
+
+.wide .days {
+  gap: 4px;
+}
+
+.wide .historyHead {
+  margin-top: 0;
+}
+
+.wide .historyBox {
+  margin-top: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.wide .bars,
+.wide .lines,
+.wide .axis {
+  right: 88px;
+}
+
+.wide .monthLabels {
+  margin-right: 88px;
+}
+
+.wide .overLine {
+  margin-top: 10px;
+}
+
+.wide .useAverage {
+  height: 36px;
+}
+
+.wide .alerts > .switchRow {
+  min-height: 48px;
+  padding: 0;
+}
+
+.editorFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.totalRow {
+  min-height: 54px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  border-top: 1px solid var(--line-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tableNote {
+  margin: 10px 20px 8px;
+}
+
+/* The bar that stays at the bottom while there are changes to save. */
+.footBar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 12px 12px 12px 18px;
+  border-radius: 14px;
+  background: var(--glass);
+  border: 1px solid var(--line-2);
+  box-shadow: var(--pop);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.footTitle {
+  font-weight: 600;
+}
+
+.footButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Phones: the plan and a list of budgets, each opening the sheet. */
+.phoneList {
+  padding: 0 16px;
+}
+
+.phoneRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.phoneRow + .phoneRow {
+  border-top: 1px solid var(--line);
+}
+
+.phoneRow:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.phoneRow > svg {
+  flex: none;
+  color: var(--text-3);
+}
+
+.rowAmount {
+  text-align: right;
+}
+
+.phoneEmpty {
+  padding: 16px;
+}
+
+@media (max-width: 760px) {
+  .phoneOnly {
+    display: block;
+  }
+
+  .wideOnly {
+    display: none;
+  }
+
+  .page {
+    gap: 12px;
+  }
+
+  .planCard {
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .kpis :global(.big) {
+    font-size: 19px;
+    letter-spacing: -0.025em;
+  }
+}

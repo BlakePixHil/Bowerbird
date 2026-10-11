@@ -128,6 +128,7 @@ export const ICONS = {
   users:
     "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 12 0v1M16 3.5a4 4 0 0 1 0 7.5M22 21v-1a6 6 0 0 0-4-5.6",
   wand: "M15 4V2M15 10V8M11 6h2M17 6h2M4 20 14 10M18 13l1 1M20 11l-1 1",
+  wave: "M3 12c2.5-4 4.5-4 7 0s4.5 4 7 0 3-3 4-2",
 } as const satisfies Record<string, string>;
 
 export type IconName = keyof typeof ICONS;

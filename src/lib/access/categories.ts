@@ -45,6 +45,11 @@ export type CategoryOverview = {
   to: PlainDate;
   /** The first day of each month in `months`, oldest first. */
   monthStarts: PlainDate[];
+  /**
+   * How many of those months, counting back from the latest, are since money first came in. The
+   * ones before are empty because nothing was here yet, not because nothing was spent.
+   */
+  counted: number;
   /** In the household's order. */
   categories: CategorySummary[];
   /** Money out this month that has no category yet and isn't a transfer. */
@@ -106,6 +111,7 @@ export async function categoryOverview(
     from,
     to: today,
     monthStarts,
+    counted: 0,
     categories: [],
     unsorted: { cents: 0, count: 0 },
   };
@@ -200,6 +206,7 @@ export async function categoryOverview(
   const unsortedRows = monthRows.filter((row) => !row.categoryId && row.month === thisMonth);
   return {
     ...empty,
+    counted: counted.length,
     categories: summaries,
     unsorted: {
       cents: unsortedRows.reduce((sum, row) => sum + row.out, 0),
