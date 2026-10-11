@@ -25,6 +25,7 @@ import {
   WIDE,
 } from "@/components/ui";
 import type { ActivityPage, ActivityRow, CategoryChoice, TagRef } from "@/lib/access";
+import type { Find } from "@/lib/access/find";
 import { formatShortDate, type PlainDate } from "@/lib/money";
 import { categoryColour } from "@/lib/sorting/colour";
 import styles from "./Activity.module.css";
@@ -48,6 +49,11 @@ type ActivityListProps = {
   first: ActivityPage;
   show: Show;
   search: string;
+  find: Find;
+  /** "Filtered by" and its chips, when any filters are in use. */
+  filteredBy: ReactNode;
+  /** Where Clear filters goes, when any filters are in use. */
+  clearFilters: string | null;
   /** How many rows match, across every page. */
   total: number;
   today: PlainDate;
@@ -71,6 +77,9 @@ export function ActivityList({
   first,
   show,
   search,
+  find,
+  filteredBy,
+  clearFilters,
   total,
   today,
   people,
@@ -98,7 +107,7 @@ export function ActivityList({
     setLoading(true);
     setFailed(false);
     try {
-      const page = await moreActivity(show, search, next);
+      const page = await moreActivity({ show, search, find }, next);
       setDays((shown) => [...shown, ...byDay(page.rows)]);
       setNext(page.next);
     } catch {
@@ -184,7 +193,8 @@ export function ActivityList({
     return (
       <div className={styles.flow}>
         <section className={cx(styles.list, styles.w2)} aria-label="Transactions">
-          <NoMatch show={show} search={search} />
+          {filteredBy}
+          <NoMatch show={show} search={search} find={find} clearFilters={clearFilters} />
         </section>
         <div className={cx(styles.side, styles.w1)}>{side}</div>
         <div className={styles.phoneOnly}>{footer}</div>
@@ -205,10 +215,11 @@ export function ActivityList({
             Transactions
           </h2>
           <span className="muted small tnum">
-            {total.toLocaleString("en-AU")} {search ? "found" : "shown"}
+            {total.toLocaleString("en-AU")} {search || clearFilters ? "found" : "shown"}
           </span>
           <span className={cx("muted small", styles.order)}>Newest first</span>
         </div>
+        {filteredBy}
         <div className={styles.columns} aria-hidden="true">
           <span>What</span>
           <span>Category</span>
@@ -421,13 +432,33 @@ function Row({
   );
 }
 
-function NoMatch({ show, search }: { show: Show; search: string }) {
+function NoMatch({
+  show,
+  search,
+  find,
+  clearFilters,
+}: {
+  show: Show;
+  search: string;
+  find: Find;
+  clearFilters: string | null;
+}) {
+  if (clearFilters)
+    return (
+      <div className={styles.none}>
+        <Tile icon="search" size="sm" />
+        <p className={styles.noneTitle}>No transactions match these filters</p>
+        <ButtonLink href={clearFilters} replace scroll={false}>
+          Clear filters
+        </ButtonLink>
+      </div>
+    );
   if (search)
     return (
       <div className={styles.none}>
         <Tile icon="search" size="sm" />
         <p className={styles.noneTitle}>No transactions match &ldquo;{search}&rdquo;</p>
-        <ButtonLink href={activityHref(show, "")} replace scroll={false}>
+        <ButtonLink href={activityHref(show, "", find)} replace scroll={false}>
           Clear search
         </ButtonLink>
       </div>

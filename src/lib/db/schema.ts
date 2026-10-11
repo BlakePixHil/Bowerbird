@@ -13,6 +13,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -538,4 +539,19 @@ export const budgets = pgTable(
     index("budgets_household_idx").on(t.householdId),
     index("budgets_category_idx").on(t.categoryId),
   ],
+);
+
+export const savedViews = pgTable(
+  "saved_views",
+  {
+    id: id(),
+    memberId: uuid()
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" }),
+    name: text().notNull(),
+    /** Activity's search and filters, as `SavedFilters` in `src/lib/access/find.ts`. */
+    filters: jsonb().notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("saved_views_member_name_key").on(t.memberId, sql`lower(${t.name})`)],
 );

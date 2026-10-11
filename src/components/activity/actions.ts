@@ -4,11 +4,14 @@ import {
   activityPage,
   addTag,
   categoriseTransaction,
+  countActivity,
   markAsTransfer,
   notATransfer,
   removeSplit,
   removeTag,
+  removeView,
   saveNote,
+  saveView,
   sortShopAlways,
   splitTransaction,
   viewerOf,
@@ -21,23 +24,60 @@ import {
   type SplitSaved,
   type TagsSaved,
   type TransferChanged,
+  type ViewSaved,
 } from "@/lib/access";
+import { cleanFind } from "@/lib/access/find";
 import { SPLIT_MAX_PARTS } from "@/lib/access/limits";
 import { requireMember } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { isPlainDate } from "@/lib/money";
+import { isPlainDate, todayIn } from "@/lib/money";
 import { filtersOf, parseSearch, parseShow, viewOf } from "./show";
 
-/** The next page of Activity: the whole days before `before`, for the same chip and search. */
-export async function moreActivity(
-  show: string,
-  search: string,
-  before: string,
-): Promise<ActivityPage> {
-  const viewer = viewerOf(await requireMember());
-  if (!isPlainDate(before)) return { rows: [], next: null };
+/** What Activity is showing: a chip, a search and the filters. */
+export type Finding = { show: string; search: string; find: unknown };
+
+async function finding({ show, search, find }: Finding) {
+  const me = await requireMember();
   const chip = parseShow(show);
-  return activityPage(getDb(), viewer, viewOf(chip), filtersOf(chip, parseSearch(search)), before);
+  return {
+    viewer: viewerOf(me),
+    view: viewOf(chip),
+    filters: filtersOf(chip, parseSearch(search), cleanFind(find), todayIn(me.household.timezone)),
+  };
+}
+
+/** The next page of Activity: the whole days before `before`, for the same chip and filters. */
+export async function moreActivity(showing: Finding, before: string): Promise<ActivityPage> {
+  const { viewer, view, filters } = await finding(showing);
+  if (!isPlainDate(before)) return { rows: [], next: null };
+  return activityPage(getDb(), viewer, view, filters, before);
+}
+
+/** How many rows the filter sheet's choices match, for "Show 37 transactions". */
+export async function countFound(showing: Finding): Promise<number> {
+  const { viewer, view, filters } = await finding(showing);
+  return countActivity(getDb(), viewer, view, filters);
+}
+
+/** Saves the sheet's search and filters as a view called `name`. */
+export async function saveFilters(view: {
+  name: string;
+  search: string;
+  find: unknown;
+}): Promise<ViewSaved> {
+  const viewer = viewerOf(await requireMember());
+  if (typeof view.name !== "string" || typeof view.search !== "string") return muddled;
+  return saveView(getDb(), viewer, view.name.slice(0, 200), {
+    search: parseSearch(view.search),
+    find: cleanFind(view.find),
+  });
+}
+
+/** Removes one of the person's saved views. */
+export async function forgetView(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const viewer = viewerOf(await requireMember());
+  if (!ids(id)) return muddled;
+  return removeView(getDb(), viewer, id);
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

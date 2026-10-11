@@ -14,3 +14,9 @@ export const TAGS_MAX = 8;
 
 /** The longest a transaction's note can be. */
 export const NOTE_MAX = 200;
+
+/** The longest a saved view's name can be. */
+export const VIEW_NAME_MAX = 40;
+
+/** How many views one person can save. They sit with the chips at the top of Activity. */
+export const VIEWS_MAX = 8;

@@ -4,6 +4,7 @@ import {
   count,
   desc,
   eq,
+  gt,
   gte,
   ilike,
   inArray,
@@ -16,7 +17,14 @@ import {
   type SQL,
 } from "drizzle-orm";
 import type { Db } from "@/lib/db";
-import { categories, merchants, tags, transactions, transactionTags } from "@/lib/db/schema";
+import {
+  categories,
+  merchants,
+  splits,
+  tags,
+  transactions,
+  transactionTags,
+} from "@/lib/db/schema";
 import { parseMoney, type DaySpend, type PlainDate } from "@/lib/money";
 import { countedMoney, isCounted } from "@/lib/sorting/transfers";
 import { scopeFor, type SeenAccount, type View, type Viewer, type Whose } from "./accounts";
@@ -28,11 +36,31 @@ import { partsOf } from "./details";
  * as with `transactionsFor`.
  */
 
+/** What Activity is narrowed to. Every filter given must match, together with the search. */
 export type ActivityFilters = {
   /** A shop, some bank text, a tag, a note, or an amount such as 86.20 or $86. */
   search?: string;
   /** Only rows with no category yet that aren't transfers. */
   toCheck?: boolean;
+  /** Only the viewer's own accounts. */
+  mineOnly?: boolean;
+  /** Only these accounts. Any the viewer can't see in full are left out, and none means nothing. */
+  accountIds?: readonly string[];
+  /** Rows in any of these categories. A split row matches by any of its parts. */
+  categoryIds?: readonly string[];
+  /** Rows with any of these tags. */
+  tagIds?: readonly string[];
+  /** The first and last day, each included. */
+  from?: PlainDate;
+  to?: PlainDate;
+  /** The amount's size in cents, whichever way the money went, each end included. */
+  minCents?: number;
+  maxCents?: number;
+  direction?: "in" | "out";
+  /** False leaves out transfers between the household's own accounts. */
+  transfers?: boolean;
+  /** False leaves out rows the bank hasn't settled yet. */
+  pending?: boolean;
 };
 
 export type ActivityCategory = {
@@ -82,11 +110,27 @@ export type ActivityPage = {
 /** About how many rows a page holds. Pages end on a whole day, so a page can hold a few more. */
 export const ACTIVITY_PAGE_ROWS = 100;
 
-/** The accounts in a view whose transactions the viewer may see. */
-async function fullAccounts(db: Db, viewer: Viewer, view: View): Promise<Map<string, SeenAccount>> {
+/**
+ * The accounts in a view whose transactions the viewer may see, narrowed to the ones the filters
+ * pick.
+ */
+async function fullAccounts(
+  db: Db,
+  viewer: Viewer,
+  view: View,
+  filters: ActivityFilters = {},
+): Promise<Map<string, SeenAccount>> {
   const { accounts } = await scopeFor(db, viewer, view);
+  const picked = filters.accountIds && new Set(filters.accountIds);
   return new Map(
-    accounts.filter((account) => account.access === "full").map((account) => [account.id, account]),
+    accounts
+      .filter(
+        (account) =>
+          account.access === "full" &&
+          (!filters.mineOnly || account.whose === "mine") &&
+          (!picked || picked.has(account.id)),
+      )
+      .map((account) => [account.id, account]),
   );
 }
 
@@ -115,7 +159,16 @@ function searchCondition(search: string | undefined): SQL | undefined {
   );
 }
 
+const some = (ids: readonly string[] | undefined): ids is readonly string[] =>
+  ids !== undefined && ids.length > 0;
+
+/**
+ * The one query builder for Activity's filters: every filter given, together, as SQL. Accounts
+ * are picked before this, by `fullAccounts`.
+ */
 function matching(viewer: Viewer, accountIds: string[], filters: ActivityFilters) {
+  const size = sql`abs(${transactions.amountCents})`;
+  const { categoryIds, tagIds } = filters;
   return and(
     eq(transactions.householdId, viewer.householdId),
     inArray(transactions.accountId, accountIds),
@@ -123,6 +176,23 @@ function matching(viewer: Viewer, accountIds: string[], filters: ActivityFilters
     filters.toCheck
       ? and(isNull(transactions.categoryId), isNull(transactions.transferGroupId))
       : undefined,
+    some(categoryIds)
+      ? or(
+          inArray(transactions.categoryId, [...categoryIds]),
+          sql`exists (select 1 from ${splits} where ${splits.transactionId} = ${transactions.id} and ${inArray(splits.categoryId, [...categoryIds])})`,
+        )
+      : undefined,
+    some(tagIds)
+      ? sql`exists (select 1 from ${transactionTags} where ${transactionTags.transactionId} = ${transactions.id} and ${inArray(transactionTags.tagId, [...tagIds])})`
+      : undefined,
+    filters.from ? gte(transactions.date, filters.from) : undefined,
+    filters.to ? lte(transactions.date, filters.to) : undefined,
+    filters.minCents !== undefined ? sql`${size} >= ${filters.minCents}` : undefined,
+    filters.maxCents !== undefined ? sql`${size} <= ${filters.maxCents}` : undefined,
+    filters.direction === "in" ? gt(transactions.amountCents, 0) : undefined,
+    filters.direction === "out" ? lt(transactions.amountCents, 0) : undefined,
+    filters.transfers === false ? countedMoney() : undefined,
+    filters.pending === false ? eq(transactions.pending, false) : undefined,
   );
 }
 
@@ -138,7 +208,7 @@ export async function activityPage(
   before?: PlainDate,
   pageRows = ACTIVITY_PAGE_ROWS,
 ): Promise<ActivityPage> {
-  const seen = await fullAccounts(db, viewer, view);
+  const seen = await fullAccounts(db, viewer, view, filters);
   if (seen.size === 0) return { rows: [], next: null };
   const where = matching(viewer, [...seen.keys()], filters);
 
@@ -237,7 +307,7 @@ export async function countActivity(
   view: View,
   filters: ActivityFilters = {},
 ): Promise<number> {
-  const seen = await fullAccounts(db, viewer, view);
+  const seen = await fullAccounts(db, viewer, view, filters);
   if (seen.size === 0) return 0;
   const [row] = await db
     .select({ rows: count() })

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useState, useTransition } from "react";
 import { cx, Icon, Kbd } from "@/components/ui";
+import type { Find } from "@/lib/access/find";
 import styles from "./Activity.module.css";
 import { activityHref, MAX_SEARCH, parseSearch, type Show } from "./show";
 
@@ -13,10 +14,13 @@ import { activityHref, MAX_SEARCH, parseSearch, type Show } from "./show";
 export function ActivitySearch({
   show,
   search,
+  find,
   place,
 }: {
   show: Show;
   search: string;
+  /** The filters in use, which a search keeps. */
+  find: Find;
   /** The phone's box sits under the title; the desktop one is in the header with a / hint. */
   place: "phone" | "desktop";
 }) {
@@ -33,7 +37,7 @@ export function ActivitySearch({
 
   function go(words: string) {
     setSent(words);
-    startTransition(() => router.replace(activityHref(show, words), { scroll: false }));
+    startTransition(() => router.replace(activityHref(show, words, find), { scroll: false }));
   }
 
   const onPause = useEffectEvent(go);

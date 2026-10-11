@@ -1405,3 +1405,584 @@
   margin-top: 10px;
   color: var(--crit-ink);
 }
+
+/* Find transactions: the Filters button, the sheet and the desktop panel */
+
+.filterIcon {
+  position: relative;
+  display: inline-flex;
+}
+
+.filterDot {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--accent-btn);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.filtersOpen {
+  background: var(--surface-3);
+  border-color: var(--accent);
+}
+
+.filterCount {
+  height: 18px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.findPanel {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 20px 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--raise);
+}
+
+.findHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  min-height: 36px;
+}
+
+.findHead h2 {
+  margin: 0;
+}
+
+.findHead > :last-child {
+  margin-left: auto;
+  align-self: center;
+}
+
+.findBody {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 16px;
+}
+
+.findPanel .findBody {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 20px 32px;
+  margin-top: 12px;
+}
+
+.findCol {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+
+.findCol:empty {
+  display: none;
+}
+
+.findPanel .findCol {
+  flex: 1 1 260px;
+  gap: 18px;
+}
+
+.findPanel .findCol:nth-child(2) {
+  flex: 1.2 1 300px;
+}
+
+.findGroupHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.findPanel .findGroupHead {
+  margin-bottom: 8px;
+}
+
+.findChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.findChips > .findChip {
+  height: 34px;
+  padding: 0 12px 0 10px;
+  font-size: 12.5px;
+}
+
+.findPanel .findChips > button {
+  height: 30px;
+}
+
+.findChip[aria-pressed="true"] .key {
+  box-shadow: 0 0 0 1.5px var(--surface);
+}
+
+.pickAll {
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.findAccounts {
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.findPanel .findAccounts {
+  padding: 0;
+  background: transparent;
+}
+
+.findAccount {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.findAccount + .findAccount {
+  border-top: 1px solid var(--line);
+}
+
+.findPanel .findAccount {
+  min-height: 36px;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.findAccount > span:last-child {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.findAccountName {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.findAccountName > :first-child {
+  font-weight: 500;
+}
+
+.findPanel .findAccountName {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.findPanel .findAccountName > :first-child {
+  flex: 1 1 auto;
+  font-weight: 400;
+}
+
+/* Columns fit their words, so "Last 3 months" isn't cut short on a phone. */
+.rangeSeg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: auto;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.rangeButton {
+  height: 36px;
+  min-width: 0;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.rangeButton[aria-pressed="true"] {
+  background: var(--surface-3);
+  color: var(--text);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 1px var(--line-2);
+}
+
+.rangeButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.findPanel .rangeSeg {
+  padding: 2px;
+  border-radius: 10px;
+}
+
+.findPanel .rangeButton {
+  height: 30px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+.findPair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.findGroup [role="group"] > .findPair:first-child {
+  margin-top: 0;
+}
+
+.amountField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line-2);
+  background: var(--surface-2);
+}
+
+.amountField > span {
+  flex: none;
+}
+
+.amountField input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.amountField input::placeholder {
+  color: var(--text-3);
+}
+
+.amountField:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.amountBad {
+  border-color: var(--crit);
+}
+
+.findPanel .amountField {
+  height: 36px;
+  border-radius: 10px;
+}
+
+.findPanel .amountField input {
+  font-size: 13px;
+}
+
+.findDirection {
+  margin-top: 8px;
+}
+
+.findSwitches {
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.findPanel .findSwitches {
+  padding: 0;
+  background: transparent;
+}
+
+.findSwitch {
+  display: flex;
+  flex-direction: row-reverse;
+  width: 100%;
+  min-height: 60px;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.findSwitch + .findSwitch {
+  border-top: 1px solid var(--line);
+}
+
+.findPanel .findSwitch {
+  min-height: 40px;
+  font-size: 13px;
+}
+
+.findSwitch > span:last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.findSwitchWords {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.findSwitchWords > svg {
+  flex: none;
+  color: var(--text-2);
+}
+
+.findSwitchWords > span {
+  display: flex;
+  flex-direction: column;
+}
+
+.findSwitchTitle {
+  font-weight: 500;
+}
+
+.findPanel .findSwitchWords > svg,
+.findPanel .findSwitchWords .small {
+  display: none;
+}
+
+.findPanel .findSwitchTitle {
+  font-weight: 400;
+}
+
+.saveFilters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.saveFilters:disabled {
+  color: var(--text-3);
+  cursor: default;
+}
+
+.saveFilters > svg:last-child {
+  color: var(--text-3);
+}
+
+.saveWords {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.saveTitle {
+  font-weight: 500;
+}
+
+.saveFiltersPanel {
+  width: auto;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 10px 0 6px;
+  border-radius: 8px;
+  gap: 6px;
+  font-size: 13px;
+}
+
+@media (hover: hover) {
+  .saveFiltersPanel:not(:disabled):hover {
+    background: var(--surface-2);
+  }
+}
+
+.saveForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.findFoot .saveForm {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin: 0;
+}
+
+.findFoot .saveForm > :first-child {
+  flex: 1 1 240px;
+}
+
+.saveButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.savedRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.findFoot .savedRow {
+  margin: 0;
+}
+
+.savedRow .savedPill {
+  flex: 0 1 auto;
+  min-width: 0;
+  height: auto;
+  min-height: 28px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 14px;
+  white-space: normal;
+}
+
+.savedPill > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.findFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 16px -20px 0;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+}
+
+.showButtons {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.findFoot .showButtons {
+  display: flex;
+  width: auto;
+  margin-left: auto;
+}
+
+.findFoot .showButtons button {
+  height: 34px;
+}
+
+/* Filtered by, over the list */
+
+.filteredBy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 12px 20px;
+}
+
+.filteredBy > :first-child {
+  margin-right: 2px;
+}
+
+.filteredChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 5px 0 9px;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+  background: var(--surface-3);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.filteredChip > svg {
+  width: 12px;
+  height: 12px;
+  color: var(--text-3);
+}
+
+.clearAll {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .filteredChip:hover {
+    border-color: var(--axis);
+  }
+
+  .clearAll:hover {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+}
+
+@media (max-width: 760px) {
+  .filteredBy {
+    padding: 0 0 12px;
+  }
+}
