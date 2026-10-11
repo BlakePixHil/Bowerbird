@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "rules_household_merchant_key" ON "rules" USING btree ("household_id","merchant_id") WHERE "rules"."merchant_id" is not null;

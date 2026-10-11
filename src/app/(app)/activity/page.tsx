@@ -19,6 +19,7 @@ import { ButtonLink, EmptyState, IconButtonLink } from "@/components/ui";
 import {
   activityCounts,
   activityPage,
+  categoryChoices,
   countActivity,
   dailySpending,
   otherMembers,
@@ -46,7 +47,7 @@ export default async function ActivityPage({
   const filters = filtersOf(show, search);
   const today = shell.today;
 
-  const [counts, first, total, spending, others] = await Promise.all([
+  const [counts, first, total, spending, others, categories] = await Promise.all([
     activityCounts(db, viewer),
     activityPage(db, viewer, view, filters),
     countActivity(db, viewer, view, filters),
@@ -56,6 +57,7 @@ export default async function ActivityPage({
       to: today,
     }),
     otherMembers(db, viewer),
+    categoryChoices(db, viewer),
   ]);
 
   const header = (
@@ -129,13 +131,20 @@ export default async function ActivityPage({
       <ActivityChips choices={choices} show={show} search={search} />
       <WeekSummary spending={weekSpending(spending.days, today, spending.since)} today={today} />
       <ActivityList
-        key={`${show}|${search}|${total}|${first.rows[0]?.id ?? ""}`}
+        // A new import or sync starts the list again. Sorting rows out of To check changes its
+        // total and top row too, but the list stays put so the open transaction doesn't close.
+        key={
+          show === "check"
+            ? `${show}|${search}`
+            : `${show}|${search}|${total}|${first.rows[0]?.id ?? ""}`
+        }
         first={first}
         show={show}
         search={search}
         total={total}
         today={today}
         people={people}
+        categories={categories}
         footer={<MissingSomething />}
         side={<ImportCard liveSync={shell.live.connections > 0} />}
       />

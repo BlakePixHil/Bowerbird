@@ -779,3 +779,121 @@
     border-radius: 16px;
   }
 }
+
+/* Categorise: the grid of categories and the rule question (board "Categorise and make a rule") */
+
+.categorise {
+  margin-top: 20px;
+}
+
+.catGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.catButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 66px;
+  padding: 8px 2px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+
+.catButton > span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  /* "Entertainment" is wider than a phone's cell: a hyphen where the browser can, else a break. */
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.catButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.catButton:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+@media (hover: hover) {
+  .catButton:not(:disabled):hover {
+    border-color: var(--line-2);
+    color: var(--text);
+  }
+}
+
+.catButton.catPicked {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--text);
+}
+
+.ask {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--accent-wash);
+  border-radius: 14px;
+  background: var(--accent-tint);
+}
+
+.askHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.askHead > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--accent-ink);
+}
+
+.askTitle {
+  font-weight: 600;
+}
+
+.askButtons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.said {
+  display: flex;
+  flex-direction: column;
+}
+
+.said:not(:empty) {
+  margin-top: 14px;
+}
+
+.saidPill {
+  align-self: stretch;
+  height: auto;
+  min-height: 40px;
+  padding: 8px 12px;
+  gap: 8px;
+  border-radius: 12px;
+  white-space: normal;
+}

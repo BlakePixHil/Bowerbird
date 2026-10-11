@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   memo,
   useCallback,
@@ -22,7 +23,7 @@ import {
   Tag,
   Tile,
 } from "@/components/ui";
-import type { ActivityPage, ActivityRow } from "@/lib/access";
+import type { ActivityCategory, ActivityPage, ActivityRow, CategoryChoice } from "@/lib/access";
 import { formatShortDate, type PlainDate } from "@/lib/money";
 import { categoryColour } from "@/lib/sorting/colour";
 import styles from "./Activity.module.css";
@@ -63,6 +64,8 @@ type ActivityListProps = {
   total: number;
   today: PlainDate;
   people: People;
+  /** The household's categories, for the grid in the transaction sheet. */
+  categories: readonly CategoryChoice[];
   /** Under the list on a phone: "Missing something?". */
   footer: ReactNode;
   /** Under the transaction panel on desktop. */
@@ -81,6 +84,7 @@ export function ActivityList({
   total,
   today,
   people,
+  categories,
   footer,
   side,
 }: ActivityListProps) {
@@ -94,6 +98,7 @@ export function ActivityList({
   const busy = useRef(false);
   const end = useRef<HTMLDivElement>(null);
   const wide = useWide();
+  const router = useRouter();
 
   async function loadMore() {
     if (!next || busy.current) return;
@@ -132,6 +137,31 @@ export function ActivityList({
     rows.findIndex((row) => row.id === picked),
   );
   const current = rows[index] ?? null;
+
+  // A category change shows on every loaded row it moved, and on every row of that category,
+  // since its colour may be new. The page then refreshes for the counts and totals.
+  const changeRows = useCallback(
+    (ids: string[], category: ActivityCategory) => {
+      const moved = new Set(ids);
+      const touches = (row: ActivityRow) => moved.has(row.id) || row.category?.id === category.id;
+      setDays((shown) =>
+        shown.map((day) =>
+          day.rows.some(touches)
+            ? {
+                ...day,
+                rows: day.rows.map((row) =>
+                  touches(row)
+                    ? { ...row, category, notCounted: row.paired || category.kind === "transfer" }
+                    : row,
+                ),
+              }
+            : day,
+        ),
+      );
+      router.refresh();
+    },
+    [router],
+  );
 
   const pick = useCallback((id: string) => {
     setPicked(id);
@@ -229,7 +259,12 @@ export function ActivityList({
                 />
               </div>
             </div>
-            <TransactionDetail row={current} people={people} />
+            <TransactionDetail
+              row={current}
+              people={people}
+              categories={categories}
+              onChanged={changeRows}
+            />
           </section>
         )}
         {side}
@@ -242,7 +277,14 @@ export function ActivityList({
         onClose={() => setSheetOpen(false)}
         title="Transaction"
       >
-        {current && <TransactionDetail row={current} people={people} />}
+        {current && (
+          <TransactionDetail
+            row={current}
+            people={people}
+            categories={categories}
+            onChanged={changeRows}
+          />
+        )}
       </BottomSheet>
     </div>
   );

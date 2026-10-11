@@ -61,6 +61,8 @@ export type ActivityRow = {
   pending: boolean;
   /** Money moving between the household's own accounts: never spending or income. */
   notCounted: boolean;
+  /** Matched with the other side of a transfer, so it isn't counted whatever its category. */
+  paired: boolean;
   /** Split across categories. */
   split: boolean;
   tags: string[];
@@ -219,6 +221,7 @@ export async function activityPage(
       category,
       pending: row.pending,
       notCounted: row.transferGroupId !== null || category?.kind === "transfer",
+      paired: row.transferGroupId !== null,
       split: isSplit.has(row.id),
       tags: tagsOf.get(row.id) ?? [],
       note: row.note,

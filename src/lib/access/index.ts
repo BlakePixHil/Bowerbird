@@ -42,3 +42,11 @@ export {
   type ActivityRow,
   type DailySpending,
 } from "./activity";
+export {
+  categoriseTransaction,
+  categoryChoices,
+  sortShopAlways,
+  type Categorised,
+  type CategoryChoice,
+  type ShopSorted,
+} from "./categorise";

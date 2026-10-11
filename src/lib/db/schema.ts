@@ -364,7 +364,13 @@ export const rules = pgTable(
     appliedCount: integer().notNull().default(0),
     createdAt: createdAt(),
   },
-  (t) => [index("rules_household_idx").on(t.householdId, t.position)],
+  (t) => [
+    index("rules_household_idx").on(t.householdId, t.position),
+    // One rule per shop, so "Yes, always" twice updates the rule rather than adding another.
+    uniqueIndex("rules_household_merchant_key")
+      .on(t.householdId, t.merchantId)
+      .where(sql`${t.merchantId} is not null`),
+  ],
 );
 
 // Transactions --------------------------------------------------------------

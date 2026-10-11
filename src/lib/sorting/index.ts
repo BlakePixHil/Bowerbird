@@ -1,9 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import type { Db } from "@/lib/db";
-import { transactions } from "@/lib/db/schema";
+import { transactions, transactionTags } from "@/lib/db/schema";
 import type { PlainDate } from "@/lib/money";
 import { assignColours } from "./categories";
 import { cleanShopNames } from "./merchants";
+import { applyRules } from "./rules";
 
 /** One transaction going through the sorting steps, with what the steps decided so far. */
 export type SortingRow = {
@@ -24,6 +25,8 @@ export type SortingRow = {
     /** 1 to 7 maps to --c1 to --c7. Null is the shared grey. */
     colourSlot: number | null;
   };
+  /** A tag a rule adds, such as "Bali 2027". */
+  tag?: { id: string; name: string };
   /** Both sides of a transfer between the household's own accounts share this id. */
   transferGroupId?: string;
 };
@@ -43,7 +46,7 @@ export type SortingStep = (context: SortingContext, rows: SortingRow[]) => Promi
  * sync"): clean shop names (BUD-23), apply rules (BUD-25), match transfers (BUD-27). Project 03
  * adds each step here. Rows no rule sorts are left to check.
  */
-export const STEPS: readonly SortingStep[] = [cleanShopNames];
+export const STEPS: readonly SortingStep[] = [cleanShopNames, applyRules];
 
 export type SortingCounts = {
   /** Rows that got a category, transfers included. */
@@ -76,7 +79,7 @@ export async function previewSorting(
 }
 
 /**
- * Sorts saved transactions and saves each row's shop, category and transfer pair. Pass the
+ * Sorts saved transactions and saves each row's shop, category, tag and transfer pair. Pass the
  * database transaction the rows were written in, so an import is saved whole or not at all.
  * When a row lands in a category, any free category colours are handed out too.
  */
@@ -98,6 +101,10 @@ export async function sortTransactions(
       })
       .where(and(eq(transactions.id, row.id), eq(transactions.householdId, householdId)));
   }
+  const tagged = rows.flatMap((row) =>
+    row.id && row.tag ? [{ transactionId: row.id, tagId: row.tag.id }] : [],
+  );
+  if (tagged.length > 0) await db.insert(transactionTags).values(tagged).onConflictDoNothing();
   if (rows.some((row) => row.id && row.category)) await assignColours(db, householdId);
   return countSorted(rows);
 }

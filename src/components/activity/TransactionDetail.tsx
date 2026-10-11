@@ -1,8 +1,8 @@
 import { colourVar, cx, Icon, Tag, Tile, Well, type IconName } from "@/components/ui";
-import type { ActivityRow } from "@/lib/access";
+import type { ActivityCategory, ActivityRow, CategoryChoice } from "@/lib/access";
 import { formatShortDate } from "@/lib/money";
-import { categoryColour } from "@/lib/sorting/colour";
 import styles from "./Activity.module.css";
+import { Categorise } from "./Categorise";
 import { rowAmount, rowIcon, whoseLook, type People } from "./look";
 
 /** Why a row counts the way it does, in a line under its tags. */
@@ -22,13 +22,22 @@ function aboutRow(row: ActivityRow): { icon: IconName; text: string } | null {
 }
 
 /**
- * One transaction: what it was, whose and where from. The transaction sheet on a phone and the
- * panel beside the list on desktop. Categorising, splits, tags and notes come in later tickets.
+ * One transaction: what it was, whose and where from, and its category to change. The transaction
+ * sheet on a phone and the panel beside the list on desktop. Splits, tags and notes come later.
  */
-export function TransactionDetail({ row, people }: { row: ActivityRow; people: People }) {
+export function TransactionDetail({
+  row,
+  people,
+  categories,
+  onChanged,
+}: {
+  row: ActivityRow;
+  people: People;
+  categories: readonly CategoryChoice[];
+  onChanged: (ids: string[], category: ActivityCategory) => void;
+}) {
   const whose = whoseLook(row.whose, people);
   const about = aboutRow(row);
-  const colour = colourVar(categoryColour(row.category));
   return (
     <div className={styles.detail}>
       <div className={styles.detailHead}>
@@ -56,6 +65,7 @@ export function TransactionDetail({ row, people }: { row: ActivityRow; people: P
           {whose.label}
         </Tag>
         <Tag>{row.account.name}</Tag>
+        {row.shop !== row.description && <Tag>Renamed from bank text</Tag>}
         {row.pending && <Tag>Pending</Tag>}
         {row.notCounted && <Tag>Not counted</Tag>}
         {row.split && <Tag icon="split">Split</Tag>}
@@ -79,14 +89,11 @@ export function TransactionDetail({ row, people }: { row: ActivityRow; people: P
         </Well>
       )}
 
+      {categories.length > 0 && (
+        <Categorise key={row.id} row={row} categories={categories} onChanged={onChanged} />
+      )}
+
       <dl className={styles.facts}>
-        <div>
-          <dt>Category</dt>
-          <dd>
-            <span className={styles.dot} style={{ background: colour }} />
-            {row.category?.name ?? "No category yet"}
-          </dd>
-        </div>
         <div>
           <dt>Account</dt>
           <dd>

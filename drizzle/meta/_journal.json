@@ -43,6 +43,13 @@
       "when": 1791686976167,
       "tag": "0005_starting_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791687614463,
+      "tag": "0006_one_rule_per_shop",
+      "breakpoints": true
     }
   ]
 }
