@@ -4,6 +4,7 @@ import { AppSidebar } from "./AppSidebar";
 import { getShell } from "./data";
 import { TABS, visible } from "./nav";
 import { SearchShortcut } from "./SearchShortcut";
+import { SyncOnOpen } from "./SyncOnOpen";
 import styles from "./Shell.module.css";
 
 /**
@@ -23,6 +24,7 @@ export async function AppFrame({ children }: { children: ReactNode }) {
       </main>
       <TabBar items={visible(TABS)} className={styles.tabbar} />
       <SearchShortcut />
+      {shell.syncDue && <SyncOnOpen />}
     </div>
   );
 }

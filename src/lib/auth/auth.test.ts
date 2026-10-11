@@ -5,6 +5,7 @@ import { createTestDb } from "../../../tests/db";
 import { fakeAuthenticator } from "../../../tests/fake-authenticator";
 import type { Db } from "@/lib/db";
 import { households, members, passkeys, sessions } from "@/lib/db/schema";
+import { isCronCall } from "./cron";
 import { memberFor } from "./current";
 import { deviceLabel, passkeyButtonLabel } from "./device";
 import { checkRegistration, checkSignIn, registrationOptions, signInOptions } from "./passkeys";
@@ -70,6 +71,24 @@ describe("who may open what", () => {
     expect(safeNext("/\\evil.example")).toBe("/");
     expect(safeNext("/api/sync")).toBe("/");
     expect(safeNext("/sign-in")).toBe("/");
+  });
+});
+
+describe("the daily job's secret", () => {
+  const env = { CRON_SECRET: "a-long-random-cron-secret" };
+
+  it("lets in only Vercel Cron's header with the secret", () => {
+    expect(isCronCall("Bearer a-long-random-cron-secret", env)).toBe(true);
+    expect(isCronCall("Bearer a-long-random-cron-secreT", env)).toBe(false);
+    expect(isCronCall("a-long-random-cron-secret", env)).toBe(false);
+    expect(isCronCall("Bearer ", env)).toBe(false);
+    expect(isCronCall(null, env)).toBe(false);
+  });
+
+  it("refuses every call without a long enough secret", () => {
+    expect(isCronCall("Bearer ", { CRON_SECRET: "" })).toBe(false);
+    expect(isCronCall("Bearer undefined", {})).toBe(false);
+    expect(isCronCall("Bearer short", { CRON_SECRET: "short" })).toBe(false);
   });
 });
 

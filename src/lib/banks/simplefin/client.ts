@@ -1,5 +1,10 @@
 import { addDays, type PlainDate } from "@/lib/money";
-import { SourceError, type BankSource, type SourceAccountList } from "../source";
+import {
+  SourceError,
+  type BankSource,
+  type SourceAccount,
+  type SourceAccountList,
+} from "../source";
 import {
   readText,
   remoteUrl,
@@ -8,7 +13,7 @@ import {
   UnsafeUrlError,
   type HttpOptions,
 } from "./http";
-import { readAccountSet, type AccountSet } from "./parse";
+import { readAccountSet, type AccountSet, type SimpleFinAccount } from "./parse";
 import { checkSetupToken, providerName } from "./token";
 
 /**
@@ -207,6 +212,16 @@ export async function fetchAccountSet(
   return set;
 }
 
+const asSourceAccount = (a: SimpleFinAccount): SourceAccount => ({
+  externalId: a.id,
+  name: a.name,
+  institution: a.institution,
+  currency: a.currency,
+  balanceCents: a.balanceCents,
+  availableCents: a.availableCents,
+  date: a.balanceDate,
+});
+
 /** Midnight UTC at the start of a day, in unix seconds. */
 const unixStart = (date: PlainDate) => Date.parse(`${date}T00:00:00Z`) / 1000;
 
@@ -218,36 +233,38 @@ export function simplefinSource(
 ): BankSource {
   const accounts = async (): Promise<SourceAccountList> => {
     const set = await fetchAccountSet(accessUrl, { balancesOnly: true }, timeZone, options);
-    return {
-      accounts: set.accounts.map((a) => ({
-        externalId: a.id,
-        name: a.name,
-        institution: a.institution,
-        currency: a.currency,
-        balanceCents: a.balanceCents,
-        availableCents: a.availableCents,
-        date: a.balanceDate,
-      })),
-      bankCount: set.bankCount,
-    };
+    return { accounts: set.accounts.map(asSourceAccount), bankCount: set.bankCount };
   };
+  // Ask a day either side, since the server's days are UTC, then keep the household's days.
+  const between = (wanted: string[], from: PlainDate, to?: PlainDate) =>
+    fetchAccountSet(
+      accessUrl,
+      {
+        startDate: unixStart(addDays(from, -1)),
+        endDate: to ? unixStart(addDays(to, 2)) : undefined,
+        pending: true,
+        accounts: wanted,
+      },
+      timeZone,
+      options,
+    );
+  const inDays = (rows: SimpleFinAccount["transactions"], from: PlainDate, to?: PlainDate) =>
+    rows.filter((t) => t.date >= from && (!to || t.date <= to));
   return {
     listAccounts: accounts,
     async fetchTransactions(account, from, to) {
-      // Ask a day either side, since the server's days are UTC, then keep the household's days.
-      const set = await fetchAccountSet(
-        accessUrl,
-        {
-          startDate: unixStart(addDays(from, -1)),
-          endDate: unixStart(addDays(to, 2)),
-          pending: true,
-          accounts: [account],
-        },
-        timeZone,
-        options,
-      );
+      const set = await between([account], from, to);
       const found = set.accounts.find((a) => a.id === account);
-      return (found?.transactions ?? []).filter((t) => t.date >= from && t.date <= to);
+      return inDays(found?.transactions ?? [], from, to);
+    },
+    async fetchRecent(wanted, from) {
+      if (wanted.length === 0) return { accounts: [] };
+      const set = await between(wanted, from);
+      return {
+        accounts: set.accounts
+          .filter((a) => wanted.includes(a.id))
+          .map((a) => ({ ...asSourceAccount(a), transactions: inDays(a.transactions, from) })),
+      };
     },
     async fetchBalance(account) {
       const found = (await accounts()).accounts.find((a) => a.externalId === account);

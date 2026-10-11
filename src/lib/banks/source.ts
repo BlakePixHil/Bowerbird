@@ -11,6 +11,11 @@ export interface BankSource {
   fetchTransactions(account: string, from: PlainDate, to: PlainDate): Promise<SourceTransaction[]>;
   /** An account's latest balance. */
   fetchBalance(account: string): Promise<SourceBalance>;
+  /**
+   * The given accounts with their latest balances and every transaction dated `from` or later,
+   * including any the bank dates ahead, in one request. For the daily sync.
+   */
+  fetchRecent(accounts: string[], from: PlainDate): Promise<SourceRecent>;
 }
 
 export type SourceBalance = {
@@ -36,6 +41,11 @@ export type SourceAccountList = {
   accounts: SourceAccount[];
   /** How many bank connections the provider has behind this source, or null if it doesn't say. */
   bankCount: number | null;
+};
+
+export type SourceRecent = {
+  /** Each account the source sent, with its transactions oldest first. */
+  accounts: (SourceAccount & { transactions: SourceTransaction[] })[];
 };
 
 export type SourceTransaction = {

@@ -1,0 +1,27 @@
+.card {
+  padding: 16px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.head p {
+  margin: 0;
+}
+
+.plan {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 8px;
+  margin-top: 12px;
+}

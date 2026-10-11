@@ -116,6 +116,8 @@ describe("AppSidebar", () => {
     today: "2026-10-10",
     member: { name: "You", initials: "Y", owner: "you" },
     sync: { kind: "never" },
+    syncDue: false,
+    live: { connections: 0, banks: null },
   };
   const html = renderToStaticMarkup(<AppSidebar shell={shell} />);
 

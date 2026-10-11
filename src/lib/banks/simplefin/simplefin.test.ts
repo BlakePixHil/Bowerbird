@@ -332,5 +332,19 @@ describe("talking to a SimpleFIN server", () => {
       date: "2026-09-03",
     });
     await expect(source.fetchBalance("gone")).rejects.toMatchObject({ kind: "auth" });
+
+    // The daily sync: every wanted account in one request, balances and rows together.
+    const before = server.requests.length;
+    const recent = await source.fetchRecent(["acc-1", "acc-2"], "2026-09-02");
+    expect(server.requests.length).toBe(before + 1);
+    expect(server.requests.at(-1)!.getAll("account")).toEqual(["acc-1", "acc-2"]);
+    expect(server.requests.at(-1)!.has("end-date")).toBe(false);
+    expect(recent.accounts.map((a) => [a.externalId, a.balanceCents])).toEqual([
+      ["acc-1", 218450],
+      ["acc-2", -128400],
+    ]);
+    expect(recent.accounts[0].transactions.map((r) => r.externalId)).toEqual(["t2", "t3"]);
+    expect(await source.fetchRecent([], "2026-09-02")).toEqual({ accounts: [] });
+    expect(server.requests.length).toBe(before + 1);
   });
 });
