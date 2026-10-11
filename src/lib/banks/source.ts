@@ -6,7 +6,7 @@ import type { PlainDate } from "@/lib/money";
  */
 export interface BankSource {
   /** Every account the connection can read, with its latest balance. */
-  listAccounts(): Promise<SourceAccount[]>;
+  listAccounts(): Promise<SourceAccountList>;
   /** An account's transactions dated from `from` up to and including `to`, oldest first. */
   fetchTransactions(account: string, from: PlainDate, to: PlainDate): Promise<SourceTransaction[]>;
   /** An account's latest balance. */
@@ -30,6 +30,12 @@ export type SourceAccount = SourceBalance & {
   institution: string | null;
   /** ISO 4217, for example AUD. */
   currency: string;
+};
+
+export type SourceAccountList = {
+  accounts: SourceAccount[];
+  /** How many bank connections the provider has behind this source, or null if it doesn't say. */
+  bankCount: number | null;
 };
 
 export type SourceTransaction = {

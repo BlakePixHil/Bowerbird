@@ -1,5 +1,5 @@
 import { addDays, type PlainDate } from "@/lib/money";
-import { SourceError, type BankSource, type SourceAccount } from "../source";
+import { SourceError, type BankSource, type SourceAccountList } from "../source";
 import {
   readText,
   remoteUrl,
@@ -216,17 +216,20 @@ export function simplefinSource(
   timeZone: string,
   options: HttpOptions = {},
 ): BankSource {
-  const accounts = async (): Promise<SourceAccount[]> => {
+  const accounts = async (): Promise<SourceAccountList> => {
     const set = await fetchAccountSet(accessUrl, { balancesOnly: true }, timeZone, options);
-    return set.accounts.map((a) => ({
-      externalId: a.id,
-      name: a.name,
-      institution: a.institution,
-      currency: a.currency,
-      balanceCents: a.balanceCents,
-      availableCents: a.availableCents,
-      date: a.balanceDate,
-    }));
+    return {
+      accounts: set.accounts.map((a) => ({
+        externalId: a.id,
+        name: a.name,
+        institution: a.institution,
+        currency: a.currency,
+        balanceCents: a.balanceCents,
+        availableCents: a.availableCents,
+        date: a.balanceDate,
+      })),
+      bankCount: set.bankCount,
+    };
   };
   return {
     listAccounts: accounts,
@@ -247,7 +250,7 @@ export function simplefinSource(
       return (found?.transactions ?? []).filter((t) => t.date >= from && t.date <= to);
     },
     async fetchBalance(account) {
-      const found = (await accounts()).find((a) => a.externalId === account);
+      const found = (await accounts()).accounts.find((a) => a.externalId === account);
       if (!found)
         throw new SourceError(
           "auth",

@@ -192,6 +192,10 @@ export const connections = pgTable(
     lastSyncedAt: timestamp({ withTimezone: true }),
     lastError: text(),
     consentExpiresAt: timestamp({ withTimezone: true }),
+    /** How many bank connections the provider has behind this link, for the plan usage line. */
+    bankCount: smallint(),
+    /** A sync holds this lease while it runs, so the same connection never syncs twice at once. */
+    syncLeaseUntil: timestamp({ withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [index("connections_member_idx").on(t.memberId)],
@@ -220,6 +224,10 @@ export const accounts = pgTable(
     includeInBudgets: boolean().notNull().default(true),
     manual: boolean().notNull().default(false),
     archived: boolean().notNull().default(false),
+    /** Live sync only: the earliest day the first sync has asked the bank for so far. */
+    historyFrom: date({ mode: "string" }),
+    /** Live sync only: when the first sync finished bringing in this account's history. */
+    historySyncedAt: timestamp({ withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [

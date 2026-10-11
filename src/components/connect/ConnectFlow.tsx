@@ -8,7 +8,6 @@ import {
   cx,
   Divider,
   Icon,
-  IconButtonLink,
   Tag,
   TextLink,
   Tile,
@@ -25,6 +24,7 @@ import {
   KeepsNote,
   NumberedList,
   OpenProvider,
+  PhoneTop,
   Section,
   StepRail,
   TokenField,
@@ -145,15 +145,7 @@ export function ConnectFlow({ ready }: { ready: boolean }) {
 
   const phone = (
     <div className={styles.phone}>
-      <div className={styles.phoneBar}>
-        <IconButtonLink icon="arrow-left" label="Back to accounts and sharing" href="/accounts" />
-        <span className="small sub">Live sync · step 1 of 3</span>
-      </div>
-      <div className={styles.progress} role="img" aria-label="Step 1 of 3">
-        <span className={styles.progressOn} />
-        <span />
-        <span />
-      </div>
+      <PhoneTop step={1} back={{ href: "/accounts", label: "Back to accounts and sharing" }} />
       <div className={styles.intro}>
         <h1 className="h1">Connect live sync</h1>
         <p className={cx("sub", styles.lead)}>

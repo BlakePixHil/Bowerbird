@@ -20,6 +20,8 @@ type SegmentedControlProps<T extends string> = {
   /** The form field name. */
   name?: string;
   disabled?: boolean;
+  /** sm is the 32px control in a list row, such as who can see an account. */
+  size?: "md" | "sm";
   className?: string;
 };
 
@@ -35,11 +37,16 @@ export function SegmentedControl<T extends string>({
   onChange,
   name,
   disabled,
+  size = "md",
   className,
 }: SegmentedControlProps<T>) {
   const groupName = useId();
   return (
-    <div role="radiogroup" aria-label={label} className={cx(styles.seg, className)}>
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className={cx(styles.seg, size === "sm" && styles.sm, className)}
+    >
       {options.map((option) => (
         <label key={option.value} className={cx(styles.option, "hit")}>
           <input

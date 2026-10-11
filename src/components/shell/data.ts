@@ -1,7 +1,10 @@
 import { connection } from "next/server";
 import { cache } from "react";
 import type { Owner } from "@/components/ui";
+import { viewerOf } from "@/lib/access";
 import { requireMember } from "@/lib/auth";
+import { liveSyncSummary, resumeFirstSyncs } from "@/lib/banks/live/background";
+import { getDb } from "@/lib/db";
 import { todayIn, type PlainDate } from "@/lib/money";
 import type { SyncState } from "./sync";
 
@@ -25,7 +28,7 @@ export function initialsOf(name: string): string {
 
 /**
  * Reads the frame's data once per request, for the signed-in member (anyone else is sent to sign
- * in). Project 02 fills in the sync state.
+ * in). A first sync that stopped part way carries on in the background as the page loads.
  */
 export const getShell = cache(async (): Promise<Shell> => {
   // Today's date changes per request, so the frame is never prerendered at build time.
@@ -33,6 +36,10 @@ export const getShell = cache(async (): Promise<Shell> => {
   const me = await requireMember();
   const now = new Date();
   const timeZone = me.household.timezone;
+  const db = getDb();
+  const viewer = viewerOf(me);
+  const resumed = await resumeFirstSyncs(db, viewer);
+  const live = await liveSyncSummary(db, viewer, now);
   return {
     householdName: me.household.name,
     timeZone,
@@ -43,6 +50,11 @@ export const getShell = cache(async (): Promise<Shell> => {
       initials: initialsOf(me.member.displayName),
       owner: "you",
     },
-    sync: { kind: "never" },
+    sync:
+      resumed || live.running
+        ? { kind: "syncing" }
+        : live.lastSyncedAt
+          ? { kind: "synced", at: live.lastSyncedAt }
+          : { kind: "never" },
   };
 });

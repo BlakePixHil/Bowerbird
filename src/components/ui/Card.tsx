@@ -3,7 +3,7 @@ import styles from "./Card.module.css";
 import { cx } from "./cx";
 
 type SurfaceProps = HTMLAttributes<HTMLElement> & {
-  as?: "div" | "section" | "article" | "aside" | "li" | "ol";
+  as?: "div" | "section" | "article" | "aside" | "li" | "ol" | "ul";
 };
 
 /** The main surface for a group of content. Padding is up to the screen using it. */

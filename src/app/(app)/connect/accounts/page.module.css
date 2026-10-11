@@ -4,11 +4,15 @@
   gap: 16px;
 }
 
+.phoneTop {
+  display: none;
+}
+
 .card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
   padding: 20px;
 }
 
@@ -18,7 +22,21 @@
   text-wrap: pretty;
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 @media (max-width: 760px) {
+  .page {
+    gap: 12px;
+  }
+
+  .phoneTop {
+    display: block;
+  }
+
   .rail {
     display: none;
   }

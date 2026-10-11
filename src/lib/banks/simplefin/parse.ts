@@ -32,6 +32,8 @@ export type SimpleFinProblem = {
 
 export type AccountSet = {
   accounts: SimpleFinAccount[];
+  /** How many bank connections are behind the access link (version 2), or null if it doesn't say. */
+  bankCount: number | null;
   problems: SimpleFinProblem[];
   /** Rows the server sent that couldn't be read (no id, or an amount that isn't a number). */
   skipped: number;
@@ -173,5 +175,6 @@ export function readAccountSet(
       transactions,
     });
   }
-  return { accounts, problems, skipped };
+  const bankCount = Array.isArray(body.connections) ? body.connections.length : null;
+  return { accounts, bankCount, problems, skipped };
 }

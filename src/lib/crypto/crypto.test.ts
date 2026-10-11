@@ -27,7 +27,8 @@ describe("secrets at rest", () => {
   it("refuses the wrong key and changed values", () => {
     const sealed = encryptSecret(secret, key);
     expect(() => decryptSecret(sealed, randomBytes(32))).toThrow(DecryptError);
-    const flipped = sealed.slice(0, -2) + (sealed.endsWith("A") ? "B" : "A") + sealed.slice(-1);
+    // Change the second-to-last character, which is all ciphertext (the last can be part padding).
+    const flipped = sealed.slice(0, -2) + (sealed.at(-2) === "A" ? "B" : "A") + sealed.slice(-1);
     expect(() => decryptSecret(flipped, key)).toThrow(DecryptError);
     expect(() => decryptSecret(sealed.slice(0, 20), key)).toThrow(DecryptError);
     expect(() => decryptSecret("v2." + sealed.slice(3), key)).toThrow(DecryptError);
