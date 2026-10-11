@@ -1,4 +1,4 @@
-import type { DataColour, IconName } from "@/components/ui";
+import type { IconName } from "@/components/ui";
 import { ICONS } from "@/components/ui/icons";
 import type { ColumnRole, DetectedColumn, FileFormat } from "@/lib/banks/files";
 import type { FileAccountKind, ShownCategory } from "@/lib/banks/imports/shapes";
@@ -110,12 +110,6 @@ export function count(n: number, noun: string, plural = `${noun}s`): string {
 }
 
 export const number = (n: number) => n.toLocaleString("en-AU");
-
-/** The colour a category is drawn in: its fixed slot, or the shared grey. */
-export function categoryColour(category: Pick<ShownCategory, "colourSlot">): DataColour {
-  const slot = category.colourSlot;
-  return slot && slot >= 1 && slot <= 7 ? (`c${slot}` as DataColour) : "c-other";
-}
 
 export function categoryIcon(category: ShownCategory | null, transfer: boolean): IconName {
   if (transfer) return "transfer";

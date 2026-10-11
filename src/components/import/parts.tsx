@@ -28,9 +28,9 @@ import {
   type SortGroup,
 } from "@/lib/banks/imports/shapes";
 import { formatMoney, formatShortDate } from "@/lib/money";
+import { categoryColour } from "@/lib/sorting/colour";
 import styles from "./Import.module.css";
 import {
-  categoryColour,
   categoryIcon,
   columnName,
   count,

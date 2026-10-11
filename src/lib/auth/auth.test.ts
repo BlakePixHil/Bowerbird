@@ -4,7 +4,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestDb } from "../../../tests/db";
 import { fakeAuthenticator } from "../../../tests/fake-authenticator";
 import type { Db } from "@/lib/db";
-import { households, members, passkeys, sessions } from "@/lib/db/schema";
+import { STARTING_CATEGORIES } from "@/config/app";
+import { categories, households, members, passkeys, sessions } from "@/lib/db/schema";
 import { isCronCall } from "./cron";
 import { memberFor } from "./current";
 import { deviceLabel, passkeyButtonLabel } from "./device";
@@ -194,6 +195,10 @@ describe("with a database", () => {
       member: { role: "owner", displayName: "Sam" },
       household: { name: FIRST_HOUSEHOLD_NAME },
     });
+    const starting = await db.select({ name: categories.name }).from(categories);
+    expect(starting.map((c) => c.name).sort()).toEqual(
+      STARTING_CATEGORIES.map((c) => c.name).sort(),
+    );
   });
 
   it("closes setup once someone has set up", async () => {
