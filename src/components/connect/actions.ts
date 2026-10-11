@@ -2,7 +2,7 @@
 
 import { viewerOf } from "@/lib/access";
 import { requireMember } from "@/lib/auth";
-import { connectSimpleFin } from "@/lib/banks/connections";
+import { connectSimpleFin, reconnectSimpleFin } from "@/lib/banks/connections";
 import {
   firstSyncProgress,
   saveAccountPicks,
@@ -19,15 +19,23 @@ const dev = () => process.env.NODE_ENV === "development";
 export type ConnectAnswer = { ok: true; next: string } | { ok: false; error: string };
 
 /**
- * Claims the pasted setup token for the signed-in member and saves the connection. The token is
- * only ever in this request: it isn't logged, saved or sent back.
+ * Claims the pasted setup token for the signed-in member and saves the connection, or with
+ * `reconnect`, gives one of their connections the new access link. The token is only ever in this
+ * request: it isn't logged, saved or sent back.
  */
 export async function connectLiveSync(form: FormData): Promise<ConnectAnswer> {
   const me = await requireMember();
   const token = form.get("token");
+  const reconnect = form.get("reconnect");
   if (typeof token !== "string" || token.length > 4096)
     return { ok: false, error: "Paste the setup token from Redbark." };
-  const result = await connectSimpleFin(getDb(), viewerOf(me), token, { allowLocal: dev() });
+  const options = { allowLocal: dev() };
+  if (typeof reconnect === "string" && reconnect !== "") {
+    const result = await reconnectSimpleFin(getDb(), viewerOf(me), reconnect, token, options);
+    if (!result.ok) return { ok: false, error: result.error };
+    return { ok: true, next: "/accounts" };
+  }
+  const result = await connectSimpleFin(getDb(), viewerOf(me), token, options);
   if (!result.ok) return { ok: false, error: result.error };
   return { ok: true, next: `/connect/accounts?connection=${result.connectionId}` };
 }

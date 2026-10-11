@@ -62,6 +62,49 @@ export async function connectSimpleFin(
   }
 }
 
+const NOT_YOURS = "Only the person who connected live sync can reconnect it.";
+
+/**
+ * Reconnects one of the viewer's own connections with a new setup token, for when the provider
+ * stopped the old access link. The new link replaces the old one, so the accounts, their picks
+ * and everything already imported stay as they are. Checks the same things as connecting before
+ * the token is used.
+ */
+export async function reconnectSimpleFin(
+  db: Db,
+  viewer: Viewer,
+  connectionId: string,
+  setupToken: string,
+  options: HttpOptions & { env?: Record<string, string | undefined> } = {},
+): Promise<ConnectResult> {
+  const own = await ownConnection(db, viewer, connectionId);
+  if (!own || own.kind !== "simplefin")
+    return { ok: false, problem: "not_saved", error: NOT_YOURS };
+  if (!canEncrypt(options.env)) return { ok: false, problem: "not_ready", error: NO_KEY };
+  const check = checkSetupToken(setupToken);
+  if (!check.ok) return { ok: false, problem: "not_a_token", error: check.error };
+
+  const claim = await claimSetupToken(setupToken, options);
+  if (!claim.ok) return claim;
+
+  try {
+    await db
+      .update(connections)
+      .set({
+        secretEncrypted: encryptSecret(claim.accessUrl, encryptionKey(options.env)),
+        status: "ok",
+        lastError: null,
+        // So opening the app syncs it straight away.
+        syncTriedAt: null,
+      })
+      .where(eq(connections.id, own.id));
+    return { ok: true, connectionId: own.id, provider: claim.provider };
+  } catch (error) {
+    console.error("Saving a live sync connection failed", (error as { code?: string }).code);
+    return { ok: false, problem: "not_saved", error: notSaved(claim.provider) };
+  }
+}
+
 export type OwnConnection = {
   id: string;
   kind: "simplefin" | "coinspot";

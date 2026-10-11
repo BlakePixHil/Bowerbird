@@ -28,7 +28,20 @@ export type SimpleFinProblem = {
   message: string;
   connectionId: string | null;
   accountId: string | null;
+  /**
+   * The bank it's about: the named connection's or account's bank (version 2), or the bank a
+   * version 1 message names in "Connection to <bank> may need attention". Null if neither says.
+   */
+  bank: string | null;
 };
+
+/** How Redbark, on protocol version 1, says one bank's connection isn't working. */
+const NEEDS_ATTENTION = /^connection to (.+?) may need attention\b/i;
+
+/** The bank a version 1 message says needs attention, or null if it isn't that message. */
+export function bankNeedingAttention(message: string): string | null {
+  return NEEDS_ATTENTION.exec(message.trim())?.[1].trim() || null;
+}
 
 export type AccountSet = {
   accounts: SimpleFinAccount[];
@@ -120,17 +133,26 @@ export function readAccountSet(
       if (!isObject(e)) continue;
       const message = text(e.msg);
       if (!message) continue;
+      const connectionId = id(e.conn_id);
       problems.push({
         code: text(e.code) ?? "",
         message,
-        connectionId: id(e.conn_id),
+        connectionId,
         accountId: id(e.account_id),
+        bank: connectionId ? (connections.get(connectionId) ?? null) : null,
       });
     }
   } else if (Array.isArray(body.errors)) {
     for (const e of body.errors) {
       const message = text(e);
-      if (message) problems.push({ code: "", message, connectionId: null, accountId: null });
+      if (message)
+        problems.push({
+          code: "",
+          message,
+          connectionId: null,
+          accountId: null,
+          bank: bankNeedingAttention(message),
+        });
     }
   }
 
@@ -174,6 +196,11 @@ export function readAccountSet(
       balanceDate: balanceAt === null ? today : unixDay(balanceAt, timeZone),
       transactions,
     });
+  }
+  // A problem about one account is about that account's bank.
+  for (const problem of problems) {
+    if (problem.bank || !problem.accountId) continue;
+    problem.bank = accounts.find((a) => a.id === problem.accountId)?.institution ?? null;
   }
   const bankCount = Array.isArray(body.connections) ? body.connections.length : null;
   return { accounts, bankCount, problems, skipped };

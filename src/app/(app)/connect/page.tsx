@@ -7,12 +7,18 @@ import { canEncrypt } from "@/lib/crypto";
 
 export const metadata: Metadata = { title: "Connect live sync" };
 
-export default async function ConnectPage() {
+export default async function ConnectPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reconnect?: string | string[] }>;
+}) {
   await getShell();
+  const { reconnect } = await searchParams;
+  const id = typeof reconnect === "string" && reconnect !== "" ? reconnect : undefined;
   return (
     <>
       <PageHeader
-        title="Connect live sync"
+        title={id ? "Reconnect live sync" : "Connect live sync"}
         phone={false}
         parent={{ href: "/accounts", label: "Accounts and sharing" }}
         actions={
@@ -26,7 +32,7 @@ export default async function ConnectPage() {
           </>
         }
       />
-      <ConnectFlow ready={canEncrypt()} />
+      <ConnectFlow ready={canEncrypt()} reconnect={id} />
     </>
   );
 }

@@ -9,13 +9,15 @@ import type { Db } from "@/lib/db";
 import {
   accounts,
   balances,
+  connectionBanks,
   connections,
   households,
   members,
   transactions,
   users,
 } from "@/lib/db/schema";
-import { connectSimpleFin } from "../connections";
+import { connectSimpleFin, reconnectSimpleFin } from "../connections";
+import { liveHealth, syncWarning } from "./banks";
 import {
   claimLeaseForSync,
   firstSyncProgress,
@@ -322,6 +324,146 @@ describe("the daily sync", () => {
     );
     expect(await syncConnection(db, id, { ...when(NOW), budgetMs: 60_000 })).toBe("synced");
     expect((await firstSyncProgress(db, owner, id, NOW))?.finished).toBe(true);
+  });
+});
+
+describe("when a bank needs reconnecting", () => {
+  const banksOf = (connectionId: string) =>
+    db
+      .select({
+        name: connectionBanks.name,
+        status: connectionBanks.status,
+        consentFrom: connectionBanks.consentFrom,
+        lastSyncedAt: connectionBanks.lastSyncedAt,
+        problemSince: connectionBanks.problemSince,
+      })
+      .from(connectionBanks)
+      .where(eq(connectionBanks.connectionId, connectionId))
+      .orderBy(asc(connectionBanks.name));
+  const warning = async (viewer: Viewer, today: string) =>
+    syncWarning(await liveHealth(db, viewer), today, "Australia/Sydney");
+
+  it("keeps syncing the other bank and everything already here, then clears once it's back", async () => {
+    const { owner, partner, connectionId } = await household();
+    expect(await banksOf(connectionId)).toEqual([
+      {
+        name: "Harbour Bank",
+        status: "ok",
+        consentFrom: "2026-10-10",
+        lastSyncedAt: NOW,
+        problemSince: null,
+      },
+      {
+        name: "Wattle Credit Union",
+        status: "ok",
+        consentFrom: "2026-10-10",
+        lastSyncedAt: NOW,
+        problemSince: null,
+      },
+    ]);
+    const before = await saved(connectionId);
+
+    // Two days later the provider can't reach one bank, and sends only the other bank's accounts.
+    const set = structuredClone(FIXTURE) as { accounts: Account[]; errlist: Row[] };
+    set.accounts = set.accounts.filter((account) => account.conn_id !== "c2");
+    set.errlist = [{ code: "con.auth", msg: "Approve access again.", conn_id: "c2" }];
+    server.accountSet = set;
+    const later = new Date("2026-10-12T03:00:00Z");
+    expect(await syncConnection(db, connectionId, when(later))).toBe("synced");
+    expect(await banksOf(connectionId)).toEqual([
+      {
+        name: "Harbour Bank",
+        status: "ok",
+        consentFrom: "2026-10-10",
+        lastSyncedAt: later,
+        problemSince: null,
+      },
+      {
+        name: "Wattle Credit Union",
+        status: "needs_reconnect",
+        consentFrom: "2026-10-10",
+        lastSyncedAt: NOW,
+        problemSince: later,
+      },
+    ]);
+    const after = await saved(connectionId);
+    expect(after.rows).toEqual(before.rows);
+    expect((await connection(connectionId)).status).toBe("ok");
+    expect(await warning(owner, "2026-10-12")).toEqual({
+      title: "Reconnect Wattle Credit Union in Redbark.",
+      body: "Redbark says it needs attention. Everything up to 10 Oct is still here.",
+      action: { kind: "link", label: "Reconnect", href: "https://redbark.com", external: true },
+    });
+    // Only the person who connected it can reconnect it.
+    expect(await warning(partner, "2026-10-12")).toBeNull();
+
+    // Still not back the next day: it has needed attention since the first time it was said.
+    await syncConnection(db, connectionId, when(at(60 * 24 * 3)));
+    expect((await banksOf(connectionId))[1].problemSince).toEqual(later);
+
+    server.accountSet = FIXTURE;
+    const back = new Date("2026-10-14T03:00:00Z");
+    expect(await syncConnection(db, connectionId, when(back))).toBe("synced");
+    expect((await banksOf(connectionId))[1]).toEqual({
+      name: "Wattle Credit Union",
+      status: "ok",
+      // Back well inside its consent, so the consent still counts from when it first synced.
+      consentFrom: "2026-10-10",
+      lastSyncedAt: back,
+      problemSince: null,
+    });
+    expect(await warning(owner, "2026-10-14")).toBeNull();
+  });
+
+  it("starts counting a new consent when a bank syncs again after its consent ran out", async () => {
+    const { connectionId } = await household();
+    await db
+      .update(connectionBanks)
+      .set({ consentFrom: "2025-10-12", status: "needs_reconnect" })
+      .where(eq(connectionBanks.connectionId, connectionId));
+    const back = new Date("2026-10-12T03:00:00Z");
+    await syncConnection(db, connectionId, when(back));
+    expect((await banksOf(connectionId)).map((bank) => [bank.consentFrom, bank.status])).toEqual([
+      ["2026-10-12", "ok"],
+      ["2026-10-12", "ok"],
+    ]);
+  });
+
+  it("asks for a new setup token when the provider stops access, and reconnecting clears it", async () => {
+    const { owner, partner, connectionId } = await household();
+    const before = await saved(connectionId);
+    server.accountsStatus = 403;
+    expect(await syncConnection(db, connectionId, when(at(120)))).toBe("problem");
+    expect(await warning(owner, "2026-10-10")).toMatchObject({
+      title: "Reconnect live sync.",
+      action: { href: `/connect?reconnect=${connectionId}` },
+    });
+    server.accountsStatus = null;
+
+    // The partner can't, and their token isn't used up trying.
+    const claims = server.claims;
+    expect(
+      await reconnectSimpleFin(db, partner, connectionId, server.newToken(), base),
+    ).toMatchObject({
+      ok: false,
+      error: "Only the person who connected live sync can reconnect it.",
+    });
+    expect(server.claims).toBe(claims);
+
+    expect(await reconnectSimpleFin(db, owner, connectionId, server.newToken(), base)).toEqual({
+      ok: true,
+      connectionId,
+      provider: expect.any(String),
+    });
+    expect(await connection(connectionId)).toMatchObject({
+      status: "ok",
+      lastError: null,
+      syncTriedAt: null,
+    });
+    expect(await warning(owner, "2026-10-10")).toBeNull();
+    expect(await syncConnection(db, connectionId, when(at(180)))).toBe("synced");
+    expect((await saved(connectionId)).rows).toEqual(before.rows);
+    expect(await syncIsDue(db, owner, at(200))).toBe(false);
   });
 });
 

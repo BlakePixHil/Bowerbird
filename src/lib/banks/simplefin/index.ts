@@ -1,4 +1,5 @@
 export {
+  asSourceProblem,
   claimSetupToken,
   fetchAccountSet,
   simplefinSource,
@@ -8,6 +9,7 @@ export {
 } from "./client";
 export { isPrivateHost, type HttpOptions } from "./http";
 export {
+  bankNeedingAttention,
   decimalToCents,
   readAccountSet,
   type AccountSet,

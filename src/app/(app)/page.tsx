@@ -1,10 +1,11 @@
-import { PageHeader } from "@/components/shell";
+import { PageHeader, SyncWarningBanner } from "@/components/shell";
 import { ButtonLink, EmptyState } from "@/components/ui";
 
 export default function HomePage() {
   return (
     <>
       <PageHeader title="Home" home />
+      <SyncWarningBanner />
       <EmptyState
         icon="home"
         title="Your month will show up here"

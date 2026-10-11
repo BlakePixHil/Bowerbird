@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/shell";
+import { PageHeader, SyncWarningBanner } from "@/components/shell";
 import { ButtonLink, EmptyState, IconButtonLink } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Activity" };
@@ -11,6 +11,7 @@ export default function ActivityPage() {
         title="Activity"
         phoneActions={<IconButtonLink href="/import" icon="upload" label="Import a bank file" />}
       />
+      <SyncWarningBanner />
       <EmptyState
         icon="list"
         title="No transactions yet"

@@ -4,6 +4,7 @@ import {
   type BankSource,
   type SourceAccount,
   type SourceAccountList,
+  type SourceProblem,
 } from "../source";
 import {
   readText,
@@ -13,7 +14,13 @@ import {
   UnsafeUrlError,
   type HttpOptions,
 } from "./http";
-import { readAccountSet, type AccountSet, type SimpleFinAccount } from "./parse";
+import {
+  bankNeedingAttention,
+  readAccountSet,
+  type AccountSet,
+  type SimpleFinAccount,
+  type SimpleFinProblem,
+} from "./parse";
 import { checkSetupToken, providerName } from "./token";
 
 /**
@@ -212,6 +219,21 @@ export async function fetchAccountSet(
   return set;
 }
 
+/**
+ * What a server's message means for the bank it's about. A connection problem (`con.`, or
+ * Redbark's "may need attention") or a failed sign-in to the server needs someone to reconnect at
+ * the provider. Anything else, such as an account that couldn't be read, should clear by itself.
+ * Unknown codes count as their prefix, as the protocol says.
+ */
+export function asSourceProblem(problem: SimpleFinProblem): SourceProblem {
+  const prefix = problem.code.split(".")[0];
+  const reconnect =
+    prefix === "con" ||
+    problem.code === "gen.auth" ||
+    (problem.code === "" && bankNeedingAttention(problem.message) !== null);
+  return { bank: problem.bank, kind: reconnect ? "reconnect" : "later" };
+}
+
 const asSourceAccount = (a: SimpleFinAccount): SourceAccount => ({
   externalId: a.id,
   name: a.name,
@@ -233,7 +255,11 @@ export function simplefinSource(
 ): BankSource {
   const accounts = async (): Promise<SourceAccountList> => {
     const set = await fetchAccountSet(accessUrl, { balancesOnly: true }, timeZone, options);
-    return { accounts: set.accounts.map(asSourceAccount), bankCount: set.bankCount };
+    return {
+      accounts: set.accounts.map(asSourceAccount),
+      bankCount: set.bankCount,
+      problems: set.problems.map(asSourceProblem),
+    };
   };
   // Ask a day either side, since the server's days are UTC, then keep the household's days.
   const between = (wanted: string[], from: PlainDate, to?: PlainDate) =>
@@ -258,12 +284,13 @@ export function simplefinSource(
       return inDays(found?.transactions ?? [], from, to);
     },
     async fetchRecent(wanted, from) {
-      if (wanted.length === 0) return { accounts: [] };
+      if (wanted.length === 0) return { accounts: [], problems: [] };
       const set = await between(wanted, from);
       return {
         accounts: set.accounts
           .filter((a) => wanted.includes(a.id))
           .map((a) => ({ ...asSourceAccount(a), transactions: inDays(a.transactions, from) })),
+        problems: set.problems.map(asSourceProblem),
       };
     },
     async fetchBalance(account) {

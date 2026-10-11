@@ -203,6 +203,36 @@ export const connections = pgTable(
   (t) => [index("connections_member_idx").on(t.memberId)],
 );
 
+/**
+ * Each bank behind a live sync connection, as the provider names it. One bank's consent can run
+ * out while the others keep syncing, so each bank keeps its own state.
+ */
+export const connectionBanks = pgTable(
+  "connection_banks",
+  {
+    id: id(),
+    connectionId: uuid()
+      .notNull()
+      .references(() => connections.id, { onDelete: "cascade" }),
+    /** The bank's name as the provider gives it. Only ever shown as the person's own data. */
+    name: text().notNull(),
+    /** ok, or needs_reconnect while the provider says this bank's connection needs attention. */
+    status: connectionStatus().notNull().default("ok"),
+    /** When this bank's accounts last came in without a problem. */
+    lastSyncedAt: timestamp({ withTimezone: true }),
+    /** When the provider first said this bank needs attention. Cleared once it works again. */
+    problemSince: timestamp({ withTimezone: true }),
+    /**
+     * The first day of the bank's current consent, as near as the app can tell: the day it first
+     * synced here, or synced again after being reconnected. Null until it has synced.
+     */
+    consentFrom: date({ mode: "string" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("connection_banks_connection_name_key").on(t.connectionId, t.name)],
+);
+
 export const accounts = pgTable(
   "accounts",
   {
