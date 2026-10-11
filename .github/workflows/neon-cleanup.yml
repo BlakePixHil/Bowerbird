@@ -1,0 +1,23 @@
+name: Neon cleanup
+
+# Each Vercel preview gets its own Neon database branch, named preview/<git branch>, and Neon's
+# free plan holds only 10 branches. This deletes a preview's branch once its pull request closes,
+# so the limit never fills up. It does nothing until the NEON_PROJECT_ID variable and the
+# NEON_API_KEY secret are set in the repo's Actions settings. A few seconds per closed PR.
+on:
+  pull_request:
+    types: [closed]
+
+permissions: {}
+
+jobs:
+  delete-preview-branch:
+    if: vars.NEON_PROJECT_ID != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: preview/${{ github.head_ref }}
+          api_key: ${{ secrets.NEON_API_KEY }}
