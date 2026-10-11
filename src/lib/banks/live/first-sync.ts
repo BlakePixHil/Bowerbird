@@ -1,9 +1,10 @@
 import { and, asc, count, desc, eq, inArray, isNull, lt, min, or, sql } from "drizzle-orm";
 import type { Viewer } from "@/lib/access";
 import type { Db } from "@/lib/db";
-import { accounts, balances, connections, households, transactions } from "@/lib/db/schema";
+import { accounts, connections, households, transactions } from "@/lib/db/schema";
 import { addDays, todayIn, type PlainDate } from "@/lib/money";
 import { sortTransactions, type SortingRow } from "@/lib/sorting";
+import { fillBalances, saveGivenBalance } from "../balances";
 import type { BankSource } from "../source";
 import { openConnection, recordProblem, type LiveOptions, type OpenConnection } from "./open";
 import { MAX_HISTORY_DAYS, WINDOW_DAYS, type FirstSyncProgress, type SyncAccount } from "./shapes";
@@ -284,22 +285,6 @@ async function syncWindow(
   });
 }
 
-/** Saves an account's balance for the day the bank gave it, replacing that day's if it changed. */
-export async function saveBalance(
-  db: Db,
-  accountId: string,
-  balance: { date: PlainDate; balanceCents: number },
-) {
-  await db
-    .insert(balances)
-    .values({ accountId, date: balance.date, balanceCents: balance.balanceCents })
-    .onConflictDoUpdate({
-      target: [balances.accountId, balances.date],
-      set: { balanceCents: balance.balanceCents },
-      setWhere: sql`${balances.balanceCents} <> excluded.balance_cents`,
-    });
-}
-
 /** Once every account's history is in: saves the latest balances and marks the sync done. */
 async function finish(db: Db, connectionId: string, source: BankSource, now: Date) {
   const list = await source.listAccounts();
@@ -311,8 +296,10 @@ async function finish(db: Db, connectionId: string, source: BankSource, now: Dat
   await db.transaction(async (tx) => {
     for (const account of list.accounts) {
       const accountId = ids.get(account.externalId);
-      if (accountId) await saveBalance(tx, accountId, account);
+      if (accountId) await saveGivenBalance(tx, accountId, account);
     }
+    // Every day back to the oldest row, worked out from today's balance.
+    for (const account of picked) await fillBalances(tx, account.id, now);
     await tx
       .update(connections)
       .set({ lastSyncedAt: now, status: "ok", lastError: null, bankCount: list.bankCount })

@@ -17,13 +17,13 @@ import type { Db } from "@/lib/db";
 import { accounts, connections, members, transactions } from "@/lib/db/schema";
 import { addDays, daysBetween, todayIn, type PlainDate } from "@/lib/money";
 import { sortTransactions, type SortingRow } from "@/lib/sorting";
+import { fillBalances, saveGivenBalance } from "../balances";
 import type { SourceTransaction } from "../source";
 import {
   claimLeaseForSync,
   firstSyncPending,
   firstSyncWindows,
   releaseLease,
-  saveBalance,
   startRun,
   stopped,
   type RunState,
@@ -112,12 +112,15 @@ async function syncRecent(db: Db, open: OpenConnection, now: Date): Promise<bool
   const sent = new Map(recent.accounts.map((account) => [account.externalId, account]));
   await db.transaction(async (tx) => {
     for (const account of picked) {
-      // An account the bank didn't send this time keeps what it has.
+      // An account the bank didn't send this time keeps its rows, and its balance carries on.
       const found = sent.get(account.externalId!);
-      if (!found) continue;
-      const rows = await saveRecent(tx, account.id, account.householdId, found.transactions, from);
-      await sortTransactions(tx, account.householdId, rows);
-      await saveBalance(tx, account.id, found);
+      if (found) {
+        const { id, householdId } = account;
+        const rows = await saveRecent(tx, id, householdId, found.transactions, from);
+        await sortTransactions(tx, householdId, rows);
+        await saveGivenBalance(tx, id, found);
+      }
+      await fillBalances(tx, account.id, now);
     }
     await tx
       .update(connections)

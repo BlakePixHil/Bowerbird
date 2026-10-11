@@ -1,7 +1,8 @@
 import { eq, sql } from "drizzle-orm";
 import type { Viewer } from "@/lib/access";
 import type { Db } from "@/lib/db";
-import { accounts, balances, connections } from "@/lib/db/schema";
+import { accounts, connections } from "@/lib/db/schema";
+import { saveGivenBalance } from "../balances";
 import { SourceError, type SourceAccount, type SourceAccountList } from "../source";
 import { openConnection, recordProblem, type LiveOptions } from "./open";
 import {
@@ -187,14 +188,7 @@ export async function saveAccountPicks(
               : { archived: true },
           })
           .returning({ id: accounts.id });
-        if (!include) continue;
-        await tx
-          .insert(balances)
-          .values({ accountId: row.id, date: account.date, balanceCents: account.balanceCents })
-          .onConflictDoUpdate({
-            target: [balances.accountId, balances.date],
-            set: { balanceCents: account.balanceCents },
-          });
+        if (include) await saveGivenBalance(tx, row.id, account);
       }
       await tx
         .update(connections)

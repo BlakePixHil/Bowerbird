@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestDb } from "../../../../tests/db";
 import type { Viewer } from "@/lib/access";
@@ -71,6 +71,20 @@ function done(result: ImportDone | ImportProblem): ImportDone {
 
 const rowsIn = (accountId: string) =>
   db.select().from(transactions).where(eq(transactions.accountId, accountId));
+
+/** Midday on 5 September in Sydney, two days after the files' last rows. */
+const NOW = new Date("2026-09-05T02:00:00Z");
+
+const balancesOf = (accountId: string) =>
+  db
+    .select({
+      date: balances.date,
+      balanceCents: balances.balanceCents,
+      workedOut: balances.workedOut,
+    })
+    .from(balances)
+    .where(eq(balances.accountId, accountId))
+    .orderBy(asc(balances.date));
 
 let db: Db;
 let close: () => Promise<void>;
@@ -240,7 +254,7 @@ describe("checking a file", () => {
 
 describe("importing a file", () => {
   it("saves the Westpac CSV whole, and the same file again imports nothing", async () => {
-    const first = done(await runImport(db, olive, request(A.everyday, "westpac.csv")));
+    const first = done(await runImport(db, olive, request(A.everyday, "westpac.csv"), NOW));
     expect(first).toMatchObject({
       accountId: A.everyday,
       accountName: "Everyday",
@@ -277,22 +291,27 @@ describe("importing a file", () => {
       imported: 4,
       skipped: 0,
     });
-    expect(
-      await db.select().from(balances).where(eq(balances.accountId, A.everyday)),
-    ).toMatchObject([{ date: "2026-09-03", balanceCents: 1904_35 }]);
+    // The file's running balance for each day it covers, then carried on to today.
+    expect(await balancesOf(A.everyday)).toEqual([
+      { date: "2026-09-01", balanceCents: -514_05, workedOut: false },
+      { date: "2026-09-02", balanceCents: 1935_95, workedOut: false },
+      { date: "2026-09-03", balanceCents: 1904_35, workedOut: false },
+      { date: "2026-09-04", balanceCents: 1904_35, workedOut: true },
+      { date: "2026-09-05", balanceCents: 1904_35, workedOut: true },
+    ]);
 
     const check = checked(await checkImport(db, olive, request(A.everyday, "westpac.csv")));
     expect(check).toMatchObject({ rows: 4, fresh: 0, here: 4 });
     expect(check.firstHere.map((row) => row.status)).toEqual(["here", "here"]);
     expect(check.preview.every((row) => row.status === "here")).toBe(true);
 
-    const again = done(await runImport(db, olive, request(A.everyday, "westpac.csv")));
+    const again = done(await runImport(db, olive, request(A.everyday, "westpac.csv"), NOW));
     expect(again).toMatchObject({ rows: 4, imported: 0, skipped: 4, toCheck: 0 });
     expect(await rowsIn(A.everyday)).toHaveLength(4);
   });
 
   it("saves OFX with the bank's ids and the balance it states, once", async () => {
-    const first = done(await runImport(db, olive, request(A.oliveOfx, "statement-sgml.ofx")));
+    const first = done(await runImport(db, olive, request(A.oliveOfx, "statement-sgml.ofx"), NOW));
     expect(first).toMatchObject({ rows: 3, imported: 3, skipped: 0 });
     const saved = await rowsIn(A.oliveOfx);
     expect(saved.map((row) => row.externalId).sort()).toEqual([
@@ -300,11 +319,56 @@ describe("importing a file", () => {
       "2026090200001",
       "2026090300001",
     ]);
-    expect(
-      await db.select().from(balances).where(eq(balances.accountId, A.oliveOfx)),
-    ).toMatchObject([{ date: "2026-09-03", balanceCents: 1904_35 }]);
-    const again = done(await runImport(db, olive, request(A.oliveOfx, "statement-sgml.ofx")));
+    // The file states one balance; the days before it are worked back through its rows.
+    expect(await balancesOf(A.oliveOfx)).toEqual([
+      { date: "2026-09-01", balanceCents: -514_05, workedOut: true },
+      { date: "2026-09-02", balanceCents: 1935_95, workedOut: true },
+      { date: "2026-09-03", balanceCents: 1904_35, workedOut: false },
+      { date: "2026-09-04", balanceCents: 1904_35, workedOut: true },
+      { date: "2026-09-05", balanceCents: 1904_35, workedOut: true },
+    ]);
+    const again = done(await runImport(db, olive, request(A.oliveOfx, "statement-sgml.ofx"), NOW));
     expect(again).toMatchObject({ imported: 0, skipped: 3 });
+    expect(await balancesOf(A.oliveOfx)).toHaveLength(5);
+  });
+
+  it("carries the balance on through a later file with no balance column", async () => {
+    const first = done(
+      await runImport(
+        db,
+        olive,
+        {
+          target: {
+            newAccount: { name: "Bills", institution: null, kind: "everyday", isJoint: false },
+          },
+          filename: "other-bank.csv",
+          bytes: fixture("other-bank.csv"),
+        },
+        NOW,
+      ),
+    );
+    // The layout of the ANZ file: date, amount and description, with no balance.
+    const later = new TextEncoder().encode(
+      '07/09/2026,"5.00","REFUND CHEMIST"\n06/09/2026,"-10.00","CHEMIST NEWTOWN"\n',
+    );
+    done(
+      await runImport(
+        db,
+        olive,
+        { target: { accountId: first.accountId }, filename: "later.csv", bytes: later },
+        new Date("2026-09-08T02:00:00Z"),
+      ),
+    );
+    expect(await balancesOf(first.accountId)).toEqual([
+      { date: "2026-09-01", balanceCents: -75_50, workedOut: false },
+      { date: "2026-09-02", balanceCents: 124_50, workedOut: false },
+      { date: "2026-09-03", balanceCents: 120_00, workedOut: false },
+      { date: "2026-09-04", balanceCents: 120_00, workedOut: true },
+      { date: "2026-09-05", balanceCents: 120_00, workedOut: true },
+      { date: "2026-09-06", balanceCents: 110_00, workedOut: true },
+      { date: "2026-09-07", balanceCents: 115_00, workedOut: true },
+      { date: "2026-09-08", balanceCents: 115_00, workedOut: true },
+    ]);
   });
 
   it("matches OFX rows by the bank's id even when their text changed", async () => {

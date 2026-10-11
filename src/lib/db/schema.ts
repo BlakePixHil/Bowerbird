@@ -250,6 +250,11 @@ export const balances = pgTable(
       .references(() => accounts.id, { onDelete: "cascade" }),
     date: date({ mode: "string" }).notNull(),
     balanceCents: cents().notNull(),
+    /**
+     * Worked out from another day's balance and the transactions in between, rather than given by
+     * the bank or a file. A given balance always replaces a worked-out one, never the other way.
+     */
+    workedOut: boolean().notNull().default(false),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("balances_account_date_key").on(t.accountId, t.date)],
