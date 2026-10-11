@@ -1,9 +1,10 @@
-import { and, count, eq, gt, lt, max, notExists, sql, sum } from "drizzle-orm";
+import { and, count, eq, gt, lt, max, sql, sum } from "drizzle-orm";
 import { STARTING_CATEGORIES } from "@/config/app";
 import type { Db } from "@/lib/db";
 import { categories, splits, transactions } from "@/lib/db/schema";
 import { addMonths, type PlainDate } from "@/lib/money";
 import { COLOUR_SLOTS } from "./colour";
+import { partCategory, partCents, partsJoin } from "./parts";
 import { countedMoney } from "./transfers";
 
 /**
@@ -90,42 +91,24 @@ export async function spentByCategory(db: Db, householdId: string): Promise<Map<
     .where(eq(transactions.householdId, householdId));
   if (!newest?.date) return new Map();
   const after: PlainDate = addMonths(newest.date, -COLOUR_MONTHS);
-  const counted = and(
-    eq(transactions.householdId, householdId),
-    countedMoney(),
-    gt(transactions.date, after),
-    eq(categories.kind, "spending"),
-    eq(categories.archived, false),
-  );
-
-  const whole = await db
-    .select({ id: categories.id, cents: sum(sql`-${transactions.amountCents}`).mapWith(Number) })
+  const rows = await db
+    .select({ id: categories.id, cents: sum(sql`-${partCents}`).mapWith(Number) })
     .from(transactions)
-    .innerJoin(categories, eq(categories.id, transactions.categoryId))
+    .leftJoin(splits, partsJoin)
+    .innerJoin(categories, eq(categories.id, partCategory))
     .where(
       and(
-        counted,
-        lt(transactions.amountCents, 0),
-        notExists(
-          db
-            .select({ id: splits.id })
-            .from(splits)
-            .where(eq(splits.transactionId, transactions.id)),
-        ),
+        eq(transactions.householdId, householdId),
+        countedMoney(),
+        gt(transactions.date, after),
+        lt(partCents, 0),
+        eq(categories.kind, "spending"),
+        eq(categories.archived, false),
       ),
     )
     .groupBy(categories.id);
-  const parts = await db
-    .select({ id: categories.id, cents: sum(sql`-${splits.amountCents}`).mapWith(Number) })
-    .from(splits)
-    .innerJoin(transactions, eq(transactions.id, splits.transactionId))
-    .innerJoin(categories, eq(categories.id, splits.categoryId))
-    .where(and(counted, lt(splits.amountCents, 0)))
-    .groupBy(categories.id);
 
-  const spent = new Map<string, number>();
-  for (const row of [...whole, ...parts]) spent.set(row.id, (spent.get(row.id) ?? 0) + row.cents);
-  return spent;
+  return new Map(rows.map((row) => [row.id, row.cents]));
 }
 
 /**

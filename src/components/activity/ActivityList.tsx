@@ -24,13 +24,14 @@ import {
   useWide,
   WIDE,
 } from "@/components/ui";
-import type { ActivityPage, ActivityRow, CategoryChoice } from "@/lib/access";
+import type { ActivityPage, ActivityRow, CategoryChoice, TagRef } from "@/lib/access";
 import { formatShortDate, type PlainDate } from "@/lib/money";
 import { categoryColour } from "@/lib/sorting/colour";
 import styles from "./Activity.module.css";
 import { moreActivity } from "./actions";
 import {
   byDay,
+  categoryLabel,
   dayLabel,
   dayTotal,
   rowAmount,
@@ -53,6 +54,8 @@ type ActivityListProps = {
   people: People;
   /** The household's categories, for the grid in the transaction sheet. */
   categories: readonly CategoryChoice[];
+  /** Tags the person has used, for the sheet's quick picks. */
+  tagChoices: readonly TagRef[];
   /** Under the list on a phone: "Missing something?". */
   footer: ReactNode;
   /** Under the transaction panel on desktop. */
@@ -72,6 +75,7 @@ export function ActivityList({
   today,
   people,
   categories,
+  tagChoices,
   footer,
   side,
 }: ActivityListProps) {
@@ -82,6 +86,7 @@ export function ActivityList({
   const [failed, setFailed] = useState(false);
   const [picked, setPicked] = useState<string | null>(first.rows[0]?.id ?? null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [splitting, setSplitting] = useState(false);
   const busy = useRef(false);
   const end = useRef<HTMLDivElement>(null);
   const wide = useWide();
@@ -133,9 +138,11 @@ export function ActivityList({
       const look = (row: ActivityRow): ActivityRow => {
         if (moved.has(row.id)) {
           const pair = paired ?? row.paired;
+          // One category for the whole row takes any split away.
           return {
             ...row,
             category,
+            parts: [],
             paired: pair,
             notCounted: pair || category?.kind === "transfer",
           };
@@ -147,6 +154,21 @@ export function ActivityList({
           const rows = day.rows.map(look);
           return rows.some((row, i) => row !== day.rows[i]) ? { ...day, rows } : day;
         }),
+      );
+      router.refresh();
+    },
+    [router],
+  );
+
+  // One row's own details changed: its parts, tags or note.
+  const changeRow = useCallback(
+    (next: ActivityRow) => {
+      setDays((shown) =>
+        shown.map((day) =>
+          day.date === next.date
+            ? { ...day, rows: day.rows.map((row) => (row.id === next.id ? next : row)) }
+            : day,
+        ),
       );
       router.refresh();
     },
@@ -250,10 +272,13 @@ export function ActivityList({
               </div>
             </div>
             <TransactionDetail
+              key={current.id}
               row={current}
               people={people}
               categories={categories}
+              tagChoices={tagChoices}
               onChanged={changeRows}
+              onRowChanged={changeRow}
             />
           </section>
         )}
@@ -264,15 +289,22 @@ export function ActivityList({
 
       <BottomSheet
         open={sheetOpen && !wide && current !== null}
-        onClose={() => setSheetOpen(false)}
-        title="Transaction"
+        onClose={() => {
+          setSheetOpen(false);
+          setSplitting(false);
+        }}
+        title={splitting ? "Split transaction" : "Transaction"}
       >
-        {current && (
+        {current && !wide && (
           <TransactionDetail
+            key={`${current.id}|${sheetOpen}`}
             row={current}
             people={people}
             categories={categories}
+            tagChoices={tagChoices}
             onChanged={changeRows}
+            onRowChanged={changeRow}
+            onSplitting={setSplitting}
           />
         )}
       </BottomSheet>
@@ -344,11 +376,11 @@ function Row({
   const dot = (
     <span
       className={styles.dot}
-      style={{ background: colourVar(categoryColour(row.category)) }}
+      style={{ background: colourVar(categoryColour(row.parts[0]?.category ?? row.category)) }}
       aria-hidden="true"
     />
   );
-  const category = row.category?.name ?? "No category";
+  const category = categoryLabel(row);
   return (
     <button
       type="button"
@@ -362,12 +394,14 @@ function Row({
       <span className={styles.what}>
         <span className={styles.deskDot}>{dot}</span>
         <span className={styles.name}>{row.shop}</span>
-        {row.pending && <Tag>Pending</Tag>}
-        {row.notCounted && <Tag>Not counted</Tag>}
-        {row.split && <Tag icon="split">Split</Tag>}
-        {row.tags.slice(0, 1).map((tag) => (
-          <Tag key={tag}>{tag}</Tag>
-        ))}
+        <span className={styles.rowTags}>
+          {row.pending && <Tag>Pending</Tag>}
+          {row.notCounted && <Tag>Not counted</Tag>}
+          {row.parts.length > 0 && <Tag icon="split">Split</Tag>}
+          {row.tags.slice(0, 1).map((tag) => (
+            <Tag key={tag.id}>{tag.name}</Tag>
+          ))}
+        </span>
       </span>
       <span className={styles.meta}>
         {dot}

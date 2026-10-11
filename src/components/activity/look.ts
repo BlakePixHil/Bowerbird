@@ -26,12 +26,28 @@ const isIcon = (name: string | null | undefined): name is IconName =>
   !!name && Object.hasOwn(ICONS, name);
 
 /** The icon in a row's tile: the category's own, or one for its kind. */
-export function rowIcon(row: Pick<ActivityRow, "category" | "notCounted" | "split">): IconName {
-  if (row.split) return "split";
+export function rowIcon(row: Pick<ActivityRow, "category" | "notCounted" | "parts">): IconName {
+  if (row.parts.length > 0) return "split";
   if (isIcon(row.category?.icon)) return row.category.icon;
   if (row.notCounted) return "transfer";
   if (row.category?.kind === "income") return "income";
   return row.category ? "tag" : "help";
+}
+
+/** A row's category in words: its parts' for a split row ("Groceries, Shopping"). */
+export function categoryLabel(row: Pick<ActivityRow, "category" | "parts">): string {
+  if (row.parts.length > 0) return row.parts.map((part) => part.category.name).join(", ");
+  return row.category?.name ?? "No category";
+}
+
+/** "Groceries $40 · Shopping $24", for the split row on the transaction sheet. */
+export function partsLine(row: Pick<ActivityRow, "parts">): string {
+  return row.parts
+    .map(
+      (part) =>
+        `${part.category.name} ${formatMoney(Math.abs(part.cents), { decimals: "auto", sign: "never" })}`,
+    )
+    .join(" · ");
 }
 
 /** "Today, Sat 10 Oct", "Yesterday, Fri 9 Oct", "Thu 8 Oct", and the year when it isn't this one. */
@@ -58,12 +74,13 @@ export function rowLabel(row: ActivityRow, people: People): string {
   return [
     row.shop,
     rowAmount(row),
-    row.category?.name ?? "No category",
+    categoryLabel(row),
     row.account.name,
     whoseLook(row.whose, people).label,
     row.pending && "Pending",
     row.notCounted && "Not counted",
-    ...row.tags,
+    row.parts.length > 0 && "Split",
+    ...row.tags.map((tag) => tag.name),
   ]
     .filter(Boolean)
     .join(", ");

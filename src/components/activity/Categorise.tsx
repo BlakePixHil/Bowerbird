@@ -42,7 +42,8 @@ export type RowsChanged = {
 
 /**
  * The category grid in the transaction sheet. Picking one saves it at once, then asks whether to
- * sort the shop that way always, with the option to change its earlier rows too.
+ * sort the shop that way always, with the option to change its earlier rows too. On a split row,
+ * picking one takes the split away, and it can't be marked a transfer until then.
  */
 export function Categorise({
   row,
@@ -53,7 +54,9 @@ export function Categorise({
   categories: readonly CategoryChoice[];
   onChanged: (change: RowsChanged) => void;
 }) {
-  const [chosen, setChosen] = useState(row.category?.id ?? null);
+  // A split row's categories are its parts, so nothing in the grid is picked.
+  const split = row.parts.length > 0;
+  const [chosen, setChosen] = useState(split ? null : (row.category?.id ?? null));
   const [all, setAll] = useState(false);
   const [ask, setAsk] = useState<Ask | null>(null);
   const [past, setPast] = useState(true);
@@ -146,6 +149,12 @@ export function Categorise({
       <h3 id={`category-${row.id}`} className="h3">
         Category
       </h3>
+      {split && (
+        <p className={cx("small muted", styles.splitHint)}>
+          Split across {row.parts.length} categories. Picking one here puts all of it in that
+          category instead.
+        </p>
+      )}
       <div className={styles.catGrid}>
         {shown.map((category) => (
           <button
@@ -173,15 +182,17 @@ export function Categorise({
         )}
       </div>
 
-      <Button
-        variant="ghost"
-        icon="transfer"
-        className={styles.transferButton}
-        disabled={busy}
-        onClick={() => transfer(!row.notCounted)}
-      >
-        {row.notCounted ? "Not a transfer" : "This is a transfer between your accounts"}
-      </Button>
+      {!split && (
+        <Button
+          variant="ghost"
+          icon="transfer"
+          className={styles.transferButton}
+          disabled={busy}
+          onClick={() => transfer(!row.notCounted)}
+        >
+          {row.notCounted ? "Not a transfer" : "This is a transfer between your accounts"}
+        </Button>
+      )}
 
       {ask && (
         <div className={styles.ask} role="group" aria-labelledby={`ask-${row.id}`}>

@@ -41,7 +41,23 @@ export {
   type ActivityPage,
   type ActivityRow,
   type DailySpending,
+  type SplitPart,
+  type TagRef,
 } from "./activity";
+export {
+  addTag,
+  removeSplit,
+  removeTag,
+  saveNote,
+  splitProblem,
+  splitTransaction,
+  tagChoices,
+  type NoteSaved,
+  type PartChoice,
+  type SplitRemoved,
+  type SplitSaved,
+  type TagsSaved,
+} from "./details";
 export {
   categoriseTransaction,
   categoryChoices,

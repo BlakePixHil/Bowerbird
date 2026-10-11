@@ -2,16 +2,27 @@
 
 import {
   activityPage,
+  addTag,
   categoriseTransaction,
   markAsTransfer,
   notATransfer,
+  removeSplit,
+  removeTag,
+  saveNote,
   sortShopAlways,
+  splitTransaction,
   viewerOf,
   type ActivityPage,
   type Categorised,
+  type NoteSaved,
+  type PartChoice,
   type ShopSorted,
+  type SplitRemoved,
+  type SplitSaved,
+  type TagsSaved,
   type TransferChanged,
 } from "@/lib/access";
+import { SPLIT_MAX_PARTS } from "@/lib/access/limits";
 import { requireMember } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { isPlainDate } from "@/lib/money";
@@ -75,4 +86,56 @@ export async function markTransfer(change: TransferChange): Promise<TransferChan
   return change.transfer === true
     ? markAsTransfer(getDb(), viewer, change.transactionId)
     : notATransfer(getDb(), viewer, change.transactionId);
+}
+
+/** Splits one transaction across categories, replacing any split it had. */
+export type SplitChange = { id: string; transactionId: string; parts: PartChoice[] };
+
+export async function saveSplit(change: SplitChange): Promise<SplitSaved> {
+  const viewer = viewerOf(await requireMember());
+  const parts = Array.isArray(change.parts) ? change.parts.slice(0, SPLIT_MAX_PARTS + 1) : [];
+  if (
+    !ids(change.id, change.transactionId, ...parts.map((part) => part?.categoryId)) ||
+    parts.some((part) => typeof part.cents !== "number")
+  )
+    return muddled;
+  return splitTransaction(
+    getDb(),
+    viewer,
+    change.transactionId,
+    parts.map((part) => ({ categoryId: part.categoryId, cents: part.cents })),
+  );
+}
+
+/** Takes a split away. */
+export type UnsplitChange = { id: string; transactionId: string };
+
+export async function unsplit(change: UnsplitChange): Promise<SplitRemoved> {
+  const viewer = viewerOf(await requireMember());
+  if (!ids(change.id, change.transactionId)) return muddled;
+  return removeSplit(getDb(), viewer, change.transactionId);
+}
+
+/** Adds a tag by name, or takes one off by its id. */
+export type TagChange =
+  | { id: string; transactionId: string; add: string }
+  | { id: string; transactionId: string; remove: string };
+
+export async function changeTags(change: TagChange): Promise<TagsSaved> {
+  const viewer = viewerOf(await requireMember());
+  if (!ids(change.id, change.transactionId)) return muddled;
+  if ("add" in change && typeof change.add === "string")
+    return addTag(getDb(), viewer, change.transactionId, change.add.slice(0, 200));
+  if ("remove" in change && ids(change.remove))
+    return removeTag(getDb(), viewer, change.transactionId, change.remove);
+  return muddled;
+}
+
+/** Saves a transaction's note. An empty one takes it away. */
+export type NoteChange = { id: string; transactionId: string; note: string };
+
+export async function changeNote(change: NoteChange): Promise<NoteSaved> {
+  const viewer = viewerOf(await requireMember());
+  if (!ids(change.id, change.transactionId) || typeof change.note !== "string") return muddled;
+  return saveNote(getDb(), viewer, change.transactionId, change.note.slice(0, 2000));
 }

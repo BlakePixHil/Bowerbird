@@ -9,10 +9,12 @@ import type { Db } from "@/lib/db";
 import {
   accounts,
   balances,
+  categories,
   connectionBanks,
   connections,
   households,
   members,
+  splits,
   transactions,
   users,
 } from "@/lib/db/schema";
@@ -228,6 +230,48 @@ describe("the daily sync", () => {
       note: "Coffee with Sam",
     });
     expect(after.rows.find((r) => r.externalId === "ev-other")).toBeDefined();
+  });
+
+  it("ends a split when the bank changes the amount, keeping the row's category", async () => {
+    const { owner, connectionId } = await household();
+    const coles = (await row(connectionId, "ev-73"))!;
+    expect(coles.amountCents).toBe(-54_50);
+    const [groceries, shopping] = await db
+      .insert(categories)
+      .values([
+        { householdId: owner.householdId, name: "Groceries" },
+        { householdId: owner.householdId, name: "Shopping" },
+      ])
+      .returning();
+    await db
+      .update(transactions)
+      .set({ categoryId: groceries.id })
+      .where(eq(transactions.id, coles.id));
+    await db.insert(splits).values([
+      { transactionId: coles.id, categoryId: groceries.id, amountCents: -40_00 },
+      { transactionId: coles.id, categoryId: shopping.id, amountCents: -14_50 },
+    ]);
+    const parts = () => db.select().from(splits).where(eq(splits.transactionId, coles.id));
+
+    // The same row again changes nothing.
+    await syncConnection(db, connectionId, when(at(60)));
+    expect(await parts()).toHaveLength(2);
+
+    server.accountSet = bankWith({
+      "hb-everyday": (account) => {
+        Object.assign(
+          account.transactions.find((t) => t.id === "ev-73")!,
+          { amount: "-56.10" },
+        );
+      },
+    });
+    await syncConnection(db, connectionId, when(at(120)));
+    expect(await parts()).toEqual([]);
+    const [after] = await db
+      .select({ amountCents: transactions.amountCents, categoryId: transactions.categoryId })
+      .from(transactions)
+      .where(eq(transactions.id, coles.id));
+    expect(after).toEqual({ amountCents: -56_10, categoryId: groceries.id });
   });
 
   it("removes a pending row the bank stops sending, and brings in new rows and balances", async () => {

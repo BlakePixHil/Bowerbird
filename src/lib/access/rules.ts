@@ -3,7 +3,9 @@ import type { Db } from "@/lib/db";
 import { categories, members, merchants, rules, tags, transactions } from "@/lib/db/schema";
 import { loose, shopFor } from "@/lib/sorting/merchants";
 import { scopeFor, type Viewer } from "./accounts";
-import type { ActivityCategory } from "./activity";
+import type { ActivityCategory, TagRef } from "./activity";
+import { tagNamed } from "./details";
+import { TAG_NAME_MAX } from "./limits";
 
 /**
  * Rules and shop names as the viewer sees them. Both belong to the household, but a shop only
@@ -17,7 +19,8 @@ export type RuleRow = {
   shop: { id: string; name: string } | null;
   matchText: string | null;
   category: ActivityCategory;
-  tag: string | null;
+  /** "and tag it Bali 2027": a tag the rule adds to what it sorts. */
+  tag: TagRef | null;
   enabled: boolean;
   /** How many of the viewer's transactions it has sorted. */
   sorted: number;
@@ -96,7 +99,8 @@ export async function ruleList(db: Db, viewer: Viewer): Promise<RuleRow[]> {
         enabled: rules.enabled,
         appliedCount: rules.appliedCount,
         createdAt: rules.createdAt,
-        tag: tags.name,
+        tagId: tags.id,
+        tagName: tags.name,
         category,
       })
       .from(rules)
@@ -136,7 +140,7 @@ export async function ruleList(db: Db, viewer: Viewer): Promise<RuleRow[]> {
       shop: rule.merchantId && rule.shopName ? { id: rule.merchantId, name: rule.shopName } : null,
       matchText: rule.matchText,
       category: rule.category,
-      tag: rule.tag,
+      tag: rule.tagId && rule.tagName ? { id: rule.tagId, name: rule.tagName } : null,
       enabled: rule.enabled,
       // A rule only sorts rows with no category, so what's in its category from its shop is
       // what it sorted plus any put there by hand. Without a shop, the household count.
@@ -202,14 +206,24 @@ export type RuleChanged = { ok: true } | { ok: false; error: string };
 
 const notYours = { ok: false as const, error: "That rule isn't in your household." };
 
-/** Turns a rule on or off, or changes where it puts things. Earlier rows stay as they are. */
+/**
+ * Turns a rule on or off, or changes where it puts things and the tag it adds: a tag's name,
+ * made if the household doesn't have it, or an empty name for no tag. Earlier rows stay as they
+ * are.
+ */
 export async function changeRule(
   db: Db,
   viewer: Viewer,
   ruleId: string,
-  change: { enabled?: boolean; categoryId?: string },
+  change: { enabled?: boolean; categoryId?: string; tag?: string },
 ): Promise<RuleChanged> {
   if (!(await isMember(db, viewer))) return notYours;
+  let tagId: string | null | undefined;
+  if (typeof change.tag === "string") {
+    if (change.tag.replace(/\s+/g, " ").trim().length > TAG_NAME_MAX)
+      return { ok: false, error: `Keep a tag to ${TAG_NAME_MAX} characters.` };
+    tagId = (await tagNamed(db, viewer.householdId, change.tag))?.id ?? null;
+  }
   if (change.categoryId) {
     const [target] = await db
       .select({ id: categories.id })
@@ -228,6 +242,7 @@ export async function changeRule(
     .set({
       ...(typeof change.enabled === "boolean" ? { enabled: change.enabled } : {}),
       ...(change.categoryId ? { categoryId: change.categoryId } : {}),
+      ...(tagId !== undefined ? { tagId } : {}),
     })
     .where(and(eq(rules.id, ruleId), eq(rules.householdId, viewer.householdId)))
     .returning({ id: rules.id });

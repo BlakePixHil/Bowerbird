@@ -16,17 +16,11 @@ import {
   type SQL,
 } from "drizzle-orm";
 import type { Db } from "@/lib/db";
-import {
-  categories,
-  merchants,
-  splits,
-  tags,
-  transactions,
-  transactionTags,
-} from "@/lib/db/schema";
+import { categories, merchants, tags, transactions, transactionTags } from "@/lib/db/schema";
 import { parseMoney, type DaySpend, type PlainDate } from "@/lib/money";
 import { countedMoney, isCounted } from "@/lib/sorting/transfers";
 import { scopeFor, type SeenAccount, type View, type Viewer, type Whose } from "./accounts";
+import { partsOf } from "./details";
 
 /**
  * Reads for Activity: one list of every transaction the viewer can see, a page of whole days at a
@@ -35,7 +29,7 @@ import { scopeFor, type SeenAccount, type View, type Viewer, type Whose } from "
  */
 
 export type ActivityFilters = {
-  /** A shop, some bank text, a tag, or an amount such as 86.20 or $86. */
+  /** A shop, some bank text, a tag, a note, or an amount such as 86.20 or $86. */
   search?: string;
   /** Only rows with no category yet that aren't transfers. */
   toCheck?: boolean;
@@ -48,6 +42,11 @@ export type ActivityCategory = {
   icon: string | null;
   colourSlot: number | null;
 };
+
+/** One part of a split row: its category and its share, in signed cents like the row. */
+export type SplitPart = { category: ActivityCategory; cents: number };
+
+export type TagRef = { id: string; name: string };
 
 export type ActivityRow = {
   id: string;
@@ -64,9 +63,9 @@ export type ActivityRow = {
   notCounted: boolean;
   /** Matched with the other side of a transfer, so it isn't counted whatever its category. */
   paired: boolean;
-  /** Split across categories. */
-  split: boolean;
-  tags: string[];
+  /** Its parts when it's split across categories, biggest first; otherwise empty. */
+  parts: SplitPart[];
+  tags: TagRef[];
   note: string | null;
   source: "sync" | "file";
   account: { id: string; name: string; institution: string | null };
@@ -109,6 +108,7 @@ function searchCondition(search: string | undefined): SQL | undefined {
   const like = `%${text.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
   return or(
     ilike(transactions.descriptionRaw, like),
+    ilike(transactions.note, like),
     sql`exists (select 1 from ${merchants} where ${merchants.id} = ${transactions.merchantId} and ${merchants.displayName} ilike ${like})`,
     sql`exists (select 1 from ${transactionTags} join ${tags} on ${tags.id} = ${transactionTags.tagId} where ${transactionTags.transactionId} = ${transactions.id} and ${tags.name} ilike ${like})`,
     amountCondition(text),
@@ -183,23 +183,19 @@ export async function activityPage(
     .orderBy(desc(transactions.date), desc(transactions.id));
 
   const ids = found.map((row) => row.id);
-  const [tagRows, splitRows] = await Promise.all([
+  const [tagRows, partRows] = await Promise.all([
     db
-      .select({ transactionId: transactionTags.transactionId, name: tags.name })
+      .select({ transactionId: transactionTags.transactionId, id: tags.id, name: tags.name })
       .from(transactionTags)
       .innerJoin(tags, eq(tags.id, transactionTags.tagId))
       .where(inArray(transactionTags.transactionId, ids))
       .orderBy(asc(sql`lower(${tags.name})`)),
-    db
-      .selectDistinct({ transactionId: splits.transactionId })
-      .from(splits)
-      .where(inArray(splits.transactionId, ids)),
+    partsOf(db, ids),
   ]);
-  const tagsOf = new Map<string, string[]>();
-  for (const tag of tagRows) {
-    tagsOf.set(tag.transactionId, [...(tagsOf.get(tag.transactionId) ?? []), tag.name]);
+  const tagsOf = new Map<string, TagRef[]>();
+  for (const { transactionId, ...tag } of tagRows) {
+    tagsOf.set(transactionId, [...(tagsOf.get(transactionId) ?? []), tag]);
   }
-  const isSplit = new Set(splitRows.map((row) => row.transactionId));
 
   const rows = found.map((row): ActivityRow => {
     const account = seen.get(row.accountId)!;
@@ -223,7 +219,7 @@ export async function activityPage(
       pending: row.pending,
       notCounted: !isCounted({ paired: row.transferGroupId !== null, kind: category?.kind }),
       paired: row.transferGroupId !== null,
-      split: isSplit.has(row.id),
+      parts: partRows.get(row.id) ?? [],
       tags: tagsOf.get(row.id) ?? [],
       note: row.note,
       source: row.source,

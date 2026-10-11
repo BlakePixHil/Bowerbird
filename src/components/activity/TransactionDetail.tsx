@@ -1,9 +1,14 @@
-import { colourVar, cx, Icon, Tag, Tile, Well, type IconName } from "@/components/ui";
-import type { ActivityRow, CategoryChoice } from "@/lib/access";
+"use client";
+
+import { useState } from "react";
+import { colourVar, cx, Icon, Pill, Tag, Tile, Well, type IconName } from "@/components/ui";
+import type { ActivityRow, CategoryChoice, TagRef } from "@/lib/access";
 import { formatShortDate } from "@/lib/money";
 import styles from "./Activity.module.css";
 import { Categorise, type RowsChanged } from "./Categorise";
 import { rowAmount, rowIcon, whoseLook, type People } from "./look";
+import { MoreDetails } from "./MoreDetails";
+import { SplitEditor, type SplitDone } from "./SplitEditor";
 
 /** Why a row counts the way it does, in a line under its tags. */
 function aboutRow(row: ActivityRow): { icon: IconName; text: string } | null {
@@ -22,22 +27,48 @@ function aboutRow(row: ActivityRow): { icon: IconName; text: string } | null {
 }
 
 /**
- * One transaction: what it was, whose and where from, and its category to change. The transaction
- * sheet on a phone and the panel beside the list on desktop. Splits, tags and notes come later.
+ * One transaction: what it was, whose and where from, its category to change, then Split, Tags
+ * and Note. The transaction sheet on a phone and the panel beside the list on desktop. Split
+ * opens the split editor in place of the category.
  */
 export function TransactionDetail({
   row,
   people,
   categories,
+  tagChoices,
   onChanged,
+  onRowChanged,
+  onSplitting,
 }: {
   row: ActivityRow;
   people: People;
   categories: readonly CategoryChoice[];
+  tagChoices: readonly TagRef[];
   onChanged: (change: RowsChanged) => void;
+  /** One row's own details changed: its parts, tags or note. */
+  onRowChanged: (row: ActivityRow) => void;
+  /** Told when the split editor opens or closes, so the phone sheet can say so. */
+  onSplitting?: (splitting: boolean) => void;
 }) {
+  const [splitting, setSplitting] = useState(false);
+  const [said, setSaid] = useState<string | null>(null);
   const whose = whoseLook(row.whose, people);
   const about = aboutRow(row);
+  const split = (on: boolean) => {
+    setSplitting(on);
+    onSplitting?.(on);
+    if (on) setSaid(null);
+  };
+
+  function splitDone(done: SplitDone) {
+    onRowChanged({ ...row, parts: done.split ? done.parts : [], category: done.category });
+    setSaid(
+      done.split
+        ? "Split saved. Each part now counts in its own budget and report."
+        : "Split removed. It counts as one payment again.",
+    );
+    split(false);
+  }
   return (
     <div className={styles.detail}>
       <div className={styles.detailHead}>
@@ -68,10 +99,10 @@ export function TransactionDetail({
         {row.shop !== row.description && <Tag>Renamed from bank text</Tag>}
         {row.pending && <Tag>Pending</Tag>}
         {row.notCounted && <Tag>Not counted</Tag>}
-        {row.split && <Tag icon="split">Split</Tag>}
+        {row.parts.length > 0 && <Tag icon="split">Split</Tag>}
         {row.tags.map((tag) => (
-          <Tag key={tag} icon="tag">
-            {tag}
+          <Tag key={tag.id} icon="tag">
+            {tag.name}
           </Tag>
         ))}
       </div>
@@ -89,8 +120,40 @@ export function TransactionDetail({
         </Well>
       )}
 
-      {categories.length > 0 && (
-        <Categorise key={row.id} row={row} categories={categories} onChanged={onChanged} />
+      {splitting ? (
+        <SplitEditor
+          row={row}
+          categories={categories}
+          onDone={splitDone}
+          onCancel={() => split(false)}
+        />
+      ) : (
+        <>
+          {categories.length > 0 && (
+            <Categorise
+              key={`${row.id}|${row.parts.length}`}
+              row={row}
+              categories={categories}
+              onChanged={(change) => {
+                setSaid(null);
+                onChanged(change);
+              }}
+            />
+          )}
+          <div role="status" className={styles.said}>
+            {said && (
+              <Pill tone="good" className={styles.saidPill}>
+                {said}
+              </Pill>
+            )}
+          </div>
+          <MoreDetails
+            row={row}
+            tagChoices={tagChoices}
+            onSplit={() => split(true)}
+            onChanged={onRowChanged}
+          />
+        </>
       )}
 
       <dl className={styles.facts}>

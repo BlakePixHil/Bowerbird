@@ -7,11 +7,12 @@
  * production. Running it again replaces the demo household.
  */
 import { loadEnvConfig } from "@next/env";
-import { and, count, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { DEFAULT_TIMEZONE } from "../src/config/app";
 import { closeDb, getDb } from "../src/lib/db/client";
 import * as t from "../src/lib/db/schema";
 import { addDays, addMonths, dayOfWeek, parts, todayIn } from "../src/lib/money/dates";
+import { allocateCents } from "../src/lib/money/cents";
 import { addStartingCategories, assignColours } from "../src/lib/sorting/categories";
 import { nameShops } from "../src/lib/sorting/merchants";
 
@@ -352,6 +353,13 @@ async function main() {
   const start = addDays(end, -(DAYS - 1));
 
   await db.transaction(async (tx) => {
+    // A split's parts hold on to their categories, so they go before the household does.
+    const old = tx
+      .select({ id: t.transactions.id })
+      .from(t.transactions)
+      .innerJoin(t.households, eq(t.households.id, t.transactions.householdId))
+      .where(eq(t.households.name, DEMO_HOUSEHOLD));
+    await tx.delete(t.splits).where(inArray(t.splits.transactionId, old));
     await tx.delete(t.households).where(eq(t.households.name, DEMO_HOUSEHOLD));
     await tx.delete(t.users).where(eq(t.users.email, DEMO_EMAIL));
 
@@ -486,6 +494,31 @@ async function main() {
       await tx
         .insert(t.transactionTags)
         .values(tagged.map(({ id }) => ({ transactionId: id, tagId: tag.id })));
+    }
+
+    // The newest Kmart shop is split: mostly groceries, the rest homewares.
+    const kmart = rows
+      .map((row, index) => ({ row, id: saved[index].id }))
+      .filter(({ row }) => row.description.startsWith("KMART") && !row.pending)
+      .at(-1);
+    if (kmart && kmart.row.amountCents < -2_00) {
+      const [groceries, homewares] = allocateCents(kmart.row.amountCents, [3, 2]);
+      await tx.insert(t.splits).values([
+        {
+          transactionId: kmart.id,
+          categoryId: categoryId.get("Groceries")!,
+          amountCents: groceries,
+        },
+        {
+          transactionId: kmart.id,
+          categoryId: categoryId.get("Shopping")!,
+          amountCents: homewares,
+        },
+      ]);
+      await tx
+        .update(t.transactions)
+        .set({ categoryId: categoryId.get("Groceries")! })
+        .where(eq(t.transactions.id, kmart.id));
     }
 
     // A balance for every account on every day, working forward from made-up opening balances.

@@ -1,21 +1,9 @@
-import {
-  and,
-  asc,
-  count,
-  countDistinct,
-  eq,
-  gte,
-  inArray,
-  lte,
-  min,
-  ne,
-  notExists,
-  sql,
-} from "drizzle-orm";
+import { and, asc, count, countDistinct, eq, gte, inArray, lte, min, ne, sql } from "drizzle-orm";
 import type { Db } from "@/lib/db";
 import { budgets, categories, members, rules, splits, transactions } from "@/lib/db/schema";
 import { addMonths, daysBetween, type PlainDate } from "@/lib/money";
 import { assignColours } from "@/lib/sorting/categories";
+import { partCategory, partCents, partsJoin } from "@/lib/sorting/parts";
 import { scopeFor, type Viewer } from "./accounts";
 import type { ActivityCategory } from "./activity";
 import { CATEGORY_NAME_MAX } from "./limits";
@@ -79,18 +67,20 @@ async function fullAccounts(db: Db, viewer: Viewer): Promise<string[]> {
   return accounts.filter((account) => account.access === "full").map((account) => account.id);
 }
 
-/** Sums per category and month, for whole rows and split parts alike. */
-function sums(amount: typeof transactions.amountCents | typeof splits.amountCents) {
+/** Sums per category and month. A split row counts in each of its parts (see `partCents`). */
+function sums() {
   const paired = sql`${transactions.transferGroupId} is not null`;
   return {
     month: sql<string>`to_char(${transactions.date}, 'YYYY-MM')`,
-    out: sql<number>`coalesce(sum(-${amount}) filter (where ${amount} < 0 and not ${paired}), 0)`.mapWith(
+    out: sql<number>`coalesce(sum(-${partCents}) filter (where ${partCents} < 0 and not ${paired}), 0)`.mapWith(
       Number,
     ),
-    in: sql<number>`coalesce(sum(${amount}) filter (where ${amount} > 0 and not ${paired}), 0)`.mapWith(
+    in: sql<number>`coalesce(sum(${partCents}) filter (where ${partCents} > 0 and not ${paired}), 0)`.mapWith(
       Number,
     ),
-    moved: sql<number>`coalesce(sum(-${amount}) filter (where ${amount} < 0), 0)`.mapWith(Number),
+    moved: sql<number>`coalesce(sum(-${partCents}) filter (where ${partCents} < 0), 0)`.mapWith(
+      Number,
+    ),
   };
 }
 
@@ -147,43 +137,29 @@ export async function categoryOverview(
     eq(transactions.householdId, viewer.householdId),
     seen ? inArray(transactions.accountId, accountIds) : sql`false`,
   );
-  const unsplit = notExists(
-    db.select({ id: splits.id }).from(splits).where(eq(splits.transactionId, transactions.id)),
-  );
   const inRange = and(gte(transactions.date, monthStarts[0]), lte(transactions.date, today));
 
-  const whole = sums(transactions.amountCents);
-  const part = sums(splits.amountCents);
-  const [wholeRows, partRows, wholeEver, partEver, [first]] = await Promise.all([
+  const money = sums();
+  const [monthRows, everRows, [first]] = await Promise.all([
     db
       .select({
-        categoryId: transactions.categoryId,
-        ...whole,
-        n: count(),
-        outN: sql<number>`count(*) filter (where ${transactions.amountCents} < 0 and ${transactions.transferGroupId} is null)`.mapWith(
+        categoryId: partCategory,
+        ...money,
+        n: countDistinct(transactions.id),
+        outN: sql<number>`count(distinct ${transactions.id}) filter (where ${transactions.amountCents} < 0 and ${transactions.transferGroupId} is null)`.mapWith(
           Number,
         ),
       })
       .from(transactions)
-      .where(and(visible, unsplit, inRange))
-      .groupBy(transactions.categoryId, whole.month),
-    db
-      .select({ categoryId: splits.categoryId, ...part, n: countDistinct(transactions.id) })
-      .from(splits)
-      .innerJoin(transactions, eq(transactions.id, splits.transactionId))
+      .leftJoin(splits, partsJoin)
       .where(and(visible, inRange))
-      .groupBy(splits.categoryId, part.month),
+      .groupBy(partCategory, money.month),
     db
-      .select({ categoryId: transactions.categoryId, n: count() })
+      .select({ categoryId: partCategory, n: countDistinct(transactions.id) })
       .from(transactions)
-      .where(and(visible, unsplit))
-      .groupBy(transactions.categoryId),
-    db
-      .select({ categoryId: splits.categoryId, n: countDistinct(transactions.id) })
-      .from(splits)
-      .innerJoin(transactions, eq(transactions.id, splits.transactionId))
+      .leftJoin(splits, partsJoin)
       .where(visible)
-      .groupBy(splits.categoryId),
+      .groupBy(partCategory),
     db
       .select({ since: min(transactions.date) })
       .from(transactions)
@@ -191,11 +167,11 @@ export async function categoryOverview(
   ]);
 
   const byCategory = new Map<string, MonthSums[]>();
-  for (const row of [...wholeRows, ...partRows])
+  for (const row of monthRows)
     if (row.categoryId)
       byCategory.set(row.categoryId, [...(byCategory.get(row.categoryId) ?? []), row]);
   const ever = new Map<string, number>();
-  for (const row of [...wholeEver, ...partEver])
+  for (const row of everRows)
     if (row.categoryId) ever.set(row.categoryId, (ever.get(row.categoryId) ?? 0) + row.n);
 
   // Months before the first transaction don't count toward "usually": nothing was here yet.
@@ -221,7 +197,7 @@ export async function categoryOverview(
     };
   });
 
-  const unsortedRows = wholeRows.filter((row) => !row.categoryId && row.month === thisMonth);
+  const unsortedRows = monthRows.filter((row) => !row.categoryId && row.month === thisMonth);
   return {
     ...empty,
     categories: summaries,

@@ -69,6 +69,8 @@ export async function updateRule(change: {
   ruleId: string;
   enabled?: boolean;
   categoryId?: string;
+  /** The tag it adds, by name, or "" for none. */
+  tag?: string;
 }): Promise<RuleChanged> {
   const viewer = viewerOf(await requireMember());
   if (!ids(change.id, change.ruleId) || (change.categoryId && !ids(change.categoryId)))
@@ -76,6 +78,7 @@ export async function updateRule(change: {
   return changeRule(getDb(), viewer, change.ruleId, {
     enabled: typeof change.enabled === "boolean" ? change.enabled : undefined,
     categoryId: change.categoryId,
+    tag: typeof change.tag === "string" ? change.tag.slice(0, 200) : undefined,
   });
 }
 

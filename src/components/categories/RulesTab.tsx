@@ -16,11 +16,13 @@ import {
   SelectField,
   Switch,
   Tag,
+  TextField,
   Tile,
   useWide,
   Well,
 } from "@/components/ui";
-import type { CategorySummary, RuleRow } from "@/lib/access";
+import type { CategorySummary, RuleRow, TagRef } from "@/lib/access";
+import { TAG_NAME_MAX } from "@/lib/access/limits";
 import { formatShortDate, type PlainDate } from "@/lib/money";
 import { removeRule, updateRule } from "./actions";
 import { colourOf, ruleMatch, rulesSummary, ruleWhen, transactionsText } from "./look";
@@ -52,7 +54,7 @@ function RuleWords({ rule }: { rule: RuleRow }) {
       {rule.tag && (
         <span className={styles.nowrap}>
           {" "}
-          <span className="sub">and tag it</span> <Tag icon="tag">{rule.tag}</Tag>
+          <span className="sub">and tag it</span> <Tag icon="tag">{rule.tag.name}</Tag>
         </span>
       )}
       {rule.category.kind === "transfer" && (
@@ -92,19 +94,29 @@ function OnSwitch({ rule, onSaved }: { rule: RuleRow; onSaved: () => void }) {
   );
 }
 
-/** Change where a rule puts things, or delete it. New rules come from transactions. */
+/**
+ * Change where a rule puts things and the tag it adds, or delete it. New rules come from
+ * transactions.
+ */
 function RuleEditor({
   rule,
   categories,
+  tags,
   wide,
   onDone,
 }: {
   rule: RuleRow;
   categories: readonly CategorySummary[];
+  /** Tags the person has used, offered as they type. */
+  tags: readonly TagRef[];
   wide: boolean;
   onDone: (message: string, deleted?: boolean) => void;
 }) {
   const [categoryId, setCategoryId] = useState(rule.category.id);
+  const [tag, setTag] = useState(rule.tag?.name ?? "");
+  const tidyTag = tag.replace(/\s+/g, " ").trim();
+  const tagChanged = tidyTag !== (rule.tag?.name ?? "");
+  const changed = categoryId !== rule.category.id || tagChanged;
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [busy, start] = useTransition();
@@ -117,9 +129,15 @@ function RuleEditor({
         id: crypto.randomUUID(),
         ruleId: rule.id,
         categoryId,
+        ...(tagChanged ? { tag: tidyTag } : {}),
       }).catch(() => null);
       if (!result?.ok) setError(result?.error ?? failed);
-      else onDone(`New ${ruleMatch(rule)} transactions now go in ${target?.name ?? "it"}.`);
+      else
+        onDone(
+          `New ${ruleMatch(rule)} transactions now go in ${target?.name ?? "it"}${
+            tidyTag ? ` and get the ${tidyTag} tag` : ""
+          }.`,
+        );
     });
   }
 
@@ -140,7 +158,7 @@ function RuleEditor({
       aria-label={`Rule for ${ruleMatch(rule)}`}
       onSubmit={(event) => {
         event.preventDefault();
-        if (categoryId !== rule.category.id && !busy) save();
+        if (changed && !busy) save();
       }}
     >
       {wide && <h2 className="h2">Rule</h2>}
@@ -154,6 +172,21 @@ function RuleEditor({
         options={categories.map((c) => ({ value: c.id, label: c.name }))}
         hint="Only new transactions follow the change. Ones already sorted stay where they are."
       />
+      <TextField
+        label="And tag it"
+        icon="tag"
+        value={tag}
+        maxLength={TAG_NAME_MAX}
+        placeholder="No tag"
+        list={`rule-tags-${rule.id}`}
+        onChange={(event) => setTag(event.target.value)}
+        hint="Optional. A tag such as a trip groups spending across categories."
+      />
+      <datalist id={`rule-tags-${rule.id}`}>
+        {tags.map((t) => (
+          <option key={t.id} value={t.name} />
+        ))}
+      </datalist>
       <div className={styles.dangerRows}>
         {confirm ? (
           <div className={styles.confirm} role="group" aria-label="Delete this rule">
@@ -194,7 +227,7 @@ function RuleEditor({
           variant="primary"
           size={wide ? "md" : "lg"}
           block={!wide}
-          disabled={categoryId === rule.category.id || busy}
+          disabled={!changed || busy}
         >
           Save
         </Button>
@@ -214,11 +247,13 @@ const howTo = (
 export function RulesTab({
   rules,
   categories,
+  tags,
   today,
   timeZone,
 }: {
   rules: readonly RuleRow[];
   categories: readonly CategorySummary[];
+  tags: readonly TagRef[];
   today: PlainDate;
   timeZone: string;
 }) {
@@ -477,9 +512,10 @@ export function RulesTab({
         <section className={cx(styles.card, styles.panel)} aria-label="Rule">
           {wide && picked ? (
             <RuleEditor
-              key={`${picked.id}|${picked.category.id}`}
+              key={`${picked.id}|${picked.category.id}|${picked.tag?.id}`}
               rule={picked}
               categories={categories}
+              tags={tags}
               wide
               onDone={done}
             />
@@ -512,9 +548,10 @@ export function RulesTab({
       >
         {!wide && picked && (
           <RuleEditor
-            key={`${picked.id}|${picked.category.id}`}
+            key={`${picked.id}|${picked.category.id}|${picked.tag?.id}`}
             rule={picked}
             categories={categories}
+            tags={tags}
             wide={false}
             onDone={done}
           />

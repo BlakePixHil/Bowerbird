@@ -23,6 +23,7 @@ import {
   countActivity,
   dailySpending,
   otherMembers,
+  tagChoices,
   viewerOf,
 } from "@/lib/access";
 import { requireMember } from "@/lib/auth";
@@ -47,7 +48,7 @@ export default async function ActivityPage({
   const filters = filtersOf(show, search);
   const today = shell.today;
 
-  const [counts, first, total, spending, others, categories] = await Promise.all([
+  const [counts, first, total, spending, others, categories, tags] = await Promise.all([
     activityCounts(db, viewer),
     activityPage(db, viewer, view, filters),
     countActivity(db, viewer, view, filters),
@@ -58,6 +59,7 @@ export default async function ActivityPage({
     }),
     otherMembers(db, viewer),
     categoryChoices(db, viewer),
+    tagChoices(db, viewer),
   ]);
 
   const header = (
@@ -145,6 +147,7 @@ export default async function ActivityPage({
         today={today}
         people={people}
         categories={categories}
+        tagChoices={tags}
         footer={<MissingSomething />}
         side={<ImportCard liveSync={shell.live.connections > 0} />}
       />

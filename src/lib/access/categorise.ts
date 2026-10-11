@@ -99,8 +99,9 @@ export type Categorised =
 
 /**
  * Puts one transaction in a category. The viewer must see its account in full, and the category
- * must be one of the household's. Says what to ask next: whether to sort the shop this way always.
- * Doing it twice gives the same result, so a change queued offline can be sent again safely.
+ * must be one of the household's. A split row stops being split. Says what to ask next: whether
+ * to sort the shop this way always. Doing it twice gives the same result, so a change queued
+ * offline can be sent again safely.
  */
 export async function categoriseTransaction(
   db: Db,
@@ -126,20 +127,14 @@ export async function categoriseTransaction(
             and(eq(transactions.id, transactionId), inArray(transactions.accountId, accountIds)),
           );
   if (!row) return { ok: false, error: "That transaction isn't one you can change." };
-  const [split] = await db
-    .select({ n: count() })
-    .from(splits)
-    .where(eq(splits.transactionId, row.id));
-  if ((split?.n ?? 0) > 0)
-    return {
-      ok: false,
-      error: "This one is split across categories, so change its parts instead.",
-    };
-
-  await db
-    .update(transactions)
-    .set({ categoryId })
-    .where(and(eq(transactions.id, row.id), eq(transactions.householdId, viewer.householdId)));
+  // One category for the whole row replaces any split it had, as the boards do.
+  await db.transaction(async (tx) => {
+    await tx.delete(splits).where(eq(splits.transactionId, row.id));
+    await tx
+      .update(transactions)
+      .set({ categoryId })
+      .where(and(eq(transactions.id, row.id), eq(transactions.householdId, viewer.householdId)));
+  });
   await assignColours(db, viewer.householdId);
   const coloured = (await pickable(db, viewer, categoryId)) ?? category;
 

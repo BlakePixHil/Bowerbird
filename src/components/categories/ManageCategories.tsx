@@ -1,6 +1,6 @@
 "use client";
 
-import type { CategoryOverview, RuleRow, ShopRow } from "@/lib/access";
+import type { CategoryOverview, RuleRow, ShopRow, TagRef } from "@/lib/access";
 import type { PlainDate } from "@/lib/money";
 import { CategoriesTab } from "./CategoriesTab";
 import { CategoryTabs } from "./CategoryTabs";
@@ -14,6 +14,7 @@ export function ManageCategories({
   overview,
   rules,
   shops,
+  tags,
   dayLine,
   today,
   timeZone,
@@ -21,6 +22,7 @@ export function ManageCategories({
   overview: CategoryOverview;
   rules: readonly RuleRow[];
   shops: readonly ShopRow[];
+  tags: readonly TagRef[];
   dayLine: string;
   today: PlainDate;
   timeZone: string;
@@ -36,6 +38,7 @@ export function ManageCategories({
         <RulesTab
           rules={rules}
           categories={overview.categories}
+          tags={tags}
           today={today}
           timeZone={timeZone}
         />

@@ -14,7 +14,7 @@ import {
 } from "drizzle-orm";
 import type { Viewer } from "@/lib/access";
 import type { Db } from "@/lib/db";
-import { accounts, connections, members, transactions } from "@/lib/db/schema";
+import { accounts, connections, members, splits, transactions } from "@/lib/db/schema";
 import { addDays, daysBetween, todayIn, type PlainDate } from "@/lib/money";
 import { sortTransactions, type SortingRow } from "@/lib/sorting";
 import { fillBalances, saveGivenBalance } from "../balances";
@@ -229,6 +229,10 @@ async function saveRecent(
         pending: to.pending,
       })
       .where(eq(transactions.id, row.id));
+    // A split's parts add up to the old amount, so a new amount ends the split. The row keeps
+    // its category, its biggest part's.
+    if (to.amountCents !== row.amountCents)
+      await db.delete(splits).where(eq(splits.transactionId, row.id));
     // Only rows nothing has sorted yet: a category, shop or transfer pair already set stays.
     if (!row.categoryId && !row.merchantId && !row.transferGroupId)
       toSort.push({

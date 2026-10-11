@@ -273,9 +273,12 @@ describe("rules", () => {
     expect(await categoriseTransaction(db, pat, patsRow.id, category["Gifts"])).toMatchObject({
       ok: true,
     });
-    expect(
-      await categoriseTransaction(db, olive, (await one("KMART split")).id, category["Gifts"]),
-    ).toMatchObject({ ok: false });
+    // One category for a split row replaces its parts.
+    const split = await one("KMART split");
+    expect(await categoriseTransaction(db, olive, split.id, category["Gifts"])).toMatchObject({
+      ok: true,
+    });
+    expect(await db.select().from(splits).where(eq(splits.transactionId, split.id))).toEqual([]);
     const kmart = await shopOf("Kmart");
     expect(await sortShopAlways(db, zed, kmart.id, awayGroceries.id, true)).toEqual({
       ok: false,

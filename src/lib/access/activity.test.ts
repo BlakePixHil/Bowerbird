@@ -283,8 +283,8 @@ describe("activityPage", () => {
     });
     expect(rows.get(special.transferOut)?.notCounted).toBe(true);
     expect(rows.get(special.savings)?.notCounted).toBe(true);
-    expect(rows.get(special.booking)?.tags).toEqual(["Bali 2027"]);
-    expect(rows.get(special.kmart)?.split).toBe(true);
+    expect(rows.get(special.booking)?.tags.map((tag) => tag.name)).toEqual(["Bali 2027"]);
+    expect(rows.get(special.kmart)?.parts).toHaveLength(2);
     expect(rows.get(special.pat)?.whose).toBe("partner");
   });
 
