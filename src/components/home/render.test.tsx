@@ -94,6 +94,10 @@ const data = (more: Partial<HomeData>): HomeData => ({
       },
     }),
   ],
+  months: [
+    { key: "2026-08", label: "AUG", name: "Aug 2026", inCents: 652_000, outCents: 580_000 },
+    { key: "2026-09", label: "SEP", name: "Sep 2026", inCents: 652_000, outCents: 489_000 },
+  ],
   people: { me: { name: "Olive", initials: "O" }, partner: null },
   setup: null,
   firstName: "Olive",
@@ -109,6 +113,34 @@ describe("Home", () => {
     expect(html).toContain('href="/reports/money-in-out"');
     expect(html).toContain("Woolworths");
     expect(html).not.toContain("Finish setting up");
+  });
+
+  it("draws desktop's KPI row, plan vs reality, last months and Latest as a table", () => {
+    const rows = Array.from({ length: 12 }, (_, i) =>
+      row({
+        id: `t${i}`,
+        shop: `Shop ${i}`,
+        date: `2026-10-${String(10 - (i % 9)).padStart(2, "0")}`,
+      }),
+    );
+    const html = renderToStaticMarkup(<HomeOverview data={data({ latest: rows })} />);
+    expect(html).toContain(">Left over so far<");
+    expect(html).toContain("of $900 · about $33 a day");
+    expect(html).toContain(">Plan vs reality<");
+    expect(html).toContain(">Last 2 months<");
+    expect(html).toContain("Sep 2026");
+    expect(html).toContain('href="/reports/money-in-out#left-over"');
+    expect(html).toContain('role="columnheader">Whose<');
+    // Desktop lists 10 and the phone 5, so the first five appear twice and the next five once.
+    expect(html.split(">Shop 0<")).toHaveLength(3);
+    expect(html.split(">Shop 9<")).toHaveLength(2);
+    expect(html).not.toContain(">Shop 10<");
+  });
+
+  it("leaves the months out until a whole month has passed", () => {
+    const html = renderToStaticMarkup(<HomeOverview data={data({ months: [] })} />);
+    expect(html).not.toContain("Open report");
+    expect(html).toContain(">Plan vs reality<");
   });
 
   it("shows the setup checklist before there's anything to show", () => {

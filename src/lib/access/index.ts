@@ -36,6 +36,7 @@ export {
   countActivity,
   dailySpending,
   moneyInOut,
+  monthlyInOut,
   type ActivityCategory,
   type ActivityCounts,
   type ActivityFilters,
@@ -43,6 +44,7 @@ export {
   type ActivityRow,
   type DailySpending,
   type InOut,
+  type MonthInOut,
   type SplitPart,
   type TagRef,
 } from "./activity";

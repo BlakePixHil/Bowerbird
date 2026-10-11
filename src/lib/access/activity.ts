@@ -390,6 +390,35 @@ export async function moneyInOut(
   return { in: row?.in ?? 0, out: row?.out ?? 0 };
 }
 
+/** Money in and out for one calendar month, such as "2026-09". */
+export type MonthInOut = InOut & { month: string };
+
+/**
+ * Money in and out for each calendar month that has any, oldest first, by the same rules as
+ * `moneyInOut`, so a month here matches `moneyInOut` over that month's days.
+ */
+export async function monthlyInOut(
+  db: Db,
+  viewer: Viewer,
+  view: View,
+  range: { from: PlainDate; to: PlainDate },
+): Promise<MonthInOut[]> {
+  const seen = await fullAccounts(db, viewer, view);
+  if (seen.size === 0) return [];
+  const amount = transactions.amountCents;
+  const month = sql<string>`to_char(${transactions.date}, 'YYYY-MM')`;
+  return db
+    .select({
+      month,
+      in: sql<number>`coalesce(sum(${amount}) filter (where ${amount} > 0), 0)`.mapWith(Number),
+      out: sql<number>`coalesce(sum(-${amount}) filter (where ${amount} < 0), 0)`.mapWith(Number),
+    })
+    .from(transactions)
+    .where(matching(viewer, [...seen.keys()], { from: range.from, to: range.to, transfers: false }))
+    .groupBy(month)
+    .orderBy(month);
+}
+
 export type DailySpending = {
   /** Days with any spending, oldest first, in positive cents. */
   days: DaySpend[];

@@ -9,7 +9,7 @@ import {
 } from "@/components/activity/look";
 import { dollars } from "@/components/budgets/budgets";
 import type { Status } from "@/components/budgets/progress";
-import { RunningTotalChart } from "@/components/charts";
+import { RunningTotalChart, type InOutMonth } from "@/components/charts";
 import {
   Avatar,
   BarMeter,
@@ -37,6 +37,7 @@ import {
   whenWords,
   type SetupFacts,
 } from "./home";
+import { DesktopHome } from "./DesktopHome";
 import styles from "./Home.module.css";
 
 export type HomeData = {
@@ -45,8 +46,10 @@ export type HomeData = {
   progress: BudgetProgress;
   /** Money in and out so far this period, from Activity's totals. */
   money: InOut;
-  /** The newest transactions, newest first. */
+  /** The newest transactions, newest first: the phone shows 5, desktop 10. */
   latest: readonly ActivityRow[];
+  /** Money in and out for each whole month before this one, oldest first, for desktop. */
+  months: readonly InOutMonth[];
   people: People;
   /** The first-week state: set until there are transactions and budgets to show. */
   setup: SetupFacts | null;
@@ -54,7 +57,7 @@ export type HomeData = {
   firstName: string;
 };
 
-/** How many transactions Latest shows. */
+/** How many transactions Latest shows on the phone. */
 export const LATEST_ROWS = 5;
 
 function StatusPill({ status }: { status: Status }) {
@@ -379,14 +382,24 @@ function FirstWeek({ data, facts }: { data: HomeData; facts: SetupFacts }) {
 }
 
 /**
- * Home, from the "Home" board: Left to spend, Spending pace, Money in, money out and Latest. Until
- * there are transactions and budgets, it's the first-week state from "First run 4: You are set".
- * Cards for Until payday, net worth, goals and bills coming up wait for their projects.
+ * Home, from the "Home" board on the phone and "Desktop: Home" on wider screens: Left to spend,
+ * Spending pace, Money in, money out and Latest. Until there are transactions and budgets, it's the
+ * first-week state from "First run 4: You are set". Cards for Until payday, net worth, goals and
+ * bills coming up wait for their projects.
  */
 export function HomeOverview({ data }: { data: HomeData }) {
+  if (data.setup)
+    return (
+      <div className={styles.page}>
+        <FirstWeek data={data} facts={data.setup} />
+      </div>
+    );
   return (
-    <div className={styles.page}>
-      {data.setup ? <FirstWeek data={data} facts={data.setup} /> : <ThisPeriod data={data} />}
-    </div>
+    <>
+      <div className={cx(styles.page, styles.phoneOnly)}>
+        <ThisPeriod data={data} />
+      </div>
+      <DesktopHome data={data} />
+    </>
   );
 }

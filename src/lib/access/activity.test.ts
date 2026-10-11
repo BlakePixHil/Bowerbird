@@ -14,13 +14,14 @@ import {
   transactionTags,
   users,
 } from "@/lib/db/schema";
-import { addDays, spentBy, sumCents } from "@/lib/money";
+import { addDays, addMonths, spentBy, sumCents } from "@/lib/money";
 import {
   activityCounts,
   activityPage,
   countActivity,
   dailySpending,
   moneyInOut,
+  monthlyInOut,
   type ActivityFilters,
   type ActivityRow,
   type View,
@@ -338,6 +339,17 @@ describe("moneyInOut", () => {
     });
     expect(totals.in).toBeGreaterThan(0);
     expect(totals.out).toBeGreaterThan(0);
+    // Each month matches the totals over its own days.
+    const months = await monthlyInOut(db, olive, "household", {
+      from: addDays(TODAY, -130),
+      to: TODAY,
+    });
+    expect(months.length).toBeGreaterThanOrEqual(4);
+    for (const { month, ...sums } of months) {
+      const first = `${month}-01`;
+      const last = addDays(addMonths(first, 1), -1);
+      expect(sums).toEqual(await moneyInOut(db, olive, "household", { from: first, to: last }));
+    }
     // Pat's private account and the other household stay out.
     expect(await moneyInOut(db, zed, "household", { from, to: TODAY })).not.toEqual(totals);
   });

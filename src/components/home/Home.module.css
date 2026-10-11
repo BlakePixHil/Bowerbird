@@ -1,5 +1,5 @@
-/* Home, from the boards "Home" and "First run 4: You are set". Desktop Home is its own ticket, so
-   wider screens show the phone's cards in one column for now. */
+/* Home, from the boards "Home", "Desktop: Home" and "First run 4: You are set". Both layouts are
+   drawn; the phone one shows at 760px and narrower. The first week is one column on any screen. */
 
 .page {
   display: flex;
@@ -417,4 +417,272 @@
 
 .ghostLines > span:last-child {
   width: 72%;
+}
+
+/* Desktop: the "Desktop: Home" board. */
+.desktop {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.phoneOnly {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .desktop {
+    display: none;
+  }
+
+  .phoneOnly {
+    display: flex;
+  }
+}
+
+.flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.w2 {
+  flex: 2 1 560px;
+  min-width: 0;
+}
+
+.w1 {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.wideCard {
+  padding: 18px 20px;
+}
+
+.titled {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cardHeadWrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.deskHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 52px;
+}
+
+.key {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.keyOver {
+  margin-left: -6px;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.keyed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Left over so far: money in and out as two short bars. */
+.miniInOut {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: center;
+}
+
+.miniInOut > :nth-child(3n) {
+  min-width: 56px;
+  text-align: right;
+}
+
+.miniTrack {
+  display: block;
+  height: 6px;
+}
+
+.miniTrack > span {
+  border-radius: 0 3px 3px 0;
+}
+
+/* Spending pace. */
+.bigChart {
+  margin-top: 20px;
+}
+
+.course {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.wideCard .note {
+  margin-top: 16px;
+}
+
+/* Plan vs reality. */
+.planCard {
+  padding: 4px 20px 12px;
+}
+
+.planRow {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.planTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.planBottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.thinBar {
+  height: 4px;
+}
+
+.statusWords {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 104px;
+  color: var(--text-2);
+}
+
+.statusWords svg {
+  width: 12px;
+  height: 12px;
+}
+
+.good {
+  color: var(--good-ink);
+}
+
+.warn {
+  color: var(--warn-ink);
+}
+
+.crit {
+  color: var(--crit-ink);
+}
+
+/* Money in, money out over the last 12 months. */
+.monthWell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  margin-top: 14px;
+  padding: 10px 14px;
+}
+
+.monthName {
+  min-width: 72px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.monthsChart {
+  margin-top: 18px;
+}
+
+/* Latest, as a table. */
+.tableCard {
+  padding: 4px 0 6px;
+  min-width: 0;
+}
+
+.tableCard .deskHead {
+  padding: 0 20px;
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+.table {
+  min-width: 860px;
+  padding: 0 8px;
+}
+
+.cols {
+  display: grid;
+  grid-template-columns:
+    104px minmax(200px, 1.5fr) minmax(170px, 1.2fr) 112px minmax(160px, 1fr)
+    112px;
+  gap: 12px;
+  padding: 0 12px;
+}
+
+.colHead {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tableRow {
+  align-items: center;
+  min-height: 48px;
+  font-size: 13px;
+}
+
+.tableRow + .tableRow {
+  border-top: 1px solid var(--line);
+}
+
+.num {
+  text-align: right;
+}
+
+.what {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.what:has(.smallTile) {
+  gap: 10px;
+}
+
+.smallTile {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+}
+
+.quietAmount {
+  color: var(--text-3);
+}
+
+.pendingRow .what:nth-child(2) {
+  opacity: 0.62;
 }

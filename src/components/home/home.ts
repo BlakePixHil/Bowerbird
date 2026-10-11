@@ -2,9 +2,9 @@ import { activityHref } from "@/components/activity/show";
 import { dollars, unitOf } from "@/components/budgets/budgets";
 import { isCalendarMonth, paceStatus, type Status } from "@/components/budgets/progress";
 import { cycleWords } from "@/components/paydays/paydays";
-import type { RunningTotalChartProps } from "@/components/charts";
+import type { InOutMonth, RunningTotalChartProps } from "@/components/charts";
 import type { IconName } from "@/components/ui";
-import type { BudgetProgress, Income, InOut, Whose } from "@/lib/access";
+import type { BudgetProgress, Income, InOut, MonthInOut, Whose } from "@/lib/access";
 import {
   addDays,
   addMonths,
@@ -81,6 +81,9 @@ export type LeftToSpend = {
   today: number;
   /** "Today is day 10 of 31". */
   dayLine: string;
+  /** The days after today, and about how much a day is left for them, or null when none is. */
+  after: number;
+  daily: number | null;
   pace: Status;
 };
 
@@ -94,6 +97,7 @@ export function leftToSpend(progress: BudgetProgress): LeftToSpend | null {
   const left = everyday.planned - everyday.spent;
   const after = day.of - day.day;
   const plan = dollars(everyday.planned);
+  const daily = left > 0 && after > 0 ? Math.round(left / after) : null;
   let line: string;
   if (left < 0) {
     const rest = after > 0 ? `, with ${plural(after, "day")} to go` : "";
@@ -103,11 +107,11 @@ export function leftToSpend(progress: BudgetProgress): LeftToSpend | null {
   } else if (after === 0) {
     line = `of ${plan} for everyday spending, for the rest of today.`;
   } else {
-    const daily = dollars(Math.round(left / after));
+    const each = dollars(daily!);
     line =
       after === 1
-        ? `of ${plan} for everyday spending. That's about ${daily} for tomorrow, the last day.`
-        : `of ${plan} for everyday spending. That's about ${daily} a day for the next ${after} days.`;
+        ? `of ${plan} for everyday spending. That's about ${each} for tomorrow, the last day.`
+        : `of ${plan} for everyday spending. That's about ${each} a day for the next ${after} days.`;
   }
   return {
     title: `Left to spend ${inName(period, spec)}`,
@@ -118,7 +122,32 @@ export function leftToSpend(progress: BudgetProgress): LeftToSpend | null {
     planned: everyday.planned,
     today: day.day / day.of,
     dayLine: `Today is day ${day.day} of ${day.of}`,
+    after,
+    daily,
     pace: paceStatus(progress.pace, false),
+  };
+}
+
+/** Under Left to spend on desktop: "of $2,220 · about $105 a day". */
+export function leftKpiLine(left: LeftToSpend): string {
+  const plan = dollars(left.planned);
+  if (left.left < 0) return `over the ${plan} plan`;
+  if (left.left === 0) return `of ${plan} · all spent`;
+  if (left.daily === null) return `of ${plan} · for the rest of today`;
+  return `of ${plan} · about ${dollars(left.daily)} ${left.after === 1 ? "for tomorrow" : "a day"}`;
+}
+
+/** Bills still to come on desktop: "$549", "$2,411 of $2,960 already paid", and how much is paid. */
+export function billsKpi(
+  progress: BudgetProgress,
+): { toCome: string; line: string; paid: number; planned: number } | null {
+  const { planned, spent } = progress.setDates;
+  if (planned <= 0 && spent <= 0) return null;
+  return {
+    toCome: dollars(Math.max(0, planned - spent)),
+    line: `${dollars(spent)} of ${dollars(planned)} already paid`,
+    paid: spent,
+    planned,
   };
 }
 
@@ -146,6 +175,8 @@ function runningTotal(start: PlainDate, last: PlainDate, days: readonly DaySpend
 
 export type SpendingPace = {
   chart: RunningTotalChartProps;
+  /** "On course for $2,173" and "by 31 Oct, $47 under plan.", or null on the last day. */
+  course: { lead: string; rest: string } | null;
   /** "$212 more than September by this point.", or null with nothing to compare. */
   vsLast: string | null;
 };
@@ -187,6 +218,17 @@ export function spendingPace(progress: BudgetProgress): SpendingPace | null {
 
   const onCourse = Math.round((now * day.of) / day.day);
   const ends = today >= period.end;
+  const beyond = onCourse - everyday.planned;
+  const course = ends
+    ? null
+    : {
+        lead: `On course for ${dollars(onCourse)}`,
+        rest: `by ${formatShortDate(period.end, { weekday: false })}, ${
+          beyond === 0
+            ? "right on plan"
+            : `${dollars(Math.abs(beyond))} ${beyond < 0 ? "under" : "over"} plan`
+        }.`,
+      };
   return {
     chart: {
       label: `Everyday spending ${isCalendarMonth(period) ? `in ${name}` : lower(name)}`,
@@ -217,8 +259,21 @@ export function spendingPace(progress: BudgetProgress): SpendingPace | null {
       callouts: [{ date: today, cents: now, label: dollars(now), strong: true }],
       table: "hidden",
     },
+    course,
     vsLast,
   };
+}
+
+/**
+ * The middle of the period, labelled along the bottom of the big pace chart: 15 Oct for October.
+ * Left out when today's label would sit on top of it.
+ */
+export function midTick(progress: BudgetProgress): PlainDate[] {
+  const { period, today } = progress;
+  const length = daysBetween(period.start, period.end);
+  const mid = addDays(period.start, Math.ceil(length / 2) - 1);
+  const apart = Math.abs(daysBetween(today, mid)) / Math.max(1, length);
+  return today >= period.start && today <= period.end && apart < 0.12 ? [] : [mid];
 }
 
 export type InOutCard = {
@@ -244,6 +299,40 @@ export function inOutCard(money: InOut, period: Period, spec: PeriodSpec): InOut
     outPct: pct(money.out),
     left: signed(money.in - money.out),
   };
+}
+
+/** How many whole months Money in, money out shows on desktop Home. */
+export const HOME_MONTHS = 12;
+
+const firstOf = (date: PlainDate): PlainDate => `${date.slice(0, 7)}-01`;
+
+/**
+ * The whole months before this one for Money in, money out on desktop, oldest first: up to 12,
+ * starting no earlier than the month money first came in. Empty until a whole month has passed.
+ */
+export function wholeMonths(
+  sums: readonly MonthInOut[],
+  today: PlainDate,
+  since: PlainDate | null,
+): InOutMonth[] {
+  if (!since) return [];
+  const by = new Map(sums.map((sum) => [sum.month, sum]));
+  const months: InOutMonth[] = [];
+  for (let i = HOME_MONTHS; i >= 1; i--) {
+    const start = addMonths(firstOf(today), -i);
+    if (start < firstOf(since)) continue;
+    const key = start.slice(0, 7);
+    const { year, month } = parts(start);
+    const short = MONTHS[month - 1].slice(0, 3);
+    months.push({
+      key,
+      label: short.toUpperCase(),
+      name: `${short} ${year}`,
+      inCents: by.get(key)?.in ?? 0,
+      outCents: by.get(key)?.out ?? 0,
+    });
+  }
+  return months;
 }
 
 /** "Today", "Yesterday", "Fri 9 Oct", for the second line of a row on Latest. */

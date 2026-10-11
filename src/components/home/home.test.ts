@@ -2,13 +2,17 @@ import { describe, expect, it } from "vitest";
 import { progressOf, type Income, type ProgressBudget } from "@/lib/access";
 import type { DaySpend, PeriodSpec } from "@/lib/money";
 import {
+  billsKpi,
   billsLine,
   fillsInWords,
   inOutCard,
+  leftKpiLine,
   leftToSpend,
+  midTick,
   readyTiles,
   setupSteps,
   spendingPace,
+  wholeMonths,
   whenWords,
   type SetupFacts,
 } from "./home";
@@ -70,7 +74,7 @@ const progress = (
     spec: more.spec ?? MONTH,
     period: more.period ?? OCTOBER,
     budgets: more.budgets ?? [budget("everyday", 222_000), budget("rent", 225_000, true)],
-    categories: [category("everyday"), category("rent")],
+    categories: [category("everyday"), category("rent"), category("power")],
     days: new Map([
       ["everyday", [...september, ...(more.spending ?? october)]],
       ["rent", on(["2026-09-01", 225_000], ["2026-10-01", 225_000])],
@@ -117,6 +121,31 @@ describe("left to spend", () => {
     expect(billsLine(progress())).toEqual({ paid: "$2,250 paid", toCome: "$0 still to come" });
     expect(billsLine(progress({ budgets: [budget("everyday", 222_000)] }))).toBeNull();
   });
+
+  it("says it in a line under the number on desktop", () => {
+    const line = (more: Parameters<typeof progress>[0]) =>
+      leftKpiLine(leftToSpend(progress(more))!);
+    expect(line({})).toBe("of $2,220 · about $72 a day");
+    expect(line({ spending: on(["2026-10-03", 230_000]) })).toBe("over the $2,220 plan");
+    expect(line({ spending: on(["2026-10-03", 222_000]) })).toBe("of $2,220 · all spent");
+    expect(line({ today: "2026-10-30" })).toBe("of $2,220 · about $1,519 for tomorrow");
+    expect(line({ today: "2026-10-31" })).toBe("of $2,220 · for the rest of today");
+  });
+
+  it("counts bills still to come on desktop", () => {
+    const twoBills = [
+      budget("everyday", 222_000),
+      budget("rent", 225_000, true),
+      budget("power", 54_900, true),
+    ];
+    expect(billsKpi(progress({ budgets: twoBills }))).toEqual({
+      toCome: "$549",
+      line: "$2,250 of $2,799 already paid",
+      paid: 225_000,
+      planned: 279_900,
+    });
+    expect(billsKpi(progress({ budgets: [budget("everyday", 222_000)] }))).toBeNull();
+  });
 });
 
 describe("spending pace", () => {
@@ -138,6 +167,19 @@ describe("spending pace", () => {
     expect(chart.guides).toEqual([{ cents: 222_000, label: "Plan $2,220" }]);
     // September had $489 by the 10th.
     expect(pace.vsLast).toBe("$212 more than September by this point.");
+    expect(pace.course).toEqual({
+      lead: "On course for $2,173",
+      rest: "by 31 Oct, $47 under plan.",
+    });
+    expect(spendingPace(progress({ today: "2026-10-31" }))!.course).toBeNull();
+  });
+
+  it("labels the middle of the period unless today sits on it", () => {
+    expect(midTick(progress())).toEqual(["2026-10-15"]);
+    expect(midTick(progress({ today: "2026-10-14" }))).toEqual([]);
+    expect(
+      midTick(progress({ spec: FORTNIGHT, period: { start: "2026-10-09", end: "2026-10-22" } })),
+    ).toEqual(["2026-10-15"]);
   });
 
   it("follows a pay cycle, and stops forecasting on the last day", () => {
@@ -164,6 +206,20 @@ describe("money in, money out", () => {
     });
     expect(inOutCard({ in: 326_400, out: 386_900 }, OCTOBER, MONTH).left).toBe("−$605");
     expect(inOutCard({ in: 0, out: 0 }, OCTOBER, MONTH)).toMatchObject({ inPct: 0, outPct: 0 });
+  });
+
+  it("lists the whole months before this one, back to the first month with money", () => {
+    const sums = [{ month: "2026-08", in: 652_000, out: 580_000 }];
+    expect(wholeMonths(sums, "2026-10-10", "2026-07-11")).toEqual([
+      { key: "2026-07", label: "JUL", name: "Jul 2026", inCents: 0, outCents: 0 },
+      { key: "2026-08", label: "AUG", name: "Aug 2026", inCents: 652_000, outCents: 580_000 },
+      { key: "2026-09", label: "SEP", name: "Sep 2026", inCents: 0, outCents: 0 },
+    ]);
+    const year = wholeMonths(sums, "2026-10-10", "2024-01-05");
+    expect(year).toHaveLength(12);
+    expect([year[0].name, year.at(-1)!.name]).toEqual(["Oct 2025", "Sep 2026"]);
+    expect(wholeMonths(sums, "2026-10-10", "2026-10-02")).toEqual([]);
+    expect(wholeMonths([], "2026-10-10", null)).toEqual([]);
   });
 
   it("says when each transaction was", () => {
