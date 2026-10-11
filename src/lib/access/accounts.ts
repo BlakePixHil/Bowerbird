@@ -143,3 +143,17 @@ export function pickScope(all: readonly VisibleAccount[], view: View): Scope {
 export async function scopeFor(db: Db, viewer: Viewer, view: View): Promise<Scope> {
   return pickScope(await visibleAccounts(db, viewer), view);
 }
+
+/** The other members of the viewer's household, first to join first: who sharing is with. */
+export async function otherMembers(
+  db: Db,
+  viewer: Viewer,
+): Promise<{ id: string; name: string }[]> {
+  const rows = await db
+    .select({ id: members.id, name: members.displayName })
+    .from(members)
+    .where(eq(members.householdId, viewer.householdId))
+    .orderBy(asc(members.createdAt), asc(members.id));
+  if (!rows.some((row) => row.id === viewer.memberId)) return [];
+  return rows.filter((row) => row.id !== viewer.memberId);
+}

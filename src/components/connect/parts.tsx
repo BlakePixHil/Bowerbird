@@ -8,6 +8,7 @@ import {
   cx,
   Icon,
   IconButton,
+  IconButtonLink,
   Pill,
   Well,
   type IconName,
@@ -56,24 +57,32 @@ export function StepRail({
   at,
   tokenIn,
   onPick,
+  subs = {},
+  complete = false,
 }: {
   at: StepKey;
   tokenIn?: boolean;
   onPick?: (step: StepKey) => void;
+  /** Words under a step's title in place of the usual ones, such as "6 found". */
+  subs?: Partial<Record<StepKey, string>>;
+  /** The step it's at is finished too, so it gets a tick. */
+  complete?: boolean;
 }) {
   const now = STEPS.findIndex((step) => step.key === at);
   return (
     <Card as="ol" className={styles.rail} aria-label="Steps to connect live sync">
       {STEPS.map((step, i) => {
-        const done = i < now;
+        const done = i < now || (complete && i === now);
         const current = i === now;
-        const sub = done
-          ? step.done
-          : current
-            ? step.key === "token" && tokenIn
-              ? "Looks right"
-              : step.now
-            : step.later;
+        const sub =
+          subs[step.key] ??
+          (done
+            ? step.done
+            : current
+              ? step.key === "token" && tokenIn
+                ? "Looks right"
+                : step.now
+              : step.later);
         const body = (
           <>
             <span className={cx(styles.railBar, i <= now && styles.railBarOn)} />
@@ -120,6 +129,29 @@ export function StepRail({
         );
       })}
     </Card>
+  );
+}
+
+/** The phone's top bar: back, "Live sync · step 2 of 3" and the three-part progress line. */
+export function PhoneTop({
+  step,
+  back,
+}: {
+  step: 1 | 2 | 3;
+  back: { href: string; label: string };
+}) {
+  return (
+    <>
+      <div className={styles.phoneBar}>
+        <IconButtonLink icon="arrow-left" label={back.label} href={back.href} />
+        <span className="small sub">Live sync · step {step} of 3</span>
+      </div>
+      <div className={styles.progress} role="img" aria-label={`Step ${step} of 3`}>
+        {[1, 2, 3].map((n) => (
+          <span key={n} className={cx(n <= step && styles.progressOn)} />
+        ))}
+      </div>
+    </>
   );
 }
 

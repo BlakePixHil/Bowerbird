@@ -5,6 +5,7 @@
  */
 export {
   accessTo,
+  otherMembers,
   pickScope,
   scopeFor,
   viewerOf,

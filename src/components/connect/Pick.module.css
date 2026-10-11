@@ -1,0 +1,400 @@
+/* Live sync step 2, picking accounts, from the "Live sync 2: Pick accounts and who sees them" and
+   "Desktop: Connect live sync" boards. Shared pieces are in Connect.module.css. */
+
+.name {
+  display: block;
+  font-weight: 500;
+}
+
+.faded {
+  min-width: 0;
+  transition: opacity 120ms ease;
+}
+
+.out {
+  opacity: 0.45;
+}
+
+/* The tick box: a real checkbox with a 44px tap area. */
+.tick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  cursor: pointer;
+}
+
+.box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--line-2);
+  background: var(--surface-2);
+  color: transparent;
+}
+
+.box svg {
+  stroke-width: 2.4;
+}
+
+.tick input:checked + .box {
+  border-color: transparent;
+  background: var(--accent-btn);
+  color: #ffffff;
+}
+
+.tick input:focus-visible + .box {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.leftOut {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Phone ------------------------------------------------------------------ */
+
+.bank {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bankHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 4px 0;
+}
+
+.list {
+  margin: 0;
+  padding: 0 14px;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0 14px;
+}
+
+.item + .item {
+  border-top: 1px solid var(--line);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: -10px;
+}
+
+.top > .grow {
+  display: flex;
+  flex-direction: column;
+}
+
+.choose {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.joint {
+  align-self: flex-start;
+  min-height: 32px;
+}
+
+.item .leftOut {
+  height: 36px;
+  padding-left: 2px;
+}
+
+.legend {
+  margin-top: 6px;
+  padding: 14px 14px 4px;
+}
+
+.legend ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.legend li + li {
+  border-top: 1px solid var(--line);
+}
+
+.legend li > svg,
+.legendRow li > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--text-2);
+}
+
+.legendLabel {
+  font-weight: 600;
+}
+
+.note {
+  margin: 0 4px;
+  text-wrap: pretty;
+}
+
+.see {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  color: var(--text-2);
+  text-align: center;
+}
+
+.see > svg {
+  flex: none;
+}
+
+/* Desktop ---------------------------------------------------------------- */
+
+.card {
+  container-type: inline-size;
+  padding: 4px 0 0;
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 16px 20px 14px;
+}
+
+.cardHead > div {
+  min-width: 0;
+}
+
+.table {
+  padding: 0 8px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) 124px 48px 92px 52px 220px;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 0 12px;
+}
+
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+
+.head {
+  min-height: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.head + .row {
+  border-top: 0;
+}
+
+.cellAccount {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cellAccount > .grow {
+  min-width: 0;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+}
+
+.more,
+.jointWords {
+  display: none;
+}
+
+.seg {
+  grid-auto-columns: auto;
+}
+
+.legendRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 12px 20px;
+  margin: 6px 20px 0;
+  padding: 14px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.legendRow li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-wrap: pretty;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px 20px 16px;
+  border-top: 1px solid var(--line);
+}
+
+.foot > span {
+  flex: 1 1 260px;
+  text-wrap: pretty;
+}
+
+.footActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.foot > [role="alert"] {
+  flex: 1 1 100%;
+  margin: 0;
+}
+
+/* Narrow cards: each account becomes two lines, as on the phone. */
+@container (max-width: 820px) {
+  .table {
+    padding: 0 4px;
+  }
+
+  .head {
+    display: none;
+  }
+
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto 44px;
+    grid-template-areas:
+      "acct bal inc"
+      "vis joint joint";
+    gap: 8px 10px;
+    padding: 12px;
+  }
+
+  .row > .cellAccount {
+    grid-area: acct;
+  }
+
+  .balance {
+    grid-area: bal;
+  }
+
+  .include {
+    grid-area: inc;
+  }
+
+  .vis {
+    grid-area: vis;
+    min-width: 0;
+  }
+
+  .jointCell {
+    grid-area: joint;
+    justify-content: flex-end;
+  }
+
+  .vis .seg {
+    grid-auto-columns: minmax(0, 1fr);
+  }
+
+  .wide {
+    display: none;
+  }
+
+  .more {
+    display: inline;
+  }
+
+  .jointCell .jointWords {
+    display: inline;
+  }
+}
+
+.groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  column-gap: 24px;
+}
+
+.group {
+  min-width: 0;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.groupHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.groupHead > svg {
+  color: var(--text-2);
+}
+
+.groupSub {
+  margin: 2px 0 0 22px;
+}
+
+.groupItems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.groupItems li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faded {
+    transition: none;
+  }
+}

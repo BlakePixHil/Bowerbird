@@ -135,6 +135,7 @@ describe("reading SimpleFIN data", () => {
   it("reads a version 2 account set in the household's time zone", () => {
     const set = readAccountSet(ACCOUNT_SET, TZ, new Date("2026-09-03T06:00:00Z"));
     expect(set?.skipped).toBe(1);
+    expect(set?.bankCount).toBe(2);
     expect(set?.problems).toEqual([
       {
         code: "con.auth",
@@ -211,6 +212,7 @@ describe("reading SimpleFIN data", () => {
         accountId: null,
       },
     ]);
+    expect(set?.bankCount).toBeNull();
     expect(set?.accounts[0]).toMatchObject({
       id: "7",
       institution: "ANZ",
@@ -306,7 +308,8 @@ describe("talking to a SimpleFIN server", () => {
 
   it("works as a BankSource", async () => {
     const source = simplefinSource(server.accessUrl, TZ, local);
-    const accounts = await source.listAccounts();
+    const { accounts, bankCount } = await source.listAccounts();
+    expect(bankCount).toBe(2);
     expect(accounts[0]).toEqual({
       externalId: "acc-1",
       name: "Everyday",

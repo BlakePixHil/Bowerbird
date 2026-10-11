@@ -1,6 +1,8 @@
 /**
  * A pretend SimpleFIN server on this machine, for tests. It hands out setup tokens that work once,
- * checks the access link's user name and password, and answers GET /accounts with made-up data.
+ * checks the access link's user name and password, and answers GET /accounts with made-up data,
+ * filtered the way the protocol says: by `account`, `start-date` and `end-date`, `pending` and
+ * `balances-only`.
  */
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -66,7 +68,8 @@ export async function startMockSimpleFin(): Promise<MockSimpleFin> {
       if (req.headers.authorization !== expected) return send(res, 403, "Forbidden");
       mock.requests.push(url.searchParams);
       if (mock.accountsStatus) return send(res, mock.accountsStatus, "No");
-      return send(res, 200, JSON.stringify(mock.accountSet), "application/json");
+      const body = JSON.stringify(filtered(mock.accountSet, url.searchParams));
+      return send(res, 200, body, "application/json");
     }
     send(res, 404, "Not found");
   }
@@ -77,4 +80,29 @@ export async function startMockSimpleFin(): Promise<MockSimpleFin> {
   mock.origin = `http://127.0.0.1:${port}`;
   mock.accessUrl = `http://${USER}:${PASS}@127.0.0.1:${port}/simplefin`;
   return mock;
+}
+
+type Row = Record<string, unknown>;
+
+/** The account set as a SimpleFIN server would answer this query. */
+function filtered(set: MockAccountSet, query: URLSearchParams): MockAccountSet {
+  if (!Array.isArray(set.accounts)) return set;
+  const wanted = query.getAll("account");
+  const start = Number(query.get("start-date") ?? -Infinity);
+  const end = Number(query.get("end-date") ?? Infinity);
+  const pending = query.get("pending") === "1";
+  const balancesOnly = query.get("balances-only") === "1";
+  const accounts = (set.accounts as Row[])
+    .filter((account) => wanted.length === 0 || wanted.includes(String(account.id)))
+    .map((account) => {
+      if (balancesOnly) return { ...account, transactions: undefined };
+      if (!Array.isArray(account.transactions)) return account;
+      const transactions = (account.transactions as Row[]).filter((row) => {
+        if (row.pending === true && !pending) return false;
+        const when = Number(row.posted) || Number(row.transacted_at);
+        return !Number.isFinite(when) || (when >= start && when < end);
+      });
+      return { ...account, transactions };
+    });
+  return { ...set, accounts };
 }
