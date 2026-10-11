@@ -8,6 +8,7 @@ export const ICONS = {
   alert: "M12 3 2 20h20zM12 10v4M12 17h.01",
   "arrow-back": "M19 12H5M11 6l-6 6 6 6",
   "arrow-down": "M12 5v14M6 13l6 6 6-6",
+  "arrow-down-right": "M7 7l10 10M17 9v8H9",
   "arrow-left": "m15 6-6 6 6 6",
   "arrow-right": "M5 12h14M13 6l6 6-6 6",
   "arrow-up": "M12 19V5M5 12l7-7 7 7",

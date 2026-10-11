@@ -1,6 +1,7 @@
 /**
- * Fill a local database with one made-up household for development: three accounts and three
- * months of made-up transactions ending today. Run with `pnpm db:seed:demo`.
+ * Fill a local database with one made-up household for development: four accounts (one of them
+ * joint) and about 18 months of made-up transactions ending today, a little over 2,000 of them.
+ * Today's and yesterday's card and everyday rows are still pending. Run with `pnpm db:seed:demo`.
  *
  * It refuses to run against anything but a database on this computer. Never run it against
  * production. Running it again replaces the demo household.
@@ -16,7 +17,7 @@ loadEnvConfig(process.cwd());
 
 const DEMO_EMAIL = "demo@example.com";
 const DEMO_HOUSEHOLD = "Demo household";
-const DAYS = 92;
+const DAYS = 548;
 
 function assertLocalDatabase() {
   const url = process.env.DATABASE_URL;
@@ -43,12 +44,14 @@ function mulberry32(seed: number) {
 }
 
 type Row = {
-  account: "everyday" | "savings" | "credit";
+  account: "everyday" | "savings" | "credit" | "joint";
   date: string;
   amountCents: number;
   description: string;
   category: string;
   transfer?: string;
+  pending?: boolean;
+  tag?: string;
 };
 
 function buildTransactions(start: string, end: string): Row[] {
@@ -69,6 +72,8 @@ function buildTransactions(start: string, end: string): Row[] {
     "GUZMAN Y GOMEZ 088",
   ];
   const fuel = ["AMPOL ENFIELD 4471", "BP CONNECT ASHFIELD", "7-ELEVEN 2231 PETERSHAM"];
+  const coffee = ["SINGLE O SURRY HILLS", "CAFE BREVE SURRY HILLS", "SQ *LITTLE MARIONETTE"];
+  const lunch = ["SUSHI HUB TOWN HALL", "GUZMAN Y GOMEZ 088", "SQ *BAR LUCA", "MAMAK HAYMARKET"];
   const shopping = ["KMART 1077 BROADWAY", "BUNNINGS 545000 ALEXANDRIA", "JB HI FI 0312 SYDNEY"];
 
   for (let date = start; date <= end; date = addDays(date, 1)) {
@@ -101,10 +106,27 @@ function buildTransactions(start: string, end: string): Row[] {
         category: "Transfers",
         transfer: group,
       });
+      const joint = `joint-${date}`;
+      rows.push({
+        account: "everyday",
+        date,
+        amountCents: -140000,
+        description: "TRANSFER TO JOINT 7731",
+        category: "Transfers",
+        transfer: joint,
+      });
+      rows.push({
+        account: "joint",
+        date,
+        amountCents: 140000,
+        description: "TRANSFER FROM EVERYDAY",
+        category: "Transfers",
+        transfer: joint,
+      });
     }
     if (day === 1) {
       rows.push({
-        account: "everyday",
+        account: "joint",
         date,
         amountCents: -225000,
         description: "RENT RAY WHITE REF 4417",
@@ -152,7 +174,7 @@ function buildTransactions(start: string, end: string): Row[] {
       });
     if (day === 20)
       rows.push({
-        account: "everyday",
+        account: "joint",
         date,
         amountCents: -between(16000, 21000),
         description: "ORIGIN ENERGY 551023",
@@ -161,11 +183,47 @@ function buildTransactions(start: string, end: string): Row[] {
 
     if (weekday === 2 || weekday === 6) {
       rows.push({
-        account: "credit",
+        account: "joint",
         date,
         amountCents: -between(4000, 18000),
         description: pick(groceries),
         category: "Groceries",
+      });
+    }
+    if (random() < 0.3) {
+      rows.push({
+        account: "everyday",
+        date,
+        amountCents: -between(800, 3500),
+        description: "WOOLWORTHS METRO 2231",
+        category: "Groceries",
+      });
+    }
+    if (weekday >= 1 && weekday <= 5 && random() < 0.85) {
+      rows.push({
+        account: "everyday",
+        date,
+        amountCents: -between(450, 650),
+        description: pick(coffee),
+        category: "Eating out",
+      });
+    }
+    if (weekday >= 1 && weekday <= 5 && random() < 0.4) {
+      rows.push({
+        account: "credit",
+        date,
+        amountCents: -between(1200, 2400),
+        description: pick(lunch),
+        category: "Eating out",
+      });
+    }
+    if (random() < 0.1) {
+      rows.push({
+        account: "credit",
+        date,
+        amountCents: -between(1400, 4200),
+        description: "UBER *TRIP HELP.UBER.COM",
+        category: "Transport",
       });
     }
     if (random() < 0.45) {
@@ -186,16 +244,18 @@ function buildTransactions(start: string, end: string): Row[] {
         category: "Fuel",
       });
     }
-    if (weekday >= 1 && weekday <= 5 && random() < 0.6) {
-      rows.push({
-        account: "everyday",
-        date,
-        amountCents: -between(320, 980),
-        description: "TRANSPORTFORNSW OPAL",
-        category: "Transport",
-      });
+    for (const trip of [0.75, 0.6]) {
+      if (weekday >= 1 && weekday <= 5 && random() < trip) {
+        rows.push({
+          account: "everyday",
+          date,
+          amountCents: -between(320, 980),
+          description: "TRANSPORTFORNSW OPAL",
+          category: "Transport",
+        });
+      }
     }
-    if (random() < 0.08) {
+    if (random() < 0.15) {
       rows.push({
         account: "credit",
         date,
@@ -253,6 +313,33 @@ function buildTransactions(start: string, end: string): Row[] {
     });
   }
 
+  // A weekend away a month ago, tagged so search can find it.
+  const away = addDays(end, -30);
+  rows.push(
+    {
+      account: "joint",
+      date: away,
+      amountCents: -42000,
+      description: "BOOKING.COM HOTEL KATOOMBA",
+      category: "Travel",
+      tag: "Weekend away",
+    },
+    {
+      account: "credit",
+      date: addDays(away, 1),
+      amountCents: -6400,
+      description: "BLUE MOUNTAINS FOOD CO",
+      category: "Eating out",
+      tag: "Weekend away",
+    },
+  );
+
+  // The bank hasn't settled today's and yesterday's card and everyday spending yet.
+  for (const row of rows) {
+    if (row.date >= addDays(end, -1) && row.amountCents < 0 && !row.transfer)
+      row.pending = row.account === "credit" || row.account === "everyday";
+  }
+
   return rows.sort((a, b) => a.date.localeCompare(b.date));
 }
 
@@ -283,6 +370,7 @@ async function main() {
           householdId: household.id,
           name: c.name,
           kind: c.kind,
+          icon: c.icon,
           sortOrder: i,
         })),
       )
@@ -314,12 +402,22 @@ async function main() {
           institution: "Example Credit Union",
           includeInBudgets: true,
         },
+        {
+          householdId: household.id,
+          ownerMemberId: member.id,
+          name: "Joint",
+          kind: "everyday" as const,
+          institution: "Demo Bank",
+          isJoint: true,
+          visibility: "shared" as const,
+        },
       ])
       .returning();
     const accountId = {
       everyday: accountRows[0].id,
       savings: accountRows[1].id,
       credit: accountRows[2].id,
+      joint: accountRows[3].id,
     };
 
     const rows = buildTransactions(start, end);
@@ -338,29 +436,47 @@ async function main() {
         descriptionRaw: row.description,
         categoryId: categoryId.get(row.category),
         transferGroupId,
+        pending: row.pending ?? false,
         source: "file" as const,
         dedupeKey: `demo:${index}`,
       };
     });
+    const saved: { id: string }[] = [];
     for (let i = 0; i < values.length; i += 500) {
-      await tx.insert(t.transactions).values(values.slice(i, i + 500));
+      saved.push(
+        ...(await tx
+          .insert(t.transactions)
+          .values(values.slice(i, i + 500))
+          .returning({ id: t.transactions.id })),
+      );
+    }
+    const tagged = rows.flatMap((row, index) => (row.tag ? [{ row, id: saved[index].id }] : []));
+    if (tagged.length > 0) {
+      const [tag] = await tx
+        .insert(t.tags)
+        .values({ householdId: household.id, name: "Weekend away" })
+        .returning();
+      await tx
+        .insert(t.transactionTags)
+        .values(tagged.map(({ id }) => ({ transactionId: id, tagId: tag.id })));
     }
 
     // A balance for every account on every day, working forward from made-up opening balances.
-    const opening = { everyday: 412000, savings: 1250000, credit: -84000 };
+    const opening = { everyday: 412000, savings: 1250000, credit: -84000, joint: 260000 };
     const balanceRows: (typeof t.balances.$inferInsert)[] = [];
-    for (const account of ["everyday", "savings", "credit"] as const) {
+    for (const account of ["everyday", "savings", "credit", "joint"] as const) {
       let balance = opening[account];
       for (let date = start; date <= end; date = addDays(date, 1)) {
         for (const row of rows)
-          if (row.account === account && row.date === date) balance += row.amountCents;
+          if (row.account === account && row.date === date && !row.pending)
+            balance += row.amountCents;
         balanceRows.push({ accountId: accountId[account], date, balanceCents: balance });
       }
     }
     await tx.insert(t.balances).values(balanceRows);
 
     console.log(
-      `Seeded "${DEMO_HOUSEHOLD}": 3 accounts, ${rows.length} transactions from ${start} to ${end}.`,
+      `Seeded "${DEMO_HOUSEHOLD}": 4 accounts, ${rows.length} transactions from ${start} to ${end}.`,
     );
   });
 }

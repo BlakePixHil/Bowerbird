@@ -15,23 +15,28 @@ export const DEFAULT_TIMEZONE = "Australia/Sydney";
  * income, Transfers is kind transfer, and the rest are spending.
  */
 export const STARTING_CATEGORIES = [
-  { name: "Groceries", kind: "spending" },
-  { name: "Eating out", kind: "spending" },
-  { name: "Transport", kind: "spending" },
-  { name: "Fuel", kind: "spending" },
-  { name: "Bills and utilities", kind: "spending" },
-  { name: "Housing", kind: "spending" },
-  { name: "Insurance", kind: "spending" },
-  { name: "Health", kind: "spending" },
-  { name: "Shopping", kind: "spending" },
-  { name: "Entertainment", kind: "spending" },
-  { name: "Subscriptions", kind: "spending" },
-  { name: "Travel", kind: "spending" },
-  { name: "Gifts", kind: "spending" },
-  { name: "Income", kind: "income" },
-  { name: "Transfers", kind: "transfer" },
-  { name: "Other", kind: "spending" },
-] as const satisfies readonly { name: string; kind: "spending" | "income" | "transfer" }[];
+  { name: "Groceries", kind: "spending", icon: "cart" },
+  { name: "Eating out", kind: "spending", icon: "food" },
+  { name: "Transport", kind: "spending", icon: "car" },
+  { name: "Fuel", kind: "spending", icon: "fuel" },
+  { name: "Bills and utilities", kind: "spending", icon: "bolt" },
+  { name: "Housing", kind: "spending", icon: "house" },
+  { name: "Insurance", kind: "spending", icon: "umbrella" },
+  { name: "Health", kind: "spending", icon: "heart" },
+  { name: "Shopping", kind: "spending", icon: "bag" },
+  { name: "Entertainment", kind: "spending", icon: "film" },
+  { name: "Subscriptions", kind: "spending", icon: "repeat" },
+  { name: "Travel", kind: "spending", icon: "plane" },
+  { name: "Gifts", kind: "spending", icon: "gift" },
+  { name: "Income", kind: "income", icon: "income" },
+  { name: "Transfers", kind: "transfer", icon: "transfer" },
+  { name: "Other", kind: "spending", icon: "other" },
+] as const satisfies readonly {
+  name: string;
+  kind: "spending" | "income" | "transfer";
+  /** A name from the inline icon set (src/components/ui/icons.ts). */
+  icon: string;
+}[];
 
 /**
  * Live sync goes through Redbark, a SimpleFIN provider over the Consumer Data Right. It's optional
