@@ -538,6 +538,8 @@ async function main() {
     await assignColours(tx, household.id);
 
     // Alex's budgets: a mix of periods and kinds, some under and some over what they usually spend.
+    // Set three months ago, so Health has something to roll over.
+    const setOn = new Date(`${addMonths(end, -3, 1)}T02:00:00Z`);
     const budget = (
       category: string,
       amountCents: number,
@@ -552,6 +554,7 @@ async function main() {
       onSetDates: kind === "set",
       rollover: kind === "roll",
       alert80: kind !== "set",
+      createdAt: setOn,
     });
     await tx
       .insert(t.budgets)

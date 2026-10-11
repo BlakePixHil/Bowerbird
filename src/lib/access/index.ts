@@ -109,7 +109,19 @@ export {
   type SavedView,
   type ViewSaved,
 } from "./views";
-export { budgetsOf, savePlan, type PlanChange, type PlanSaved } from "./budgets";
+export { budgetProgress, budgetsOf, savePlan, type PlanChange, type PlanSaved } from "./budgets";
+export {
+  AVERAGE_MONTHS,
+  progressOf,
+  type LineKind,
+  type BudgetLine,
+  type BudgetProgress,
+  type ProgressBudget,
+  type ProgressCategory,
+  type Review,
+  type ReviewRow,
+  type Totals,
+} from "./progress";
 export {
   budgetProblem,
   specOf,

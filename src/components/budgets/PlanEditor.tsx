@@ -21,6 +21,7 @@ import {
   Pill,
   TextLink,
   Well,
+  WIDE,
 } from "@/components/ui";
 import type { Budget, BudgetDraft, BudgetsRun } from "@/lib/access";
 import { budgetProblem, specOf, tidyBudget } from "@/lib/access/plan";
@@ -71,6 +72,8 @@ type PlanData = {
   moneyIn: MoneyIn | null;
   budgetsRun: BudgetsRun;
   incomes: PayCycle[];
+  /** A category whose budget opens straight away, when Budgets sent the person here to change it. */
+  editing?: string | null;
 };
 
 type Flash = { text: string; undo: { rows: BudgetDraft[]; open: string | null } | null };
@@ -142,7 +145,9 @@ export function PlanProvider({ children, ...data }: PlanData & { children: React
   const [saved, setSaved] = useState(data.budgets);
   const [basis, setBasis] = useState(data.budgets);
   const [rows, setRows] = useState(() => data.budgets.map(toDraft));
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(() =>
+    data.budgets.some((budget) => budget.categoryId === data.editing) ? data.editing! : null,
+  );
   const [adding, setAdding] = useState(false);
   const [flash, setFlash] = useState<Flash | null>(null);
 
@@ -803,6 +808,15 @@ function PhonePlan() {
   const plan = usePlan();
   const [sheet, setSheet] = useState<Sheet>({ mode: "closed" });
   const [opened, setOpened] = useState(0);
+  const arrived = useRef(plan.editing ?? null);
+
+  // Sent here to change one budget: on a phone its sheet opens. Desktop opens its row instead.
+  useEffect(() => {
+    const budget = plan.saved.find((saved) => saved.categoryId === arrived.current);
+    arrived.current = null;
+    if (budget && !window.matchMedia(WIDE).matches)
+      setSheet({ mode: "edit", draft: toDraft(budget), isNew: false, key: 0 });
+  }, [plan.saved]);
   const saved = plan.saved.map(toDraft);
   const has = new Set(saved.map((budget) => budget.categoryId));
   const spare = plan.categories.filter((category) => !has.has(category.id));

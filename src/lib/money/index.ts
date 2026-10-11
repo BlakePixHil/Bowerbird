@@ -51,3 +51,17 @@ export {
   type Period,
   type PeriodSpec,
 } from "./periods";
+export {
+  billDays,
+  carried,
+  customRange,
+  daysFor,
+  elapsed,
+  expectedEvenly,
+  overlap,
+  PACE_SLACK,
+  paceOf,
+  plannedFor,
+  spentIn,
+  type Pace,
+} from "./pace";

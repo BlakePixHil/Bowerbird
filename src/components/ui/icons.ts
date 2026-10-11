@@ -32,6 +32,7 @@ export const ICONS = {
   "check-circle": "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8 12l3 3 5-6",
   "check-double": "M18 6 7 17l-5-5M22 10l-7.5 7.5L13 16",
   "chevron-down": "m6 9 6 6 6-6",
+  "chevron-left": "m15 6-6 6 6 6",
   "chevron-right": "m9 6 6 6-6 6",
   "chevron-up": "m6 15 6-6 6 6",
   clipboard: "M9 3h6v3H9zM7 4.5H5V21h14V4.5h-2M8.5 11h7M8.5 15h4.5",

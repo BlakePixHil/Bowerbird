@@ -1,0 +1,499 @@
+/* Budgets, from the boards "Budgets: plan vs reality" and "Desktop: Budgets". */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.phoneOnly,
+.phoneOnlyBlock {
+  display: none;
+}
+
+.anchor {
+  scroll-margin-top: 16px;
+}
+
+.key {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.trackKey {
+  background: var(--track);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+
+.tickKey {
+  display: inline-block;
+  flex: none;
+  width: 2px;
+  height: 12px;
+  margin: 0 3px;
+  border-radius: 1px;
+  background: var(--text);
+}
+
+.keyed {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.strong {
+  font-weight: 500;
+}
+
+.bold {
+  font-weight: 600;
+}
+
+.light {
+  font-weight: 400;
+}
+
+.block {
+  display: block;
+}
+
+.pretty {
+  text-wrap: pretty;
+}
+
+.note {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.titled {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+/* Status in words, coloured by how it's going, always with an icon. */
+.status {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text-2);
+}
+
+.status > svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.status > span {
+  text-wrap: pretty;
+}
+
+.good {
+  color: var(--good-ink);
+}
+
+.warn {
+  color: var(--warn-ink);
+}
+
+.crit {
+  color: var(--crit-ink);
+}
+
+/* The period, with arrows either side. */
+.navInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navInline .navTitle {
+  min-width: 132px;
+  text-align: center;
+  font-size: 13.5px;
+}
+
+.navButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.navButton:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.navRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.navRow .navButton {
+  width: 40px;
+  height: 40px;
+}
+
+.navCentre {
+  min-width: 0;
+  text-align: center;
+}
+
+.navTitle {
+  font-weight: 600;
+}
+
+.headActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Desktop cards. */
+.kpis :global(.tiny) {
+  display: block;
+}
+
+.flow {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 16px;
+}
+
+.card {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 8px;
+}
+
+.ringRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 20px;
+}
+
+.ringSide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 150px;
+}
+
+.numbers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  align-items: center;
+  align-self: stretch;
+}
+
+.numbers > span:nth-child(even) {
+  text-align: right;
+  font-weight: 500;
+}
+
+.goneList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.goneList > li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.goneWide {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  gap: 2px 16px;
+  margin: 0 -8px;
+}
+
+.goneWide > li {
+  padding: 6px 8px;
+}
+
+.share {
+  min-width: 32px;
+  text-align: right;
+}
+
+.kinds {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 16px 28px;
+}
+
+.kindHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.kindBar {
+  margin-top: 8px;
+}
+
+.kindSub {
+  margin-top: 7px;
+  text-wrap: pretty;
+}
+
+/* Tables. */
+.tableCard {
+  padding: 4px 0 6px;
+}
+
+.tableHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px 16px;
+  min-height: 52px;
+  padding: 8px 20px;
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+.table {
+  min-width: 1000px;
+  padding: 0 8px;
+}
+
+.cols,
+.reviewCols {
+  display: grid;
+  gap: 16px;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.cols {
+  grid-template-columns:
+    minmax(180px, 1.3fr) minmax(150px, 1.2fr) 76px 76px 76px minmax(130px, 1fr)
+    minmax(210px, 1.5fr);
+}
+
+.reviewTable {
+  min-width: 860px;
+}
+
+.reviewCols {
+  grid-template-columns: minmax(180px, 1.4fr) 84px 84px minmax(120px, 0.7fr) 84px minmax(200px, 2fr);
+}
+
+.colHead {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.num {
+  text-align: right;
+}
+
+.row {
+  min-height: 60px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.row + .row {
+  border-top: 1px solid var(--line);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+a.row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  a.row:hover {
+    background: var(--surface-2);
+  }
+}
+
+.cell {
+  min-width: 0;
+}
+
+.nameLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kindWord {
+  display: block;
+  margin: 2px 0 0 16px;
+}
+
+.totalRow {
+  min-height: 52px;
+  border-top: 1px solid var(--line-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.foot {
+  margin: 10px 20px 8px;
+  text-wrap: pretty;
+}
+
+/* Phones. */
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 4px 0;
+}
+
+.phoneCard {
+  padding: 0 16px;
+}
+
+.phoneRow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.phoneRow + .phoneRow {
+  border-top: 1px solid var(--line);
+}
+
+.phoneRow:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.phoneTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.phoneTop > .grow {
+  min-width: 0;
+}
+
+.phoneName {
+  display: block;
+  font-weight: 500;
+}
+
+.phoneAmount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  white-space: nowrap;
+}
+
+.reviewList {
+  margin: 0;
+  padding: 0 16px;
+  list-style: none;
+}
+
+.reviewItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0;
+}
+
+.reviewItem + .reviewItem {
+  border-top: 1px solid var(--line);
+}
+
+.reviewTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.reviewSub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding-left: 16px;
+}
+
+@media (max-width: 1080px) {
+  .flow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .phoneOnly {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .phoneOnlyBlock {
+    display: block;
+  }
+
+  .wideOnly {
+    display: none;
+  }
+
+  .card {
+    padding: 18px 16px 16px;
+    gap: 14px;
+  }
+
+  .tableHead {
+    padding: 8px 16px;
+  }
+
+  .foot {
+    margin: 4px 16px 10px;
+  }
+}

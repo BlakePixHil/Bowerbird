@@ -15,7 +15,10 @@ import { getDb } from "@/lib/db";
 
 export const metadata: Metadata = { title: "Change the plan" };
 
-export default async function PlanPage() {
+type Params = { edit?: string | string[] };
+
+export default async function PlanPage({ searchParams }: { searchParams: Promise<Params> }) {
+  const { edit } = await searchParams;
   const shell = await getShell();
   const viewer = viewerOf(await requireMember());
   const db = getDb();
@@ -63,6 +66,7 @@ export default async function PlanPage() {
       moneyIn={moneyIn}
       budgetsRun={paydays.budgetsRun}
       incomes={paydays.incomes}
+      editing={typeof edit === "string" ? edit : null}
     >
       <PageHeader
         title="Change the plan"

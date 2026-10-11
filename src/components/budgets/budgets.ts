@@ -49,6 +49,9 @@ const UNITS: Record<BudgetPeriod, string> = {
   custom: "stretch",
 };
 
+/** One of a period, for "shown for the month". */
+export const unitOf = (period: BudgetPeriod) => UNITS[period];
+
 const MONTH: PeriodSpec = { period: "monthly", anchor: null };
 const YEAR: PeriodSpec = { period: "yearly", anchor: null };
 

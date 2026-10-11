@@ -1,8 +1,17 @@
-import { and, asc, eq, inArray, or } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lte, min, or, sql } from "drizzle-orm";
 import type { Db } from "@/lib/db";
-import { budgets, categories, members } from "@/lib/db/schema";
-import type { Viewer } from "./accounts";
+import { budgets, categories, members, splits, transactions } from "@/lib/db/schema";
+import { todayIn, type DaySpend, type Period, type PeriodSpec, type PlainDate } from "@/lib/money";
+import { partCategory, partCents, partsJoin } from "@/lib/sorting/parts";
+import { scopeFor, type Viewer } from "./accounts";
 import { budgetProblem, tidyBudget, type Budget, type BudgetDraft } from "./plan";
+import {
+  progressOf,
+  spendingFrom,
+  type BudgetProgress,
+  type ProgressBudget,
+  type ProgressCategory,
+} from "./progress";
 
 /**
  * Budgets: an amount per category for a period, from Set a budget and Change the plan. Until
@@ -59,6 +68,94 @@ export async function budgetsOf(db: Db, viewer: Viewer): Promise<Budget[]> {
       ),
     )
     .orderBy(asc(categories.sortOrder), asc(categories.name), asc(budgets.id));
+}
+
+/**
+ * The viewer's budgets in one period, with what's been spent against each, from accounts they see
+ * in full that count toward budgets. `period` is one of `spec`'s, the person's own periods, and
+ * `timeZone` is the household's, for the day each budget was set.
+ */
+export async function budgetProgress(
+  db: Db,
+  viewer: Viewer,
+  view: { spec: PeriodSpec; period: Period; today: PlainDate; timeZone: string },
+): Promise<BudgetProgress> {
+  const { spec, period, today, timeZone } = view;
+  const member = await isMember(db, viewer);
+  const [list, categoryRows, scope] = await Promise.all([
+    member ? budgetsWithDates(db, viewer, timeZone) : Promise.resolve([]),
+    db
+      .select({
+        id: categories.id,
+        name: categories.name,
+        icon: categories.icon,
+        colourSlot: categories.colourSlot,
+        kind: categories.kind,
+        countsTowardBudgets: categories.countsTowardBudgets,
+      })
+      .from(categories)
+      .where(and(eq(categories.householdId, viewer.householdId), eq(categories.archived, false)))
+      .orderBy(asc(categories.sortOrder), asc(categories.name)),
+    scopeFor(db, viewer, "household"),
+  ]);
+  const budgetCategories: ProgressCategory[] = member ? categoryRows : [];
+  const accountIds = scope.accounts
+    .filter((account) => account.access === "full" && account.includeInBudgets)
+    .map((account) => account.id);
+  const seen = and(
+    eq(transactions.householdId, viewer.householdId),
+    accountIds.length > 0 ? inArray(transactions.accountId, accountIds) : sql`false`,
+  );
+
+  const [first] = await db
+    .select({ day: min(transactions.date) })
+    .from(transactions)
+    .where(seen);
+  const firstDay = first?.day ?? null;
+  const input = { today, spec, period, budgets: list, categories: budgetCategories, firstDay };
+  const from = spendingFrom(input);
+  const to = today < period.end ? today : period.end;
+
+  const spent =
+    sql<number>`coalesce(sum(-${partCents}) filter (where ${partCents} < 0 and ${transactions.transferGroupId} is null), 0)`.mapWith(
+      Number,
+    );
+  const rows =
+    firstDay === null
+      ? []
+      : await db
+          .select({ categoryId: partCategory, date: transactions.date, cents: spent })
+          .from(transactions)
+          .leftJoin(splits, partsJoin)
+          .where(and(seen, gte(transactions.date, from), lte(transactions.date, to)))
+          .groupBy(partCategory, transactions.date)
+          .orderBy(asc(transactions.date));
+  const days = new Map<string | null, DaySpend[]>();
+  for (const row of rows) {
+    if (row.cents <= 0) continue;
+    const key = row.categoryId ?? null;
+    const list = days.get(key) ?? [];
+    list.push({ date: row.date, cents: row.cents });
+    days.set(key, list);
+  }
+  return progressOf({ ...input, days });
+}
+
+/** The viewer's budgets, each with the day it was first set in the household's time zone. */
+async function budgetsWithDates(
+  db: Db,
+  viewer: Viewer,
+  timeZone: string,
+): Promise<ProgressBudget[]> {
+  const [list, created] = await Promise.all([
+    budgetsOf(db, viewer),
+    db
+      .select({ id: budgets.id, createdAt: budgets.createdAt })
+      .from(budgets)
+      .where(eq(budgets.householdId, viewer.householdId)),
+  ]);
+  const since = new Map(created.map((row) => [row.id, todayIn(timeZone, row.createdAt)]));
+  return list.map((budget) => ({ ...budget, since: since.get(budget.id)! }));
 }
 
 /** A change to the plan: budgets set or changed, and the ids of budgets to remove. */

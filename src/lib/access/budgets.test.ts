@@ -2,8 +2,28 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createTestDb } from "../../../tests/db";
 import type { Db } from "@/lib/db";
-import { budgets, categories, households, members, users } from "@/lib/db/schema";
-import { budgetsOf, savePlan, tidyBudget, type BudgetDraft, type Viewer } from ".";
+import {
+  accounts,
+  budgets,
+  categories,
+  households,
+  members,
+  splits,
+  transactions,
+  users,
+} from "@/lib/db/schema";
+import { spentBy, type PeriodSpec } from "@/lib/money";
+import {
+  activityPage,
+  budgetProgress,
+  budgetsOf,
+  savePlan,
+  tidyBudget,
+  type ActivityFilters,
+  type ActivityRow,
+  type BudgetDraft,
+  type Viewer,
+} from ".";
 
 /** Olive and Pat share a household. Each sets their own budgets. */
 const ids = {
@@ -18,6 +38,11 @@ const ids = {
   old: "00000000-0000-4000-8000-000000000c04",
   holidays: "00000000-0000-4000-8000-000000000c05",
   elsewhere: "00000000-0000-4000-8000-000000000c06",
+  everyday: "00000000-0000-4000-8000-0000000000e1",
+  joint: "00000000-0000-4000-8000-0000000000e2",
+  patPrivate: "00000000-0000-4000-8000-0000000000e3",
+  business: "00000000-0000-4000-8000-0000000000e4",
+  transfer: "00000000-0000-4000-8000-0000000000f1",
 };
 const olive: Viewer = { memberId: ids.olive, householdId: ids.home };
 const pat: Viewer = { memberId: ids.pat, householdId: ids.home };
@@ -268,5 +293,118 @@ describe("tidyBudget", () => {
       onSetDates: true,
     });
     expect(tidyBudget(twice)).toEqual(twice);
+  });
+});
+
+describe("budgetProgress", () => {
+  const MONTH: PeriodSpec = { period: "monthly", anchor: null };
+  const october = { start: "2026-10-01", end: "2026-10-31" };
+  const view = { spec: MONTH, period: october, today: "2026-10-10", timeZone: "Australia/Sydney" };
+  type NewRow = typeof transactions.$inferInsert;
+  const row = (accountId: string, date: string, amountCents: number, more: Partial<NewRow> = {}) =>
+    ({
+      householdId: ids.home,
+      accountId,
+      date,
+      amountCents,
+      descriptionRaw: `ROW ${date} ${amountCents}`,
+      source: "file",
+      categoryId: ids.groceries,
+      ...more,
+    }) satisfies NewRow;
+
+  beforeAll(async () => {
+    await db.insert(accounts).values([
+      { id: ids.everyday, householdId: ids.home, ownerMemberId: ids.olive, name: "Everyday" },
+      {
+        id: ids.joint,
+        householdId: ids.home,
+        ownerMemberId: ids.olive,
+        name: "Joint",
+        isJoint: true,
+        visibility: "shared",
+      },
+      { id: ids.patPrivate, householdId: ids.home, ownerMemberId: ids.pat, name: "Pat's" },
+      {
+        id: ids.business,
+        householdId: ids.home,
+        ownerMemberId: ids.olive,
+        name: "Business",
+        includeInBudgets: false,
+      },
+    ]);
+    await db.insert(transactions).values([
+      row(ids.everyday, "2026-09-28", -5_000),
+      row(ids.everyday, "2026-10-01", -8_620),
+      row(ids.joint, "2026-10-04", -4_350, { pending: true }),
+      // A refund isn't spending, and a transfer between the household's accounts isn't either.
+      row(ids.everyday, "2026-10-05", 2_000),
+      row(ids.everyday, "2026-10-06", -30_000, { transferGroupId: ids.transfer }),
+      row(ids.joint, "2026-10-06", 30_000, { transferGroupId: ids.transfer }),
+      // Pat's private account and an account left out of budgets don't count.
+      row(ids.patPrivate, "2026-10-07", -9_999),
+      row(ids.business, "2026-10-07", -12_345),
+      row(ids.everyday, "2026-10-11", -7_000),
+      row(ids.everyday, "2026-10-08", -1_500, { categoryId: null }),
+    ]);
+    const [split] = await db
+      .insert(transactions)
+      .values(row(ids.joint, "2026-10-09", -10_000, { categoryId: ids.groceries }))
+      .returning({ id: transactions.id });
+    await db.insert(splits).values([
+      { transactionId: split.id, categoryId: ids.groceries, amountCents: -6_000 },
+      { transactionId: split.id, categoryId: ids.housing, amountCents: -4_000 },
+    ]);
+  });
+
+  /** Spending in a category the way Activity shows it, from every page of rows. */
+  async function fromActivity(categoryId: string, filters: ActivityFilters) {
+    const rows: ActivityRow[] = [];
+    let before: string | undefined;
+    for (;;) {
+      const page = await activityPage(
+        db,
+        olive,
+        "household",
+        { ...filters, categoryIds: [categoryId] },
+        before,
+      );
+      rows.push(...page.rows);
+      if (!page.next) break;
+      before = page.next;
+    }
+    return rows.reduce((total, r) => {
+      if (r.parts.length === 0) return total + spentBy(r);
+      const parts = r.parts.filter((part) => part.category.id === categoryId);
+      return (
+        total + parts.reduce((sum, part) => sum + spentBy({ ...r, amountCents: part.cents }), 0)
+      );
+    }, 0);
+  }
+
+  it("matches Activity for the same days and accounts", async () => {
+    await savePlan(db, olive, {
+      budgets: [
+        draft(ids.groceries, { amountCents: 90_000, period: "monthly" }),
+        draft(ids.housing, { amountCents: 225_000, period: "monthly", onSetDates: true }),
+      ],
+      removed: [],
+    });
+    const progress = await budgetProgress(db, olive, view);
+    const spent = (id: string) => progress.lines.find((l) => l.category.id === id)!.spent;
+    const counted = { accountIds: [ids.everyday, ids.joint], from: october.start, to: view.today };
+    // $86.20 + $43.50 pending + $60 of the split row.
+    expect(spent(ids.groceries)).toBe(18_970);
+    expect(spent(ids.groceries)).toBe(await fromActivity(ids.groceries, counted));
+    expect(spent(ids.housing)).toBe(4_000);
+    expect(spent(ids.housing)).toBe(await fromActivity(ids.housing, counted));
+    expect(progress.outside).toEqual({ cents: 1_500, unsorted: 1_500 });
+  });
+
+  it("is empty for someone outside the household", async () => {
+    await savePlan(db, olive, { budgets: [draft(ids.groceries)], removed: [] });
+    const progress = await budgetProgress(db, stranger, view);
+    expect(progress.lines).toEqual([]);
+    expect(progress.total).toEqual({ planned: 0, spent: 0, expected: 0 });
   });
 });
