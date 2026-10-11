@@ -1,6 +1,7 @@
 import { count, sql } from "drizzle-orm";
 import type { Db } from "@/lib/db";
 import { households, members, passkeys, users } from "@/lib/db/schema";
+import { addStartingCategories } from "@/lib/sorting/categories";
 import type { NewPasskey } from "./passkeys";
 
 /** The household's name until the first-run steps (BUD-41) ask for one. */
@@ -13,7 +14,8 @@ export async function hasUsers(db: Db): Promise<boolean> {
 }
 
 /**
- * Creates the first user, their household, them as its Owner, and their passkey, all together.
+ * Creates the first user, their household with its starting categories, them as its Owner, and
+ * their passkey, all together.
  * Returns false and saves nothing when someone else already set the app up.
  */
 export async function createOwner(
@@ -29,6 +31,7 @@ export async function createOwner(
       .insert(households)
       .values({ name: FIRST_HOUSEHOLD_NAME })
       .returning({ id: households.id });
+    await addStartingCategories(tx, household.id);
     await tx.insert(users).values({ id: owner.userId, name: owner.name, email: owner.email });
     await tx.insert(members).values({
       householdId: household.id,

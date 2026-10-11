@@ -8,10 +8,11 @@
  */
 import { loadEnvConfig } from "@next/env";
 import { eq } from "drizzle-orm";
-import { DEFAULT_TIMEZONE, STARTING_CATEGORIES } from "../src/config/app";
+import { DEFAULT_TIMEZONE } from "../src/config/app";
 import { closeDb, getDb } from "../src/lib/db/client";
 import * as t from "../src/lib/db/schema";
 import { addDays, addMonths, dayOfWeek, parts, todayIn } from "../src/lib/money/dates";
+import { addStartingCategories, assignColours } from "../src/lib/sorting/categories";
 
 loadEnvConfig(process.cwd());
 
@@ -363,18 +364,11 @@ async function main() {
       .values({ householdId: household.id, userId: user.id, role: "owner", displayName: "Alex" })
       .returning();
 
+    await addStartingCategories(tx, household.id);
     const categoryRows = await tx
-      .insert(t.categories)
-      .values(
-        STARTING_CATEGORIES.map((c, i) => ({
-          householdId: household.id,
-          name: c.name,
-          kind: c.kind,
-          icon: c.icon,
-          sortOrder: i,
-        })),
-      )
-      .returning();
+      .select()
+      .from(t.categories)
+      .where(eq(t.categories.householdId, household.id));
     const categoryId = new Map(categoryRows.map((c) => [c.name, c.id]));
 
     const accountRows = await tx
@@ -474,6 +468,7 @@ async function main() {
       }
     }
     await tx.insert(t.balances).values(balanceRows);
+    await assignColours(tx, household.id);
 
     console.log(
       `Seeded "${DEMO_HOUSEHOLD}": 4 accounts, ${rows.length} transactions from ${start} to ${end}.`,

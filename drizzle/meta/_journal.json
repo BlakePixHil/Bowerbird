@@ -36,6 +36,13 @@
       "when": 1791681853562,
       "tag": "0004_bank_problems",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791686976167,
+      "tag": "0005_starting_categories",
+      "breakpoints": true
     }
   ]
 }
