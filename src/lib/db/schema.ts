@@ -120,6 +120,12 @@ export const members = pgTable(
     displayName: text().notNull(),
     /** The period new budgets start with. Each budget can still have its own. */
     budgetsRun: budgetsRun().notNull().default("monthly"),
+    /** The first time this person opened the app from a Home Screen or as an installed app. */
+    installedAt: timestamp({ withTimezone: true }),
+    /** When they closed or followed Home's one-time prompt to install the app. */
+    installPromptDoneAt: timestamp({ withTimezone: true }),
+    /** When Install the app last emailed them its address, so it can't be sent over and over. */
+    appLinkSentAt: timestamp({ withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("members_household_user_key").on(t.householdId, t.userId)],

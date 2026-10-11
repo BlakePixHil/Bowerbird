@@ -21,6 +21,8 @@ export type Shell = {
   syncDue: boolean;
   /** The household's live sync connections, and with just one, the banks behind it when known. */
   live: { connections: number; banks: number | null };
+  /** The person has opened the installed app on some device, so install prompts stay away. */
+  installed: boolean;
 };
 
 /** "Blake" is B, "Mary Jane" is MJ. */
@@ -64,6 +66,7 @@ export const getShell = cache(async (): Promise<Shell> => {
           : { kind: "never" },
     syncDue: live.due && !live.running,
     live: { connections: live.connections, banks: live.banks },
+    installed: me.member.installedAt !== null,
   };
 });
 

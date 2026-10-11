@@ -66,38 +66,88 @@ export function smtpTransport(env: Record<string, string | undefined> = process.
   };
 }
 
+type Message = { subject: string; text: string; html: string };
+
+type SendOptions = {
+  env?: Record<string, string | undefined>;
+  smtp?: { from: string; transport: Transporter } | null;
+};
+
 /**
- * Sends the sign-in email. Nothing about the link or the email is logged, only that sending
- * failed and the mail server's error code. On your own computer without SMTP settings, the link
- * is printed to the terminal running `pnpm dev` instead, so you can test without a mail server.
+ * Sends one email. Nothing about its link or the address is logged, only that sending failed and
+ * the mail server's error code. On your own computer without SMTP settings, the link is printed to
+ * the terminal running `pnpm dev` instead, so you can test without a mail server.
  */
-export async function sendSignInEmail(
+async function deliver(
   to: string,
-  message: { name: string; url: string },
-  {
-    env = process.env,
-    smtp = smtpTransport(env),
-  }: {
-    env?: Record<string, string | undefined>;
-    smtp?: { from: string; transport: Transporter } | null;
-  } = {},
+  message: Message,
+  { what, url }: { what: string; url: string },
+  { env = process.env, smtp = smtpTransport(env) }: SendOptions,
 ): Promise<boolean> {
   if (!smtp) {
     if (env.NODE_ENV === "development") {
-      console.info(
-        `[${APP_NAME} dev] No SMTP settings, so here is the sign-in link: ${message.url}`,
-      );
+      console.info(`[${APP_NAME} dev] No SMTP settings, so here is the ${what} link: ${url}`);
       return true;
     }
-    console.error("Sign-in email not sent: SMTP_HOST, SMTP_USER and SMTP_PASS aren't set.");
+    console.error(
+      `${capital(what)} email not sent: SMTP_HOST, SMTP_USER and SMTP_PASS aren't set.`,
+    );
     return false;
   }
   try {
-    await smtp.transport.sendMail({ from: smtp.from, to, ...signInMessage(message) });
+    await smtp.transport.sendMail({ from: smtp.from, to, ...message });
     return true;
   } catch (error) {
     const code = (error as { code?: string; responseCode?: number }) ?? {};
-    console.error("Sign-in email not sent:", code.code ?? "unknown", code.responseCode ?? "");
+    console.error(
+      `${capital(what)} email not sent:`,
+      code.code ?? "unknown",
+      code.responseCode ?? "",
+    );
     return false;
   }
+}
+
+const capital = (text: string) => text[0].toUpperCase() + text.slice(1);
+
+/** Sends the sign-in email. */
+export async function sendSignInEmail(
+  to: string,
+  message: { name: string; url: string },
+  options: SendOptions = {},
+): Promise<boolean> {
+  return deliver(to, signInMessage(message), { what: "sign-in", url: message.url }, options);
+}
+
+/** The email from Install the app: the app's address, to open on a phone. */
+export function appLinkMessage({ name, url }: { name: string; url: string }) {
+  const first = name.split(" ")[0];
+  const how =
+    "Open it in Safari on an iPhone or Chrome on Android, then follow the steps to put it on your Home Screen.";
+  const c = EMAIL_COLOURS;
+  return {
+    subject: `Open ${APP_NAME} on your phone`,
+    text: [`Hi ${first},`, `Here's ${APP_NAME} for your phone. ${how}`, url].join("\n\n"),
+    html: `<!doctype html>
+<html lang="en-AU">
+<body style="margin:0;padding:24px 12px;background:${c.bg};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${c.text};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:440px;margin:0 auto;background:${c.surface};border:1px solid ${c.line};border-radius:16px;">
+    <tr><td style="padding:28px 28px 8px;font-size:17px;font-weight:600;">${escape(APP_NAME)}</td></tr>
+    <tr><td style="padding:8px 28px;font-size:15px;line-height:1.5;">Hi ${escape(first)}, here's ${escape(APP_NAME)} for your phone. ${how}</td></tr>
+    <tr><td style="padding:16px 28px 28px;">
+      <a href="${escape(url)}" style="display:inline-block;padding:12px 20px;border-radius:10px;background:${c.button};color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">Open ${escape(APP_NAME)}</a>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  };
+}
+
+/** Sends the app's address to the person's own email, from Install the app. */
+export async function sendAppLinkEmail(
+  to: string,
+  message: { name: string; url: string },
+  options: SendOptions = {},
+): Promise<boolean> {
+  return deliver(to, appLinkMessage(message), { what: "app", url: message.url }, options);
 }

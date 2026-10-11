@@ -27,6 +27,11 @@ type PageHeaderProps = {
   phone?: boolean;
   /** A line under the desktop title, saying what the page is for. */
   intro?: string;
+  /**
+   * On a phone, the back bar names where it goes and the title sits under it, large, with the
+   * intro under that, as on Install the app. Needs `back`.
+   */
+  large?: boolean;
 };
 
 /**
@@ -43,6 +48,7 @@ export async function PageHeader({
   phoneActions,
   phone = true,
   intro,
+  large = false,
 }: PageHeaderProps) {
   const shell = await getShell();
   const dateLine = `${formatShortDate(shell.today)} · ${syncLabel(shell.sync, shell.now, shell.timeZone)}`;
@@ -74,6 +80,14 @@ export async function PageHeader({
                   {account}
                 </div>
               </>
+            ) : back && large ? (
+              <Link href={back.href} className={styles.backLink}>
+                <span className={styles.backIcon}>
+                  <Icon name="arrow-left" />
+                </span>
+                <span className="sr-only">Back to </span>
+                <span className={styles.backWords}>{back.label}</span>
+              </Link>
             ) : back ? (
               <>
                 <IconButtonLink
@@ -94,6 +108,12 @@ export async function PageHeader({
             )}
           </div>
           {home && <p className={cx("mono", styles.line)}>{dateLine}</p>}
+          {back && large && (
+            <div className={styles.large}>
+              <h1 className={cx("h1", styles.largeTitle)}>{title}</h1>
+              {intro && <p className={cx("sub", styles.largeIntro)}>{intro}</p>}
+            </div>
+          )}
         </div>
       )}
 

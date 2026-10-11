@@ -9,6 +9,8 @@
 export const FEATURES = {
   /** Phase 2, project 08 · Bills, alerts and Until payday. */
   untilPayday: false,
+  /** Phase 2, project 08 · Bills, alerts and Until payday: alerts on the phone and computer. */
+  notifications: false,
   /** Phase 3, project 09 · Goals and trips. */
   goals: false,
   /** Phase 3, project 09 · Goals and trips. */

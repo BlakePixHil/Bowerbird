@@ -80,6 +80,13 @@ textarea {
   transform: translate(-50%, -50%);
 }
 
+/* Hidden while the app runs from a Home Screen or in its own window, such as ways to install it. */
+@media (display-mode: standalone) {
+  .not-installed {
+    display: none !important;
+  }
+}
+
 /* Hidden on screen, still read by screen readers. */
 .sr-only {
   position: absolute;

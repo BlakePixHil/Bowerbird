@@ -1,0 +1,868 @@
+/* Install the app, from the boards "Install on your phone" and "Desktop: Install the app". */
+
+/* ---- On a phone ---- */
+
+.phone {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.why {
+  padding: 4px 14px;
+}
+
+.whyRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.whyRow + .whyRow {
+  border-top: 1px solid var(--line);
+}
+
+.whyTitle {
+  font-weight: 500;
+}
+
+.stepsHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 4px 0;
+}
+
+.note {
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.note > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--text-2);
+}
+
+.note > span {
+  color: var(--text-2);
+  text-wrap: pretty;
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.step {
+  padding: 14px;
+}
+
+.stepTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.number {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.stepTitle {
+  font-weight: 600;
+}
+
+.stepText {
+  margin-top: 2px;
+  text-wrap: pretty;
+}
+
+.picture {
+  margin-top: 12px;
+}
+
+/* Safari's bar at the bottom of an iPhone, with Share picked out. */
+.safari {
+  padding: 12px 12px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.address {
+  height: 34px;
+  border-radius: 11px;
+  background: var(--surface-3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  color: var(--text-3);
+}
+
+.textSize {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.addressMiddle {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tinyIcon {
+  width: 11px;
+  height: 11px;
+}
+
+.skeleton {
+  height: 7px;
+  border-radius: 4px;
+  background: var(--line-2);
+}
+
+.safariUrl {
+  width: 110px;
+}
+
+.chromeUrl {
+  width: 96px;
+}
+
+.desktopUrl {
+  flex: 0 1 180px;
+  min-width: 0;
+}
+
+.strong {
+  font-weight: 500;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
+  justify-items: center;
+  height: 46px;
+  color: var(--accent-ink);
+}
+
+.toolbar > .off {
+  color: var(--text-3);
+}
+
+/* The control a step says to tap. */
+.picked {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--accent-tint);
+  box-shadow: 0 0 0 1.5px var(--accent);
+  color: var(--accent-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.round {
+  border-radius: 50%;
+}
+
+/* A menu, with the item to tap picked out. */
+.menu {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  height: 40px;
+  padding: 0 12px;
+  color: var(--text-3);
+}
+
+.iconFirst {
+  justify-content: flex-start;
+}
+
+.menuPicked {
+  height: 44px;
+  border-radius: 10px;
+  background: var(--accent-tint);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.menuPicked > svg {
+  color: var(--accent-ink);
+}
+
+/* Chrome's bar at the top of an Android phone, with the menu picked out. */
+.chrome {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-3);
+}
+
+.chromeAddress {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 36px;
+  border-radius: 18px;
+  background: var(--surface-3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+}
+
+.tabs {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 1.6px solid var(--text-3);
+  font-size: 10.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.dots {
+  stroke-width: 2.6;
+}
+
+/* A phone's Home Screen with the app on it. Dark in both themes, like a wallpaper. */
+.homeScreen {
+  border-radius: 12px;
+  background:
+    radial-gradient(90% 80% at 15% 0%, var(--wallpaper-glow-1) 0%, transparent 70%),
+    radial-gradient(80% 70% at 95% 100%, var(--wallpaper-glow-2) 0%, transparent 70%),
+    var(--wallpaper);
+}
+
+.grid {
+  padding: 16px 18px 14px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 10px;
+  justify-items: center;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.appIcon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* The app's own icon, ringed so it stands out from the others. */
+.ours {
+  display: flex;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 2px var(--wallpaper),
+    0 0 0 4px var(--wallpaper-ring);
+}
+
+.circle .appIcon,
+.circle .ours {
+  border-radius: 50%;
+}
+
+.appName {
+  height: 12px;
+  display: flex;
+  align-items: center;
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.nameSkeleton {
+  width: 28px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.done {
+  padding: 16px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.doneText {
+  margin: 4px 0 0;
+  text-wrap: pretty;
+}
+
+/* ---- On a computer ---- */
+
+.computer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.thisComputer {
+  flex: 2 1 560px;
+  min-width: 0;
+  padding: 18px 20px 20px;
+}
+
+/* Installed, it's only a few lines, so it doesn't stretch to the phone card's height. */
+.short {
+  align-self: flex-start;
+}
+
+.yourPhone {
+  flex: 1 1 320px;
+  min-width: 0;
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.cardTitle {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+/* A browser window, with its install icon picked out and the prompt it opens. */
+.browser {
+  margin-top: 16px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.tabStrip {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 38px;
+  padding: 0 12px;
+  background: var(--surface-3);
+}
+
+.lights {
+  display: flex;
+  gap: 6px;
+  align-self: center;
+}
+
+.lights > span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--line-2);
+}
+
+.browserTab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px 0 12px;
+  border-radius: 9px 9px 0 0;
+  background: var(--surface-2);
+  min-width: 0;
+  flex: 0 1 200px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.browserTab > svg {
+  width: 11px;
+  height: 11px;
+  color: var(--text-3);
+}
+
+.urlBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 12px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  color: var(--text-3);
+}
+
+.omnibox {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 3px 0 12px;
+}
+
+.omniboxPicked {
+  width: 28px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--accent-tint);
+  box-shadow: 0 0 0 1.5px var(--accent);
+  color: var(--accent-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.omniboxIcon {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.page {
+  position: relative;
+  height: 168px;
+  padding: 16px;
+  display: flex;
+  gap: 14px;
+}
+
+.pageNav {
+  flex: 0 0 22%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pageNav > span {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--line);
+}
+
+.pageNav > span:nth-child(1) {
+  width: 70%;
+  background: var(--line-2);
+}
+
+.pageNav > span:nth-child(2) {
+  width: 55%;
+}
+
+.pageNav > span:nth-child(3) {
+  width: 62%;
+}
+
+.pageNav > span:nth-child(4) {
+  width: 48%;
+}
+
+.pageBody {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pageTitle {
+  height: 10px;
+  width: 36%;
+  border-radius: 5px;
+  background: var(--line-2);
+}
+
+.pageCards {
+  display: flex;
+  gap: 10px;
+}
+
+.pageCards > span,
+.pageWide {
+  flex: 1;
+  height: 54px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.pageWide {
+  flex: none;
+  height: 50px;
+}
+
+.prompt {
+  position: absolute;
+  top: 6px;
+  right: 72px;
+  width: min(270px, calc(100% - 92px));
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--surface-3);
+  border: 1px solid var(--line-2);
+  box-shadow: var(--pop);
+}
+
+.prompt::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 44px;
+  width: 12px;
+  height: 12px;
+  background: var(--surface-3);
+  border-left: 1px solid var(--line-2);
+  border-top: 1px solid var(--line-2);
+  transform: rotate(45deg);
+}
+
+.promptTitle {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.promptApp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.promptButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.fakeButton {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: var(--surface-2);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.fakePrimary {
+  padding: 0 12px;
+  border-color: transparent;
+  background: var(--accent-btn);
+  color: #ffffff;
+}
+
+/* Safari on a Mac: the File menu, with Add to Dock picked out. */
+.macMenu {
+  height: 30px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: var(--surface-3);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.macMenu > .menuOpen {
+  height: 22px;
+  padding: 0 8px;
+  margin: 0 -8px;
+  display: flex;
+  align-items: center;
+  border-radius: 5px;
+  background: var(--accent-tint);
+  color: var(--text);
+}
+
+.dropdown {
+  position: absolute;
+  top: 0;
+  left: 72px;
+  width: min(260px, calc(100% - 92px));
+  padding: 6px;
+  border-radius: 0 0 12px 12px;
+  background: var(--surface-3);
+  border: 1px solid var(--line-2);
+  border-top: 0;
+  box-shadow: var(--pop);
+}
+
+.computerSteps {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  gap: 12px 20px;
+}
+
+.computerSteps > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.smallNumber {
+  width: 22px;
+  height: 22px;
+  font-size: 11.5px;
+}
+
+.computerStep {
+  padding-top: 2px;
+  text-wrap: pretty;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.footNote {
+  flex: 1 1 240px;
+  text-wrap: pretty;
+}
+
+.installed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--good-ink);
+  font-weight: 500;
+}
+
+.gets {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 10px;
+}
+
+.get {
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.get > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--text-2);
+}
+
+.getsTitle {
+  margin-top: 20px;
+}
+
+.phoneKind {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.phoneKindHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.shortSteps {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortSteps > li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quietNumber {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.shortIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.dock {
+  flex: 1 1 auto;
+  min-height: 104px;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 16px;
+}
+
+.dock .appIcon {
+  width: 44px;
+  height: 44px;
+}
+
+.dock .appIcon,
+.dock .ours {
+  border-radius: 11px;
+}
+
+.phoneNote {
+  margin-top: 16px;
+}
+
+.dock .nameSkeleton {
+  width: 26px;
+}
+
+.email {
+  padding-top: 16px;
+}
+
+.emailNote {
+  margin-top: 8px;
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.sent {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--good-tint);
+  color: var(--good-ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.failed {
+  margin-top: 8px;
+  color: var(--crit-ink);
+  text-align: center;
+}
+
+/* ---- Home's one-time prompt ---- */
+
+.nudge {
+  padding: 14px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.nudgeText {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.nudgeLine {
+  margin: 2px 0 0;
+  text-wrap: pretty;
+}
+
+.nudgeActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+@media (max-width: 760px) {
+  .thisComputer,
+  .yourPhone {
+    padding: 16px;
+  }
+}

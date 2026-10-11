@@ -246,6 +246,51 @@
   text-overflow: ellipsis;
 }
 
+/* A large title's back bar: the arrow, then where it goes, in grey. */
+.backLink {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.backIcon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: var(--text);
+}
+
+.backWords {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.backWords::first-letter {
+  text-transform: uppercase;
+}
+
+.large {
+  padding: 0 4px;
+}
+
+.largeTitle {
+  text-wrap: balance;
+}
+
+.largeIntro {
+  margin: 8px 0 0;
+  font-size: 14.5px;
+  text-wrap: pretty;
+}
+
 .subTitle {
   font-size: 22px;
   min-width: 0;

@@ -10,7 +10,17 @@ import { findSession } from "./sessions";
 /** The signed-in person, their place in the household, and the household. */
 export type SignedIn = {
   user: { id: string; name: string; email: string };
-  member: { id: string; role: "owner" | "partner"; displayName: string };
+  member: {
+    id: string;
+    role: "owner" | "partner";
+    displayName: string;
+    /** When they joined the household. */
+    joinedAt: Date;
+    /** When they first opened the installed app, on any device. */
+    installedAt: Date | null;
+    /** When they closed or followed Home's one-time prompt to install the app. */
+    installPromptDoneAt: Date | null;
+  };
   household: { id: string; name: string; timezone: string };
 };
 
@@ -19,7 +29,14 @@ export async function memberFor(db: Db, userId: string): Promise<SignedIn | null
   const [row] = await db
     .select({
       user: { id: users.id, name: users.name, email: users.email },
-      member: { id: members.id, role: members.role, displayName: members.displayName },
+      member: {
+        id: members.id,
+        role: members.role,
+        displayName: members.displayName,
+        joinedAt: members.createdAt,
+        installedAt: members.installedAt,
+        installPromptDoneAt: members.installPromptDoneAt,
+      },
       household: { id: households.id, name: households.name, timezone: households.timezone },
     })
     .from(members)

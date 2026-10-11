@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import type { People } from "@/components/activity";
 import { startingPeriod } from "@/components/budgets/budgets";
 import {
@@ -8,6 +9,7 @@ import {
   wholeMonths,
   type HomeData,
 } from "@/components/home";
+import { deviceOf, InstallNudge, kindOf } from "@/components/install";
 import { getShell, PageHeader, SyncWarningBanner } from "@/components/shell";
 import { initialsOf } from "@/components/shell/data";
 import {
@@ -24,13 +26,16 @@ import {
 import { specOf } from "@/lib/access/plan";
 import { requireMember } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { showsInstallPrompt } from "@/lib/install";
 import { addDays, addMonths, mainIncome, periodContaining } from "@/lib/money";
 
 export default async function HomePage() {
   const shell = await getShell();
-  const viewer = viewerOf(await requireMember());
+  const me = await requireMember();
+  const viewer = viewerOf(me);
   const db = getDb();
   const today = shell.today;
+  const device = deviceOf((await headers()).get("user-agent"));
 
   const [paydays, counts, seen, others] = await Promise.all([
     paydaysOf(db, viewer),
@@ -83,6 +88,8 @@ export default async function HomePage() {
           live: shell.live.connections,
           pay: mainIncome(paydays.incomes),
           budgets: progress.lines.length,
+          installed: shell.installed,
+          device: kindOf(device),
         }
       : null,
   };
@@ -91,6 +98,7 @@ export default async function HomePage() {
     <>
       <PageHeader title={firstWeek ? "Home" : `${thisName(period, spec)} so far`} home />
       <SyncWarningBanner />
+      {!firstWeek && showsInstallPrompt(me.member, shell.now) && <InstallNudge device={device} />}
       <HomeOverview data={data} />
     </>
   );

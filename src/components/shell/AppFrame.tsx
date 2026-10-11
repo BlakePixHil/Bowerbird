@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { InstallWatcher } from "@/components/install/InstallWatcher";
 import { TabBar } from "@/components/ui";
 import { AppSidebar } from "./AppSidebar";
 import { getShell } from "./data";
@@ -25,6 +26,7 @@ export async function AppFrame({ children }: { children: ReactNode }) {
       <TabBar items={visible(TABS)} className={styles.tabbar} />
       <SearchShortcut />
       {shell.syncDue && <SyncOnOpen />}
+      <InstallWatcher installed={shell.installed} />
     </div>
   );
 }

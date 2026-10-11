@@ -3,7 +3,7 @@ import { LiveSyncCard } from "@/components/accounts/LiveSyncCard";
 import { payHeadline } from "@/components/paydays/paydays";
 import { getShell, PageHeader } from "@/components/shell";
 import { AddPasskeyButton, SignOutButton } from "@/components/auth/AccountActions";
-import { ButtonLink, Card, EmptyState, ListRow, Pill, Tag, Tile } from "@/components/ui";
+import { ButtonLink, Card, cx, EmptyState, Icon, ListRow, Pill, Tag, Tile } from "@/components/ui";
 import { paydaysOf, viewerOf, visibleAccounts } from "@/lib/access";
 import { requireMember } from "@/lib/auth";
 import { passkeyList } from "@/lib/auth/passkeys";
@@ -101,6 +101,20 @@ export default async function AccountsPage() {
           <AddPasskeyButton />
           <SignOutButton />
         </div>
+      </Card>
+      {/* Notifications join this row in project 08, as "Notifications and Home Screen". */}
+      <Card
+        as="section"
+        aria-label="Install the app"
+        className={cx(styles.install, "not-installed")}
+      >
+        <ListRow
+          leading={<Tile icon="install-phone" />}
+          title="Install the app"
+          detail="Opens like an app, with no app store"
+          trailing={<Icon name="chevron-right" size="sm" className="muted" />}
+          href="/install"
+        />
       </Card>
     </>
   );

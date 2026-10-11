@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { APP_SHORT_NAME } from "@/config/app";
 import { progressOf, type Income, type ProgressBudget } from "@/lib/access";
 import type { DaySpend, PeriodSpec } from "@/lib/money";
 import {
@@ -259,6 +260,8 @@ describe("the first week", () => {
     live: 1,
     pay,
     budgets: 0,
+    installed: false,
+    device: "phone",
   };
 
   it("lists what's done first, then what's left, with where to go", () => {
@@ -271,6 +274,11 @@ describe("the first week", () => {
         "/activity?show=check",
       ],
       ["Set your budgets", "Start from what you usually spend each month", "/budgets/plan"],
+      [
+        `Put ${APP_SHORT_NAME} on your Home Screen`,
+        "Opens like an app, with no app store",
+        "/install",
+      ],
       [
         "Add older history from a file",
         "Anything before Sat 11 Jul, from your bank's website.",
@@ -285,6 +293,7 @@ describe("the first week", () => {
       ["bring", false],
       ["payday", false],
       ["budgets", false],
+      ["install", false],
     ]);
     expect(readyTiles(none)).toEqual([]);
     expect(fillsInWords(none).line).toBe(
@@ -293,14 +302,33 @@ describe("the first week", () => {
   });
 
   it("ticks off sorting, budgets and history once they're done", () => {
-    const later = { ...facts, toCheck: 0, budgets: 6, since: "2026-04-01", live: 0 };
+    const later = {
+      ...facts,
+      toCheck: 0,
+      budgets: 6,
+      since: "2026-04-01",
+      live: 0,
+      installed: true,
+    };
     expect(setupSteps(later).map((step) => [step.key, step.done, step.detail])).toEqual([
       ["bring", true, "6 accounts from bank files"],
       ["payday", true, "$3,260 every second Friday"],
       ["sort", true, "All sorted"],
       ["budgets", true, "6 budgets set"],
+      ["install", true, "Opens like an app from now on"],
       ["history", true, "History back to Wed 1 Apr 2026"],
     ]);
+  });
+
+  it("asks a computer to install the app in its own window", () => {
+    const install = setupSteps({ ...facts, device: "computer" }).find(
+      (step) => step.key === "install",
+    );
+    expect(install).toMatchObject({
+      title: `Install ${APP_SHORT_NAME} on this computer`,
+      detail: "Opens in its own window, like an app",
+      href: "/install",
+    });
   });
 
   it("shows what's ready", () => {

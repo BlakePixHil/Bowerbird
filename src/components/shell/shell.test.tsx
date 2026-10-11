@@ -118,6 +118,7 @@ describe("AppSidebar", () => {
     sync: { kind: "never" },
     syncDue: false,
     live: { connections: 0, banks: null },
+    installed: false,
   };
   const html = renderToStaticMarkup(<AppSidebar shell={shell} />);
 

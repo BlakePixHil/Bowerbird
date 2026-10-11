@@ -3,7 +3,9 @@ import { dollars, unitOf } from "@/components/budgets/budgets";
 import { isCalendarMonth, paceStatus, type Status } from "@/components/budgets/progress";
 import { cycleWords } from "@/components/paydays/paydays";
 import type { InOutMonth, RunningTotalChartProps } from "@/components/charts";
+import type { Kind } from "@/components/install/platform";
 import type { IconName } from "@/components/ui";
+import { APP_SHORT_NAME } from "@/config/app";
 import type { BudgetProgress, Income, InOut, MonthInOut, Whose } from "@/lib/access";
 import {
   addDays,
@@ -362,6 +364,10 @@ export type SetupFacts = {
   pay: Income | null;
   /** Budgets in the period Home shows. */
   budgets: number;
+  /** The person has opened the installed app on some device. */
+  installed: boolean;
+  /** A phone puts the app on its Home Screen; a computer installs it in its own window. */
+  device: Kind;
 };
 
 export type SetupStep = {
@@ -376,10 +382,7 @@ export type SetupStep = {
 /** History back this many whole months is enough for averages: the same 6 as Budgets. */
 const ENOUGH_MONTHS = 6;
 
-/**
- * The setup checklist, done steps first. Steps for features that aren't built yet, such as putting
- * the app on the Home Screen, stay out until they are.
- */
+/** The setup checklist, done steps first. Steps for features that aren't built yet stay out. */
 export function setupSteps(facts: SetupFacts): SetupStep[] {
   const steps: SetupStep[] = [];
   const has = facts.transactions > 0;
@@ -432,6 +435,7 @@ export function setupSteps(facts: SetupFacts): SetupStep[] {
     done: facts.budgets > 0,
     href: facts.budgets > 0 ? null : "/budgets/plan",
   });
+  steps.push(installStep(facts));
   if (has && facts.since) {
     const enough = facts.since <= addMonths(`${facts.today.slice(0, 7)}-01`, -ENOUGH_MONTHS);
     steps.push({
@@ -445,6 +449,34 @@ export function setupSteps(facts: SetupFacts): SetupStep[] {
     });
   }
   return [...steps.filter((step) => step.done), ...steps.filter((step) => !step.done)];
+}
+
+/** Putting the app on the Home Screen, or installing it on a computer, whichever this is. */
+function installStep({ installed, device }: SetupFacts): SetupStep {
+  const key = "install";
+  if (installed)
+    return {
+      key,
+      title: `Install ${APP_SHORT_NAME}`,
+      detail: "Opens like an app from now on",
+      done: true,
+      href: null,
+    };
+  return device === "phone"
+    ? {
+        key,
+        title: `Put ${APP_SHORT_NAME} on your Home Screen`,
+        detail: "Opens like an app, with no app store",
+        done: false,
+        href: "/install",
+      }
+    : {
+        key,
+        title: `Install ${APP_SHORT_NAME} on this computer`,
+        detail: "Opens in its own window, like an app",
+        done: false,
+        href: "/install",
+      };
 }
 
 export type ReadyTile = {

@@ -30,3 +30,7 @@
   justify-content: space-between;
   gap: 8px;
 }
+
+.install {
+  padding: 4px 16px;
+}

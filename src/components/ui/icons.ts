@@ -41,6 +41,7 @@ export const ICONS = {
   coffee: "M4 8h13v5a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6zM17 10h1.5a2.5 2.5 0 0 1 0 5H17M8 3v2M12 3v2",
   copy: "M8 8h12v12H8zM16 8V4H4v12h4",
   dash: "M6 12h12",
+  dock: "M4 15h16v5H4zM7.5 17.5h.01M12 17.5h.01M16.5 17.5h.01M12 4v7m0 0-3-3m3 3 3-3",
   download: "M12 4v11m0 0-4-4m4 4 4-4M4 15v5h16v-5",
   drop: "M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11z",
   external: "M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5",
@@ -54,6 +55,8 @@ export const ICONS = {
   "flag-goal": "M5 21V4M5 4h11l-2 4 2 4H5",
   food: "M7 3v18M4 3v5a3 3 0 0 0 6 0V3M18 21V3c-2.2 0-4 2.5-4 6v4h4",
   fuel: "M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h14M5 10h10M15 8l3 3v6a1.5 1.5 0 0 0 3 0V9l-3-3",
+  "full-screen":
+    "M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4",
   gift: "M4 11h16v10H4zM3 7h18v4H3zM12 7v14M12 7S10.5 3 8 3a2 2 0 0 0 0 4M12 7s1.5-4 4-4a2 2 0 0 1 0 4",
   gym: "M6 7v10M3 9.5v5M18 7v10M21 9.5v5M6 12h12",
   heart: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
@@ -130,6 +133,7 @@ export const ICONS = {
     "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 12 0v1M16 3.5a4 4 0 0 1 0 7.5M22 21v-1a6 6 0 0 0-4-5.6",
   wand: "M15 4V2M15 10V8M11 6h2M17 6h2M4 20 14 10M18 13l1 1M20 11l-1 1",
   wave: "M3 12c2.5-4 4.5-4 7 0s4.5 4 7 0 3-3 4-2",
+  window: "M3 5h18v14H3zM3 9h18M6 7h.01M8.5 7h.01",
 } as const satisfies Record<string, string>;
 
 export type IconName = keyof typeof ICONS;

@@ -77,6 +77,8 @@ const facts = (transactions: number): SetupFacts => ({
   live: 0,
   pay: null,
   budgets: 0,
+  installed: false,
+  device: "phone",
 });
 
 const data = (more: Partial<HomeData>): HomeData => ({
@@ -150,6 +152,7 @@ describe("Home", () => {
     expect(html).toContain("Welcome, Olive");
     expect(html).toContain("Finish setting up");
     expect(html).toContain("Fills in as the month goes on");
+    expect(html).toContain('href="/install"');
     expect(html).not.toContain("Left to spend");
     expect(html).not.toContain("Latest");
   });

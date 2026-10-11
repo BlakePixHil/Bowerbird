@@ -209,3 +209,11 @@
   --brand-top: #4a90f0;
   --brand-bottom: #1e5bc8;
 }
+
+/* A phone's Home Screen in Install the app's pictures: a dark wallpaper in both themes. */
+:root {
+  --wallpaper: #121318;
+  --wallpaper-glow-1: #3a2f8f;
+  --wallpaper-glow-2: #7a3a5e;
+  --wallpaper-ring: #7db1f5;
+}
