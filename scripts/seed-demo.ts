@@ -7,7 +7,7 @@
  * production. Running it again replaces the demo household.
  */
 import { loadEnvConfig } from "@next/env";
-import { eq } from "drizzle-orm";
+import { and, count, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { DEFAULT_TIMEZONE } from "../src/config/app";
 import { closeDb, getDb } from "../src/lib/db/client";
 import * as t from "../src/lib/db/schema";
@@ -447,6 +447,36 @@ async function main() {
     }
     // Shop names, the same way an import or sync names them.
     await nameShops(tx, { householdId: household.id, budgetMs: Infinity });
+    // Rules for the usual shops, as if someone had said "Yes, always" to each. One is off.
+    const usual = await tx
+      .select({
+        merchantId: t.transactions.merchantId,
+        categoryId: t.transactions.categoryId,
+        n: count(),
+      })
+      .from(t.transactions)
+      .where(
+        and(
+          eq(t.transactions.householdId, household.id),
+          isNotNull(t.transactions.merchantId),
+          isNotNull(t.transactions.categoryId),
+          isNull(t.transactions.transferGroupId),
+        ),
+      )
+      .groupBy(t.transactions.merchantId, t.transactions.categoryId)
+      .orderBy(desc(count()), t.transactions.merchantId);
+    const ruled = new Map<string, (typeof usual)[number]>();
+    for (const row of usual) if (!ruled.has(row.merchantId!)) ruled.set(row.merchantId!, row);
+    await tx.insert(t.rules).values(
+      [...ruled.values()].slice(0, 10).map((row, i) => ({
+        householdId: household.id,
+        merchantId: row.merchantId,
+        categoryId: row.categoryId!,
+        position: i,
+        appliedCount: row.n,
+        enabled: i !== 7,
+      })),
+    );
     const tagged = rows.flatMap((row, index) => (row.tag ? [{ row, id: saved[index].id }] : []));
     if (tagged.length > 0) {
       const [tag] = await tx

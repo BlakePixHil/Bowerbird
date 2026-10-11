@@ -9,7 +9,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
@@ -22,6 +21,8 @@ import {
   IconButton,
   Tag,
   Tile,
+  useWide,
+  WIDE,
 } from "@/components/ui";
 import type { ActivityPage, ActivityRow, CategoryChoice } from "@/lib/access";
 import { formatShortDate, type PlainDate } from "@/lib/money";
@@ -41,21 +42,6 @@ import {
 import { activityHref, type Show } from "./show";
 import type { RowsChanged } from "./Categorise";
 import { TransactionDetail } from "./TransactionDetail";
-
-/** Desktop: the list and the panel beside it. Below this the sheet opens instead. */
-const WIDE = "(min-width: 761px)";
-
-function useWide(): boolean {
-  return useSyncExternalStore(
-    (onChange) => {
-      const query = window.matchMedia(WIDE);
-      query.addEventListener("change", onChange);
-      return () => query.removeEventListener("change", onChange);
-    },
-    () => window.matchMedia(WIDE).matches,
-    () => false,
-  );
-}
 
 type ActivityListProps = {
   first: ActivityPage;

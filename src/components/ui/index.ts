@@ -27,3 +27,4 @@ export { SegmentedControl, type SegmentOption } from "./SegmentedControl";
 export { NavItem, NavSection, Sidebar } from "./Sidebar";
 export { TabBar } from "./TabBar";
 export { Table, Td, Th } from "./Table";
+export { useWide, WIDE } from "./useWide";

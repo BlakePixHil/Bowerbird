@@ -51,3 +51,25 @@ export {
   type ShopSorted,
 } from "./categorise";
 export { markAsTransfer, notATransfer, type TransferChanged } from "./transfers";
+export {
+  addCategory,
+  CATEGORY_NAME_MAX,
+  categoryOverview,
+  dayOfMonth,
+  deleteCategory,
+  editCategory,
+  HISTORY_MONTHS,
+  mergeCategory,
+  type CategoryChanged,
+  type CategoryOverview,
+  type CategorySummary,
+} from "./categories";
+export {
+  changeRule,
+  deleteRule,
+  ruleList,
+  shopList,
+  type RuleChanged,
+  type RuleRow,
+  type ShopRow,
+} from "./rules";

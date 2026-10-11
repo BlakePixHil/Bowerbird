@@ -1,22 +1,41 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/shell";
-import { EmptyState } from "@/components/ui";
-import { STARTING_CATEGORIES } from "@/config/app";
+import { CategoryTabs, ManageCategories, monthName } from "@/components/categories";
+import { getShell, PageHeader } from "@/components/shell";
+import { categoryOverview, dayOfMonth, ruleList, shopList, viewerOf } from "@/lib/access";
+import { requireMember } from "@/lib/auth";
+import { getDb } from "@/lib/db";
+import { formatShortDate } from "@/lib/money";
 
 export const metadata: Metadata = { title: "Categories and rules" };
 
-export default function CategoriesPage() {
+export default async function CategoriesPage() {
+  const shell = await getShell();
+  const viewer = viewerOf(await requireMember());
+  const db = getDb();
+  const [overview, rules, shops] = await Promise.all([
+    categoryOverview(db, viewer, shell.today),
+    ruleList(db, viewer),
+    shopList(db, viewer),
+  ]);
+  const { day, of } = dayOfMonth(shell.today);
+  const month = monthName(shell.today);
+
   return (
     <>
       <PageHeader
         title="Categories and rules"
         back={{ href: "/accounts", label: "accounts and sharing" }}
-        actions={null}
+        line={`${formatShortDate(shell.today)} · ${month} so far, day ${day} of ${of}`}
+        actions={<CategoryTabs place="desktop" />}
       />
-      <EmptyState icon="tag" title="Your categories will be here">
-        Every household starts with {STARTING_CATEGORIES.length} categories, like Groceries and
-        Eating out. You&apos;ll be able to change them and add rules that sort transactions for you.
-      </EmptyState>
+      <ManageCategories
+        overview={overview}
+        rules={rules}
+        shops={shops}
+        dayLine={`Day ${day} of ${of}`}
+        today={shell.today}
+        timeZone={shell.timeZone}
+      />
     </>
   );
 }

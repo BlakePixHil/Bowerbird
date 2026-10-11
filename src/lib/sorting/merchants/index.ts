@@ -5,6 +5,7 @@ import { members, merchants, transactions } from "@/lib/db/schema";
 import type { PlainDate } from "@/lib/money";
 import type { SortingRow, SortingStep } from "..";
 import { shopFor, type Shop } from "./clean";
+import { SHOP_NAME_MAX } from "./limits";
 
 export { loose, shopFor, shopText, tidyName, type Shop } from "./clean";
 
@@ -47,8 +48,7 @@ export const cleanShopNames: SortingStep = async ({ db, householdId, save }, row
   });
 };
 
-/** The longest a shop's name can be. */
-export const SHOP_NAME_MAX = 60;
+export { SHOP_NAME_MAX };
 
 export type RenameShop = { ok: true; name: string } | { ok: false; error: string };
 
