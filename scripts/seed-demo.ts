@@ -12,6 +12,7 @@ import { DEFAULT_TIMEZONE, STARTING_CATEGORIES } from "../src/config/app";
 import { closeDb, getDb } from "../src/lib/db/client";
 import * as t from "../src/lib/db/schema";
 import { addDays, addMonths, dayOfWeek, parts, todayIn } from "../src/lib/money/dates";
+import { nameShops } from "../src/lib/sorting/merchants";
 
 loadEnvConfig(process.cwd());
 
@@ -450,6 +451,8 @@ async function main() {
           .returning({ id: t.transactions.id })),
       );
     }
+    // Shop names, the same way an import or sync names them.
+    await nameShops(tx, { householdId: household.id, budgetMs: Infinity });
     const tagged = rows.flatMap((row, index) => (row.tag ? [{ row, id: saved[index].id }] : []));
     if (tagged.length > 0) {
       const [tag] = await tx
