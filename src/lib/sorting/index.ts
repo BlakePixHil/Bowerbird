@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import type { Db } from "@/lib/db";
 import { transactions } from "@/lib/db/schema";
 import type { PlainDate } from "@/lib/money";
+import { assignColours } from "./categories";
 import { cleanShopNames } from "./merchants";
 
 /** One transaction going through the sorting steps, with what the steps decided so far. */
@@ -77,6 +78,7 @@ export async function previewSorting(
 /**
  * Sorts saved transactions and saves each row's shop, category and transfer pair. Pass the
  * database transaction the rows were written in, so an import is saved whole or not at all.
+ * When a row lands in a category, any free category colours are handed out too.
  */
 export async function sortTransactions(
   db: Db,
@@ -96,5 +98,6 @@ export async function sortTransactions(
       })
       .where(and(eq(transactions.id, row.id), eq(transactions.householdId, householdId)));
   }
+  if (rows.some((row) => row.id && row.category)) await assignColours(db, householdId);
   return countSorted(rows);
 }
