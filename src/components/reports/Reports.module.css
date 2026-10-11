@@ -1,0 +1,240 @@
+/* The Reports page's cards, from the board "Reports". Money in, money out is a wide card and the
+   rest are small ones: two to a row on a phone (760px and narrower), and on desktop the wide card
+   takes half a row. */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: border-color 120ms ease;
+}
+
+.card:hover {
+  border-color: var(--line-2);
+}
+
+.wide {
+  grid-column: span 2;
+  padding: 18px 20px;
+}
+
+.small {
+  gap: 4px;
+  min-height: 196px;
+  padding: 16px;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.small .title {
+  font-size: 14px;
+}
+
+.stretched {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* The whole card opens the report. */
+.stretched::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+}
+
+.stretched:focus-visible {
+  outline: none;
+}
+
+.stretched:focus-visible::after {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.question {
+  margin: 2px 0 0;
+}
+
+.small .question {
+  margin: 0;
+}
+
+.value {
+  margin-top: 8px;
+}
+
+/* Pins a small card's chart to the bottom, at least 12px under the words. */
+.spacer {
+  flex: 1 0 8px;
+}
+
+.note {
+  margin: 12px 0 0;
+  text-wrap: pretty;
+}
+
+/* Money in, money out. */
+.figures {
+  display: flex;
+  gap: 20px;
+  margin-top: 14px;
+}
+
+.slot {
+  position: relative;
+  min-width: 0;
+}
+
+.inOut {
+  position: relative;
+  display: grid;
+  height: 92px;
+  margin-top: 14px;
+}
+
+/* The zero line. */
+.inOut::after {
+  content: "";
+  position: absolute;
+  top: 52px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--axis);
+}
+
+.inBar,
+.outBar {
+  position: absolute;
+  left: 50%;
+  width: 12px;
+  margin-left: -6px;
+}
+
+.inBar {
+  bottom: 41px;
+  border-radius: 3px 3px 0 0;
+  background: var(--in);
+}
+
+.outBar {
+  top: 53px;
+  border-radius: 0 0 3px 3px;
+  background: var(--out);
+}
+
+.partial > span {
+  opacity: 0.4;
+}
+
+.axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+
+.legend {
+  margin-top: 10px;
+}
+
+/* What's left over. */
+.kept {
+  position: relative;
+  display: grid;
+  height: 96px;
+}
+
+.average {
+  position: absolute;
+  z-index: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--grid);
+}
+
+.keptBar {
+  position: absolute;
+  left: 50%;
+  width: 8px;
+  margin-left: -4px;
+  border-radius: 2px 2px 0 0;
+  background: var(--ghost);
+}
+
+.down {
+  border-radius: 0 0 2px 2px;
+}
+
+.last {
+  background: var(--left);
+}
+
+.below {
+  background: var(--out);
+}
+
+/* Plan vs reality: a square per budget, red with a mark when it went over. */
+.marks {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--good);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.over {
+  background: var(--crit);
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .grid {
+    gap: 12px;
+  }
+
+  .wide {
+    padding: 16px;
+  }
+
+  .small {
+    min-height: 176px;
+    padding: 14px;
+  }
+
+  .kept {
+    height: 40px;
+  }
+}

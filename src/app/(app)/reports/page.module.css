@@ -1,24 +1,5 @@
 .intro {
-  margin: 0;
+  margin: -6px 0 4px;
   color: var(--text-2);
   font-size: 13.5px;
-}
-
-.list {
-  margin: 0;
-  padding: 4px 16px;
-  list-style: none;
-}
-
-.list > li {
-  padding: 6px 0;
-}
-
-.list > li + li {
-  border-top: 1px solid var(--line);
-}
-
-/* The whole question, on two lines if it needs them. */
-.question {
-  white-space: normal;
 }

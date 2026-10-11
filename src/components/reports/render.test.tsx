@@ -1,7 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import { REPORTS, visible } from "@/components/shell/nav";
+import type { ReportsData } from "./cards";
 import { moneyReport, rangeMonths } from "./money";
 import { MoneyInOutReport } from "./MoneyInOutReport";
+import { REPORT_CARDS, ReportsOverview } from "./ReportsOverview";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: () => {} }) }));
 
@@ -60,5 +63,84 @@ describe("Money in, money out", () => {
     const august = renderToStaticMarkup(<MoneyInOutReport report={report} initial="2026-08" />);
     expect(august).toContain("Where it went in August");
     expect(august).toContain("Not sorted yet");
+  });
+});
+
+const DATA: ReportsData = {
+  inOut: {
+    when: "September",
+    in: 1_117_000,
+    out: 804_000,
+    months: [
+      { key: "2026-09", label: "SEP 26", name: "Sep 2026", inCents: 1_117_000, outCents: 804_000 },
+      {
+        key: "2026-10",
+        label: "OCT 26",
+        name: "Oct 2026",
+        inCents: 736_500,
+        outCents: 311_200,
+        partial: true,
+      },
+    ],
+    from: "SEP 26",
+    to: "OCT 26, SO FAR",
+  },
+  leftOver: {
+    month: "Sept",
+    kept: 312_760,
+    share: 0.28,
+    shares: [0.2, -0.05, 0.28],
+    average: 0.23,
+  },
+  plan: {
+    on: 2,
+    of: 3,
+    when: "in Sept",
+    marks: [
+      { key: "a", name: "Groceries", over: true, text: "$100 over" },
+      { key: "b", name: "Fun", over: false, text: "$60 under" },
+      { key: "c", name: "Rent", over: false, text: "On budget" },
+    ],
+  },
+};
+
+describe("Reports", () => {
+  const html = renderToStaticMarkup(<ReportsOverview reports={visible(REPORTS)} data={DATA} />);
+
+  it("has a card for every report that's on, and only those", () => {
+    const on = visible(REPORTS).map((report) => report.href);
+    expect(REPORT_CARDS.map((card) => card.href).sort()).toEqual([...on].sort());
+    for (const href of on) expect(html).toContain(`href="${href}"`);
+    expect(html).not.toContain("What we own and owe");
+    expect(html).not.toContain("check-in");
+  });
+
+  it("shows each report's question, headline and small chart", () => {
+    expect(html).toContain("Did we earn more than we spent?");
+    expect(html).toContain("In, September");
+    expect(html).toContain(">$11,170<");
+    expect(html).toContain(">$8,040<");
+    expect(html).toContain("OCT 26, SO FAR");
+    expect(html).toContain(">28%<");
+    expect(html).toContain("of pay kept in Sept");
+    expect(html).toContain(">2 of 3<");
+    expect(html).toContain("on plan in Sept");
+    expect(html.match(/>!</g)).toHaveLength(1);
+  });
+
+  it("says when a card has nothing yet", () => {
+    const empty = renderToStaticMarkup(
+      <ReportsOverview
+        reports={visible(REPORTS)}
+        data={{
+          inOut: { note: "Shows once your first transactions are in." },
+          leftOver: { note: "Shows after your first whole month." },
+          plan: { note: "Shows once you set your budgets." },
+        }}
+      />,
+    );
+    expect(empty).toContain("Shows once your first transactions are in.");
+    expect(empty).toContain("Shows after your first whole month.");
+    expect(empty).toContain("Shows once you set your budgets.");
   });
 });

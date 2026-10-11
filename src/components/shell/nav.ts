@@ -4,8 +4,11 @@ import type { NavLink } from "@/components/ui";
 /** A place in the app's navigation. Entries with a feature only show once that feature is on. */
 export type NavEntry = NavLink & { feature?: Feature };
 
-/** A report: its everyday question goes on the Reports page (01 · Product brief, Plain words). */
-export type ReportEntry = NavEntry & { question: string };
+/**
+ * A report and its everyday question (01 · Product brief, Plain words). `short` is the question
+ * as its card on the Reports page asks it, from the board "Reports".
+ */
+export type ReportEntry = NavEntry & { question: string; short: string };
 
 /** The phone's bottom tab bar, and the top of the desktop sidebar. */
 export const TABS: readonly NavEntry[] = [
@@ -26,12 +29,14 @@ export const REPORTS: readonly ReportEntry[] = [
     label: "Money in, money out",
     icon: "in-out",
     question: "Did we earn more than we spent this month?",
+    short: "Did we earn more than we spent?",
   },
   {
     href: "/reports/money-in-out#left-over",
     label: "What's left over",
     icon: "box",
     question: "How much did we keep, and what share of our pay is that?",
+    short: "How much did we keep?",
   },
   {
     href: "/reports/own-and-owe",
@@ -39,6 +44,7 @@ export const REPORTS: readonly ReportEntry[] = [
     icon: "scales",
     feature: "ownAndOwe",
     question: "Are we better off than last month and last year?",
+    short: "Are we better off?",
   },
   {
     href: "/reports/until-payday",
@@ -46,6 +52,7 @@ export const REPORTS: readonly ReportEntry[] = [
     icon: "calendar",
     feature: "untilPayday",
     question: "Will the account stay above zero once the bills come out?",
+    short: "Will we stay above zero?",
   },
   {
     href: "/reports/the-plan",
@@ -53,12 +60,14 @@ export const REPORTS: readonly ReportEntry[] = [
     icon: "clipboard",
     feature: "thePlan",
     question: "What do we expect to earn and spend this year?",
+    short: "What do we expect to earn and spend this year?",
   },
   {
     href: "/budgets#plan-vs-reality",
     label: "Plan vs reality",
     icon: "target",
     question: "Where did we overspend or underspend, and by how much?",
+    short: "Where did we overspend?",
   },
   {
     href: "/reports/big-buys",
@@ -66,6 +75,7 @@ export const REPORTS: readonly ReportEntry[] = [
     icon: "suitcase",
     feature: "bigBuys",
     question: "What large purchases are coming, and are we saving for them?",
+    short: "Are we saving for them?",
   },
   {
     href: "/reports/investments",
@@ -73,6 +83,7 @@ export const REPORTS: readonly ReportEntry[] = [
     icon: "trend",
     feature: "investments",
     question: "How are our shares doing, and who owns what?",
+    short: "How are they doing?",
   },
   {
     href: "/reports/check-in",
@@ -80,6 +91,7 @@ export const REPORTS: readonly ReportEntry[] = [
     icon: "check-circle",
     feature: "checkIn",
     question: "What changed, what's coming, and what do we adjust?",
+    short: "What changed, and what do we adjust?",
   },
 ];
 
