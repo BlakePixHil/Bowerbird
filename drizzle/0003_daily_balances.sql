@@ -1,0 +1,1 @@
+ALTER TABLE "balances" ADD COLUMN "worked_out" boolean DEFAULT false NOT NULL;

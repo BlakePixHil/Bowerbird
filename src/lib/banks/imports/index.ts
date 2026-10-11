@@ -1,7 +1,9 @@
 import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { visibleAccounts, type SeenAccount, type Viewer } from "@/lib/access";
+import { fillBalances, saveGivenBalances } from "@/lib/banks/balances";
 import {
   closingBalance,
+  fileBalances,
   matchRows,
   MAX_FILE_BYTES,
   parseBankFile,
@@ -13,7 +15,7 @@ import {
   type RowMatch,
 } from "@/lib/banks/files";
 import type { Db } from "@/lib/db";
-import { accounts, balances, imports, transactions } from "@/lib/db/schema";
+import { accounts, imports, transactions } from "@/lib/db/schema";
 import { previewSorting, sortTransactions, type SortingRow } from "@/lib/sorting";
 import {
   ACCOUNT_NAME_MAX,
@@ -307,13 +309,14 @@ export async function checkImport(
 
 /**
  * Imports the file's new rows in one database transaction: makes the account if it's new, saves
- * the rows, records the import, sorts the rows and saves the balance the file ends on. Rows
- * already here are skipped. If anything fails, nothing is saved.
+ * the rows, records the import, sorts the rows and saves the account's daily balances through
+ * today (`now`). Rows already here are skipped. If anything fails, nothing is saved.
  */
 export async function runImport(
   db: Db,
   viewer: Viewer,
   request: ImportRequest,
+  now = new Date(),
 ): Promise<ImportDone | ImportProblem> {
   try {
     return await db.transaction(async (tx) => {
@@ -385,16 +388,10 @@ export async function runImport(
 
       const counts = await sortTransactions(tx, viewer.householdId, saved);
 
-      const balance = closingBalance(file);
-      if (balance) {
-        await tx
-          .insert(balances)
-          .values({ accountId, ...balance })
-          .onConflictDoUpdate({
-            target: [balances.accountId, balances.date],
-            set: { balanceCents: balance.balanceCents },
-          });
-      }
+      // The file's own balances where it has them, then every other day worked out from them or
+      // from the balances the account already had.
+      await saveGivenBalances(tx, accountId, fileBalances(file));
+      await fillBalances(tx, accountId, now);
 
       const skipped = file.rows.length - saved.length;
       await tx

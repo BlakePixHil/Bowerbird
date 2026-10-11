@@ -258,6 +258,27 @@ describe("the daily sync", () => {
     ]);
   });
 
+  it("carries every account's balance on to today, sent by the bank or not", async () => {
+    const { connectionId } = await household();
+    // Three days later the bank leaves the card out, and still gives the others' balances as of
+    // the 10th.
+    const set = structuredClone(FIXTURE) as { accounts: Account[] };
+    set.accounts = set.accounts.filter((account) => account.id !== "hb-card");
+    server.accountSet = set;
+    expect(await syncConnection(db, connectionId, when(new Date("2026-10-13T03:00:00Z")))).toBe(
+      "synced",
+    );
+    const { days } = await saved(connectionId);
+    for (const account of ["hb-card", "hb-everyday", "wcu-saver"])
+      expect(days.filter((d) => d.account === account).slice(-4)).toEqual(
+        ["2026-10-10", "2026-10-11", "2026-10-12", "2026-10-13"].map((date) => ({
+          account,
+          date,
+          cents: days.find((d) => d.account === account && d.date === "2026-10-10")!.cents,
+        })),
+      );
+  });
+
   it("never runs twice at once", async () => {
     const { connectionId } = await household();
     expect(await claimLeaseForSync(db, connectionId, at(120))).not.toBeNull();

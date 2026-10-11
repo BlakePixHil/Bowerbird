@@ -3,7 +3,7 @@ import { looksLikeOfx, readOfx } from "./ofx";
 import { looksLikeQif, readQif } from "./qif";
 import type { ColumnRole, FileFormat, ParseResult } from "./types";
 
-export { closingBalance } from "./balance";
+export { closingBalance, fileBalances } from "./balance";
 export { missingColumns } from "./csv";
 export { dedupeKey, dedupeKeys, normaliseDescription } from "./dedupe";
 export { matchRows, type ExistingRow, type RowMatch } from "./match";

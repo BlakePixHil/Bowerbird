@@ -4,6 +4,7 @@ import {
   closingBalance,
   dedupeKey,
   dedupeKeys,
+  fileBalances,
   matchRows,
   MAX_FILE_BYTES,
   NOT_A_BANK_FILE,
@@ -475,5 +476,53 @@ describe("closingBalance", () => {
   it("is null when the file has no balances", () => {
     expect(closingBalance({ rows: [row("2026-09-01", -5)] })).toBeNull();
     expect(closingBalance({ rows: [] })).toBeNull();
+  });
+});
+
+describe("fileBalances", () => {
+  const row = (date: string, amountCents: number, balanceCents?: number): ParsedRow => ({
+    date,
+    amountCents,
+    description: "x",
+    balanceCents,
+  });
+
+  it("gives each day the balance after its last row, oldest first", () => {
+    const westpac = parsed(parseBankFile(fixture("westpac.csv"), "w.csv"));
+    expect(fileBalances(westpac)).toEqual([
+      { date: "2026-09-01", balanceCents: -514_05 },
+      { date: "2026-09-02", balanceCents: 1935_95 },
+      { date: "2026-09-03", balanceCents: 1904_35 },
+    ]);
+    const oldestFirst = [
+      row("2026-09-01", -10, 90),
+      row("2026-09-01", -5, 85),
+      row("2026-09-02", 15, 100),
+    ];
+    expect(fileBalances({ rows: oldestFirst })).toEqual([
+      { date: "2026-09-01", balanceCents: 85 },
+      { date: "2026-09-02", balanceCents: 100 },
+    ]);
+    expect(fileBalances({ rows: [...oldestFirst].reverse() })).toEqual(
+      fileBalances({ rows: oldestFirst }),
+    );
+  });
+
+  it("lets the balance the file states win for its day", () => {
+    const ofx = parsed(parseBankFile(fixture("statement-sgml.ofx"), "a.ofx"));
+    expect(fileBalances(ofx)).toEqual([{ date: "2026-09-03", balanceCents: 1904_35 }]);
+    const rows = [row("2026-09-02", -10, 90), row("2026-09-03", -5, 85)];
+    expect(
+      fileBalances({ rows, closingBalance: { date: "2026-09-03", balanceCents: 80 } }),
+    ).toEqual([
+      { date: "2026-09-02", balanceCents: 90 },
+      { date: "2026-09-03", balanceCents: 80 },
+    ]);
+  });
+
+  it("is empty when the file has no balances", () => {
+    const anz = parsed(parseBankFile(fixture("anz.csv"), "anz.csv"));
+    expect(fileBalances(anz)).toEqual([]);
+    expect(fileBalances({ rows: [] })).toEqual([]);
   });
 });

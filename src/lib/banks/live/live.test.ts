@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createTestDb } from "../../../../tests/db";
 import { startMockSimpleFin, type MockSimpleFin } from "../../../../tests/simplefin";
@@ -15,6 +15,7 @@ import {
   transactions,
   users,
 } from "@/lib/db/schema";
+import { addDays } from "@/lib/money";
 import { connectSimpleFin } from "../connections";
 import {
   claimSyncLease,
@@ -315,6 +316,51 @@ describe("the first sync", () => {
       .innerJoin(accounts, eq(accounts.id, transactions.accountId))
       .where(and(eq(accounts.connectionId, id), eq(transactions.externalId, "ev-pending")));
     expect(row).toEqual({ pending: true, date: "2026-10-10" });
+  });
+
+  it("works every day's balance back from the bank's, from the first row to today", async () => {
+    const id = await connect();
+    await pickMost(id);
+    await runFirstSync(db, olive, id, { ...options, budgetMs: 60_000 });
+    const picked = await db
+      .select({ id: accounts.id, externalId: accounts.externalId })
+      .from(accounts)
+      .where(and(eq(accounts.connectionId, id), eq(accounts.archived, false)));
+    expect(picked).toHaveLength(5);
+    for (const account of picked) {
+      const fixture = FIXTURE.accounts.find((a: { id: string }) => a.id === account.externalId);
+      const days = await db
+        .select({
+          date: balances.date,
+          cents: balances.balanceCents,
+          workedOut: balances.workedOut,
+        })
+        .from(balances)
+        .where(eq(balances.accountId, account.id))
+        .orderBy(asc(balances.date));
+      const rows = await db
+        .select({ date: transactions.date, amountCents: transactions.amountCents })
+        .from(transactions)
+        .where(and(eq(transactions.accountId, account.id), eq(transactions.pending, false)))
+        .orderBy(asc(transactions.date));
+
+      // From the first row to today, the bank's balance on the last day.
+      expect(days[0].date).toBe(rows[0].date);
+      expect(days.at(-1)).toEqual({
+        date: "2026-10-10",
+        cents: Math.round(Number(fixture.balance) * 100),
+        workedOut: false,
+      });
+      expect(days.filter((day) => !day.workedOut)).toHaveLength(1);
+      // No gaps, and each day moves by just that day's posted rows.
+      for (let i = 1; i < days.length; i++) {
+        expect(days[i].date).toBe(addDays(days[i - 1].date, 1));
+        const moved = rows
+          .filter((row) => row.date === days[i].date)
+          .reduce((total, row) => total + row.amountCents, 0);
+        expect(days[i].cents - days[i - 1].cents).toBe(moved);
+      }
+    }
   });
 
   it("carries on where it stopped when it's interrupted", async () => {
