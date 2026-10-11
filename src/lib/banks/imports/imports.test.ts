@@ -178,7 +178,13 @@ describe("checking a file", () => {
       ["2026-09-02", 2450_00, "new"],
       ["2026-09-03", -31_60, "new"],
     ]);
-    expect(check.preview[0]).toMatchObject({ name: null, category: null });
+    // Shops are named before importing, and nothing has a category until there are rules.
+    expect(check.preview.map((row) => [row.name, row.category])).toEqual([
+      ["Netflix", null],
+      ["Cheque", null],
+      ["Salary Sample Co", null],
+      ["Woolworths", null],
+    ]);
     expect(check.firstNew).toHaveLength(4);
     expect(check.firstHere).toEqual([]);
     expect(await rowsIn(A.everyday)).toEqual([]);

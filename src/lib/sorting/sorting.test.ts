@@ -4,6 +4,7 @@ import { createTestDb } from "../../../tests/db";
 import type { Db } from "@/lib/db";
 import { accounts, categories, households, members, transactions, users } from "@/lib/db/schema";
 import { countSorted, previewSorting, sortTransactions, STEPS, type SortingStep } from ".";
+import { cleanShopNames } from "./merchants";
 
 let db: Db;
 let close: () => Promise<void>;
@@ -55,9 +56,10 @@ const row = (description: string) => ({
 });
 
 describe("the sorting pipeline", () => {
-  it("has no steps until project 03 adds them, so everything is left to check", async () => {
-    expect(STEPS).toEqual([]);
+  it("names the shop first, and leaves rows to check until rules sort them", async () => {
+    expect(STEPS[0]).toBe(cleanShopNames);
     const preview = await previewSorting(db, home, [row("WOOLWORTHS 1187")]);
+    expect(preview[0].merchant).toEqual({ id: null, name: "Woolworths" });
     expect(countSorted(preview)).toEqual({ sorted: 0, toCheck: 1, transfers: 0 });
   });
 
