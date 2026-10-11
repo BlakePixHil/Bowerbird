@@ -1,9 +1,10 @@
-import { and, count, eq, gt, isNull, lt, max, notExists, sql, sum } from "drizzle-orm";
+import { and, count, eq, gt, lt, max, notExists, sql, sum } from "drizzle-orm";
 import { STARTING_CATEGORIES } from "@/config/app";
 import type { Db } from "@/lib/db";
 import { categories, splits, transactions } from "@/lib/db/schema";
 import { addMonths, type PlainDate } from "@/lib/money";
 import { COLOUR_SLOTS } from "./colour";
+import { countedMoney } from "./transfers";
 
 /**
  * Gives a household the starting categories from config, in that order. Does nothing for a
@@ -91,7 +92,7 @@ export async function spentByCategory(db: Db, householdId: string): Promise<Map<
   const after: PlainDate = addMonths(newest.date, -COLOUR_MONTHS);
   const counted = and(
     eq(transactions.householdId, householdId),
-    isNull(transactions.transferGroupId),
+    countedMoney(),
     gt(transactions.date, after),
     eq(categories.kind, "spending"),
     eq(categories.archived, false),

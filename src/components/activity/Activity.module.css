@@ -897,3 +897,9 @@
   border-radius: 12px;
   white-space: normal;
 }
+
+.transferButton {
+  align-self: flex-start;
+  margin-top: 10px;
+  margin-left: -10px;
+}

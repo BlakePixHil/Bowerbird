@@ -1,8 +1,8 @@
 import { colourVar, cx, Icon, Tag, Tile, Well, type IconName } from "@/components/ui";
-import type { ActivityCategory, ActivityRow, CategoryChoice } from "@/lib/access";
+import type { ActivityRow, CategoryChoice } from "@/lib/access";
 import { formatShortDate } from "@/lib/money";
 import styles from "./Activity.module.css";
-import { Categorise } from "./Categorise";
+import { Categorise, type RowsChanged } from "./Categorise";
 import { rowAmount, rowIcon, whoseLook, type People } from "./look";
 
 /** Why a row counts the way it does, in a line under its tags. */
@@ -34,7 +34,7 @@ export function TransactionDetail({
   row: ActivityRow;
   people: People;
   categories: readonly CategoryChoice[];
-  onChanged: (ids: string[], category: ActivityCategory) => void;
+  onChanged: (change: RowsChanged) => void;
 }) {
   const whose = whoseLook(row.whose, people);
   const about = aboutRow(row);

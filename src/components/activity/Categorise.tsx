@@ -5,7 +5,7 @@ import { Button, Checkbox, cx, Icon, Pill, type IconName } from "@/components/ui
 import { ICONS } from "@/components/ui/icons";
 import type { ActivityCategory, ActivityRow, CategoryChoice } from "@/lib/access";
 import styles from "./Activity.module.css";
-import { changeCategory, sortShop } from "./actions";
+import { changeCategory, markTransfer, sortShop } from "./actions";
 
 /** How many categories show before More. The board's grid is two rows of four, More included. */
 const SHOWN = 7;
@@ -32,6 +32,14 @@ const transactions = (n: number, shop: string) => `${n} ${shop} transaction${n =
 
 type Ask = { shop: { id: string; name: string }; earlier: number; category: ActivityCategory };
 
+/** What changed, so the list can show it straight away. */
+export type RowsChanged = {
+  ids: string[];
+  category: ActivityCategory | null;
+  /** Set when the change paired rows as a transfer, or took them out of one. */
+  paired?: boolean;
+};
+
 /**
  * The category grid in the transaction sheet. Picking one saves it at once, then asks whether to
  * sort the shop that way always, with the option to change its earlier rows too.
@@ -43,8 +51,7 @@ export function Categorise({
 }: {
   row: ActivityRow;
   categories: readonly CategoryChoice[];
-  /** Rows that moved into a category, so the list shows it straight away. */
-  onChanged: (ids: string[], category: ActivityCategory) => void;
+  onChanged: (change: RowsChanged) => void;
 }) {
   const [chosen, setChosen] = useState(row.category?.id ?? null);
   const [all, setAll] = useState(false);
@@ -73,7 +80,7 @@ export function Categorise({
         setError(result?.error ?? "Couldn't save that. Check your connection and try again.");
         return;
       }
-      onChanged([row.id], result.category);
+      onChanged({ ids: [row.id], category: result.category });
       if (!result.shop) return;
       if (result.ruled) {
         setSaid(`${result.shop.name} is always sorted into ${result.category.name}.`);
@@ -98,12 +105,38 @@ export function Categorise({
         setError(result?.error ?? "Couldn't save the rule. Check your connection and try again.");
         return;
       }
-      onChanged(result.changed, result.category);
+      onChanged({ ids: result.changed, category: result.category });
       setAsk(null);
       setSaid(
         earlier
           ? `Rule saved. ${transactions(result.inCategory, question.shop.name)} now in ${question.category.name}.`
           : `Rule saved for new ${question.shop.name} transactions.`,
+      );
+    });
+  }
+
+  function transfer(on: boolean) {
+    setAsk(null);
+    setSaid(null);
+    setError(null);
+    start(async () => {
+      const result = await markTransfer({
+        id: crypto.randomUUID(),
+        transactionId: row.id,
+        transfer: on,
+      }).catch(() => null);
+      if (!result?.ok) {
+        setError(result?.error ?? "Couldn't save that. Check your connection and try again.");
+        return;
+      }
+      setChosen(result.category?.id ?? null);
+      onChanged({ ids: result.ids, category: result.category, paired: result.paired });
+      setSaid(
+        !on
+          ? "Counted again. Pick its category."
+          : result.paired
+            ? "Matched with the other side, and left out of totals."
+            : "Left out of totals.",
       );
     });
   }
@@ -139,6 +172,16 @@ export function Categorise({
           </button>
         )}
       </div>
+
+      <Button
+        variant="ghost"
+        icon="transfer"
+        className={styles.transferButton}
+        disabled={busy}
+        onClick={() => transfer(!row.notCounted)}
+      >
+        {row.notCounted ? "Not a transfer" : "This is a transfer between your accounts"}
+      </Button>
 
       {ask && (
         <div className={styles.ask} role="group" aria-labelledby={`ask-${row.id}`}>

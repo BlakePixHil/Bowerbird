@@ -141,6 +141,7 @@ type Saved = {
   pending: boolean;
   categoryId: string | null;
   merchantId: string | null;
+  transferGroupId: string | null;
 };
 
 const changed = (row: Saved, sent: SourceTransaction) =>
@@ -174,6 +175,7 @@ async function saveRecent(
       pending: transactions.pending,
       categoryId: transactions.categoryId,
       merchantId: transactions.merchantId,
+      transferGroupId: transactions.transferGroupId,
     })
     .from(transactions)
     .where(
@@ -227,8 +229,8 @@ async function saveRecent(
         pending: to.pending,
       })
       .where(eq(transactions.id, row.id));
-    // Only rows nothing has sorted yet: a category or shop the person chose stays.
-    if (!row.categoryId && !row.merchantId)
+    // Only rows nothing has sorted yet: a category, shop or transfer pair already set stays.
+    if (!row.categoryId && !row.merchantId && !row.transferGroupId)
       toSort.push({
         id: row.id,
         accountId,

@@ -23,7 +23,7 @@ import {
   Tag,
   Tile,
 } from "@/components/ui";
-import type { ActivityCategory, ActivityPage, ActivityRow, CategoryChoice } from "@/lib/access";
+import type { ActivityPage, ActivityRow, CategoryChoice } from "@/lib/access";
 import { formatShortDate, type PlainDate } from "@/lib/money";
 import { categoryColour } from "@/lib/sorting/colour";
 import styles from "./Activity.module.css";
@@ -39,6 +39,7 @@ import {
   type People,
 } from "./look";
 import { activityHref, type Show } from "./show";
+import type { RowsChanged } from "./Categorise";
 import { TransactionDetail } from "./TransactionDetail";
 
 /** Desktop: the list and the panel beside it. Below this the sheet opens instead. */
@@ -138,25 +139,28 @@ export function ActivityList({
   );
   const current = rows[index] ?? null;
 
-  // A category change shows on every loaded row it moved, and on every row of that category,
-  // since its colour may be new. The page then refreshes for the counts and totals.
+  // A change shows on every loaded row it moved, and on every row of that category, since its
+  // colour may be new. The page then refreshes for the counts and totals.
   const changeRows = useCallback(
-    (ids: string[], category: ActivityCategory) => {
+    ({ ids, category, paired }: RowsChanged) => {
       const moved = new Set(ids);
-      const touches = (row: ActivityRow) => moved.has(row.id) || row.category?.id === category.id;
+      const look = (row: ActivityRow): ActivityRow => {
+        if (moved.has(row.id)) {
+          const pair = paired ?? row.paired;
+          return {
+            ...row,
+            category,
+            paired: pair,
+            notCounted: pair || category?.kind === "transfer",
+          };
+        }
+        return category && row.category?.id === category.id ? { ...row, category } : row;
+      };
       setDays((shown) =>
-        shown.map((day) =>
-          day.rows.some(touches)
-            ? {
-                ...day,
-                rows: day.rows.map((row) =>
-                  touches(row)
-                    ? { ...row, category, notCounted: row.paired || category.kind === "transfer" }
-                    : row,
-                ),
-              }
-            : day,
-        ),
+        shown.map((day) => {
+          const rows = day.rows.map(look);
+          return rows.some((row, i) => row !== day.rows[i]) ? { ...day, rows } : day;
+        }),
       );
       router.refresh();
     },

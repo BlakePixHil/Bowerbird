@@ -50,3 +50,4 @@ export {
   type CategoryChoice,
   type ShopSorted,
 } from "./categorise";
+export { markAsTransfer, notATransfer, type TransferChanged } from "./transfers";

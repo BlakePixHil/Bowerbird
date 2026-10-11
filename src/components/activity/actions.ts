@@ -3,11 +3,14 @@
 import {
   activityPage,
   categoriseTransaction,
+  markAsTransfer,
+  notATransfer,
   sortShopAlways,
   viewerOf,
   type ActivityPage,
   type Categorised,
   type ShopSorted,
+  type TransferChanged,
 } from "@/lib/access";
 import { requireMember } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -61,4 +64,15 @@ export async function sortShop(change: ShopRuleChange): Promise<ShopSorted> {
     change.categoryId,
     change.earlier === true,
   );
+}
+
+/** "This is a transfer" or "Not a transfer", for one transaction and its other side. */
+export type TransferChange = { id: string; transactionId: string; transfer: boolean };
+
+export async function markTransfer(change: TransferChange): Promise<TransferChanged> {
+  const viewer = viewerOf(await requireMember());
+  if (!ids(change.id, change.transactionId)) return muddled;
+  return change.transfer === true
+    ? markAsTransfer(getDb(), viewer, change.transactionId)
+    : notATransfer(getDb(), viewer, change.transactionId);
 }

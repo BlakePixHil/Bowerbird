@@ -5,6 +5,7 @@ import type { PlainDate } from "@/lib/money";
 import { assignColours } from "./categories";
 import { cleanShopNames } from "./merchants";
 import { applyRules } from "./rules";
+import { matchTransfers } from "./transfers";
 
 /** One transaction going through the sorting steps, with what the steps decided so far. */
 export type SortingRow = {
@@ -46,7 +47,7 @@ export type SortingStep = (context: SortingContext, rows: SortingRow[]) => Promi
  * sync"): clean shop names (BUD-23), apply rules (BUD-25), match transfers (BUD-27). Project 03
  * adds each step here. Rows no rule sorts are left to check.
  */
-export const STEPS: readonly SortingStep[] = [cleanShopNames, applyRules];
+export const STEPS: readonly SortingStep[] = [cleanShopNames, applyRules, matchTransfers];
 
 export type SortingCounts = {
   /** Rows that got a category, transfers included. */

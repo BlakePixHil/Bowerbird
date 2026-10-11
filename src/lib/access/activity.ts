@@ -25,6 +25,7 @@ import {
   transactionTags,
 } from "@/lib/db/schema";
 import { parseMoney, type DaySpend, type PlainDate } from "@/lib/money";
+import { countedMoney, isCounted } from "@/lib/sorting/transfers";
 import { scopeFor, type SeenAccount, type View, type Viewer, type Whose } from "./accounts";
 
 /**
@@ -220,7 +221,7 @@ export async function activityPage(
       shop: row.shop ?? row.description,
       category,
       pending: row.pending,
-      notCounted: row.transferGroupId !== null || category?.kind === "transfer",
+      notCounted: !isCounted({ paired: row.transferGroupId !== null, kind: category?.kind }),
       paired: row.transferGroupId !== null,
       split: isSplit.has(row.id),
       tags: tagsOf.get(row.id) ?? [],
@@ -320,11 +321,7 @@ export async function dailySpending(
           gte(transactions.date, range.from),
           lte(transactions.date, range.to),
           lt(transactions.amountCents, 0),
-          isNull(transactions.transferGroupId),
-          or(
-            isNull(transactions.categoryId),
-            sql`not exists (select 1 from ${categories} where ${categories.id} = ${transactions.categoryId} and ${categories.kind} = 'transfer')`,
-          ),
+          countedMoney(),
         ),
       )
       .groupBy(transactions.date)
