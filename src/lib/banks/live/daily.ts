@@ -19,6 +19,7 @@ import { addDays, daysBetween, todayIn, type PlainDate } from "@/lib/money";
 import { sortTransactions, type SortingRow } from "@/lib/sorting";
 import { fillBalances, saveGivenBalance } from "../balances";
 import type { SourceTransaction } from "../source";
+import { saveBankStates } from "./banks";
 import {
   claimLeaseForSync,
   firstSyncPending,
@@ -122,6 +123,7 @@ async function syncRecent(db: Db, open: OpenConnection, now: Date): Promise<bool
       }
       await fillBalances(tx, account.id, now);
     }
+    await saveBankStates(tx, open.id, recent.accounts, recent.problems, now, open.timeZone);
     await tx
       .update(connections)
       .set({ lastSyncedAt: now, status: "ok", lastError: null })

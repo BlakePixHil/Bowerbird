@@ -3,6 +3,7 @@ import { cache } from "react";
 import type { Owner } from "@/components/ui";
 import { viewerOf } from "@/lib/access";
 import { requireMember } from "@/lib/auth";
+import { liveHealth, type ConnectionHealth } from "@/lib/banks/live/banks";
 import { liveSyncSummary, resumeFirstSyncs } from "@/lib/banks/live/background";
 import { getDb } from "@/lib/db";
 import { todayIn, type PlainDate } from "@/lib/money";
@@ -64,4 +65,13 @@ export const getShell = cache(async (): Promise<Shell> => {
     syncDue: live.due && !live.running,
     live: { connections: live.connections, banks: live.banks },
   };
+});
+
+/**
+ * The household's live sync connections and each bank behind them, read once per request for the
+ * warning banner and the Live bank sync card.
+ */
+export const getLiveHealth = cache(async (): Promise<ConnectionHealth[]> => {
+  const me = await requireMember();
+  return liveHealth(getDb(), viewerOf(me));
 });

@@ -18,6 +18,56 @@
   margin: 0;
 }
 
+.warn {
+  color: var(--warn-ink);
+}
+
+.stopped {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 14px 0 0;
+}
+
+.stopped svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.banks {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bankHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 8px;
+}
+
+.bankName {
+  font-weight: 500;
+}
+
+.consent {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.bar {
+  margin-top: 8px;
+}
+
+.reconnect {
+  margin-top: 16px;
+}
+
 .plan {
   display: flex;
   flex-wrap: wrap;

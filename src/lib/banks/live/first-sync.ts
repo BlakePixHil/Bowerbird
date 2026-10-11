@@ -6,6 +6,7 @@ import { addDays, todayIn, type PlainDate } from "@/lib/money";
 import { sortTransactions, type SortingRow } from "@/lib/sorting";
 import { fillBalances, saveGivenBalance } from "../balances";
 import type { BankSource } from "../source";
+import { saveBankStates } from "./banks";
 import { openConnection, recordProblem, type LiveOptions, type OpenConnection } from "./open";
 import { MAX_HISTORY_DAYS, WINDOW_DAYS, type FirstSyncProgress, type SyncAccount } from "./shapes";
 
@@ -286,8 +287,9 @@ async function syncWindow(
 }
 
 /** Once every account's history is in: saves the latest balances and marks the sync done. */
-async function finish(db: Db, connectionId: string, source: BankSource, now: Date) {
-  const list = await source.listAccounts();
+async function finish(db: Db, open: OpenConnection, now: Date) {
+  const connectionId = open.id;
+  const list = await open.source.listAccounts();
   const picked = await db
     .select({ id: accounts.id, externalId: accounts.externalId })
     .from(accounts)
@@ -300,6 +302,8 @@ async function finish(db: Db, connectionId: string, source: BankSource, now: Dat
     }
     // Every day back to the oldest row, worked out from today's balance.
     for (const account of picked) await fillBalances(tx, account.id, now);
+    const sent = list.accounts.filter((account) => ids.has(account.externalId));
+    await saveBankStates(tx, connectionId, sent, list.problems, now, open.timeZone);
     await tx
       .update(connections)
       .set({ lastSyncedAt: now, status: "ok", lastError: null, bankCount: list.bankCount })
@@ -377,7 +381,7 @@ export async function firstSyncWindows(
     if (!run.lease) return false;
     const account = await nextAccount(db, open.id);
     if (!account) {
-      if (await needsFinish(db, open.id)) await finish(db, open.id, open.source, now);
+      if (await needsFinish(db, open.id)) await finish(db, open, now);
       return true;
     }
     await syncWindow(db, open.source, account, todayIn(open.timeZone, now), now);

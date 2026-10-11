@@ -44,9 +44,10 @@ const CANT_PASTE =
 /**
  * Connect live sync, steps 1 and 2: connect banks in Redbark, then paste the setup token. One flow
  * drawn twice, for the phone and desktop boards; CSS shows one. The token lives only in this
- * component's state until it's sent, and is cleared once it's used.
+ * component's state until it's sent, and is cleared once it's used. With `reconnect`, the token
+ * gives that connection a new access link instead of making a new connection.
  */
-export function ConnectFlow({ ready }: { ready: boolean }) {
+export function ConnectFlow({ ready, reconnect }: { ready: boolean; reconnect?: string }) {
   const router = useRouter();
   const [token, setToken] = useState("");
   const [shown, setShown] = useState(false);
@@ -98,6 +99,7 @@ export function ConnectFlow({ ready }: { ready: boolean }) {
     if (!canContinue) return;
     const form = new FormData();
     form.set("token", token);
+    if (reconnect) form.set("reconnect", reconnect);
     startTransition(async () => {
       const answer = await connectLiveSync(form);
       if (answer.ok) {
@@ -147,9 +149,11 @@ export function ConnectFlow({ ready }: { ready: boolean }) {
     <div className={styles.phone}>
       <PhoneTop step={1} back={{ href: "/accounts", label: "Back to accounts and sharing" }} />
       <div className={styles.intro}>
-        <h1 className="h1">Connect live sync</h1>
+        <h1 className="h1">{reconnect ? "Reconnect live sync" : "Connect live sync"}</h1>
         <p className={cx("sub", styles.lead)}>
-          Your bank transactions come in by themselves, every day.
+          {reconnect
+            ? `Make a new setup token in ${P.name} and paste it here. Everything already here stays.`
+            : "Your bank transactions come in by themselves, every day."}
         </p>
         <div className={styles.tags}>
           <Tag>Optional</Tag>
@@ -315,7 +319,7 @@ export function ConnectFlow({ ready }: { ready: boolean }) {
   const desktop = (
     <div className={styles.desktop}>
       {notReady}
-      <StepRail at={step} tokenIn={valid} onPick={setStep} />
+      <StepRail at={step} tokenIn={valid} onPick={setStep} steps={reconnect ? 2 : undefined} />
       <div className={styles.layout}>
         <div className={styles.main}>{step === "banks" ? banksCard : tokenCard}</div>
         <aside className={styles.aside} aria-label="About this step">

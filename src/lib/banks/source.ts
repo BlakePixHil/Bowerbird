@@ -41,11 +41,27 @@ export type SourceAccountList = {
   accounts: SourceAccount[];
   /** How many bank connections the provider has behind this source, or null if it doesn't say. */
   bankCount: number | null;
+  problems: SourceProblem[];
 };
 
 export type SourceRecent = {
   /** Each account the source sent, with its transactions oldest first. */
   accounts: (SourceAccount & { transactions: SourceTransaction[] })[];
+  problems: SourceProblem[];
+};
+
+/**
+ * A bank the source couldn't read this time, while the others came in. A provider sends these
+ * alongside the data, for example when one bank's consent has run out.
+ */
+export type SourceProblem = {
+  /** The bank's name as the source gives it, or null when the problem isn't about one bank. */
+  bank: string | null;
+  /**
+   * `reconnect`: the bank's connection needs attention at the provider, such as a consent that
+   * ran out. `later`: a hiccup that should clear by itself on a later sync.
+   */
+  kind: "reconnect" | "later";
 };
 
 export type SourceTransaction = {

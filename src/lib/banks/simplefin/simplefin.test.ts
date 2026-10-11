@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { startMockSimpleFin, type MockSimpleFin } from "../../../../tests/simplefin";
 import { SourceError } from "../source";
 import {
+  asSourceProblem,
   checkSetupToken,
   claimSetupToken,
   decimalToCents,
@@ -142,6 +143,7 @@ describe("reading SimpleFIN data", () => {
         message: "Westpac needs you to approve access again.",
         connectionId: "c1",
         accountId: null,
+        bank: "Westpac",
       },
     ]);
     const [everyday, joint] = set!.accounts;
@@ -210,6 +212,7 @@ describe("reading SimpleFIN data", () => {
         message: "Connection to ANZ may need attention",
         connectionId: null,
         accountId: null,
+        bank: "ANZ",
       },
     ]);
     expect(set?.bankCount).toBeNull();
@@ -219,6 +222,34 @@ describe("reading SimpleFIN data", () => {
       connectionId: null,
       balanceCents: 1000,
     });
+  });
+
+  it("says which bank each problem is about, and whether it needs reconnecting", () => {
+    const set = readAccountSet(
+      {
+        ...ACCOUNT_SET,
+        errlist: [
+          { code: "con.auth", msg: "Approve access again.", conn_id: "c2" },
+          { code: "act.failed", msg: "Try again later.", account_id: "acc-1" },
+          { code: "con.mfa", msg: "Your bank wants a code.", conn_id: "c1" },
+          { code: "gen.auth", msg: "Sign in again." },
+          { code: "gen.", msg: "Something went wrong." },
+        ],
+      },
+      TZ,
+    );
+    expect(set?.problems.map(asSourceProblem)).toEqual([
+      { bank: "ANZ", kind: "reconnect" },
+      { bank: "Westpac", kind: "later" },
+      // An unknown subcode counts as its prefix.
+      { bank: "Westpac", kind: "reconnect" },
+      { bank: null, kind: "reconnect" },
+      { bank: null, kind: "later" },
+    ]);
+    const v1 = (message: string) =>
+      asSourceProblem({ code: "", message, connectionId: null, accountId: null, bank: null });
+    expect(v1("Connection to ANZ may need attention").kind).toBe("reconnect");
+    expect(v1("Something else happened")).toEqual({ bank: null, kind: "later" });
   });
 
   it("refuses something that isn't an account set", () => {
@@ -308,8 +339,9 @@ describe("talking to a SimpleFIN server", () => {
 
   it("works as a BankSource", async () => {
     const source = simplefinSource(server.accessUrl, TZ, local);
-    const { accounts, bankCount } = await source.listAccounts();
+    const { accounts, bankCount, problems } = await source.listAccounts();
     expect(bankCount).toBe(2);
+    expect(problems).toEqual([{ bank: "Westpac", kind: "reconnect" }]);
     expect(accounts[0]).toEqual({
       externalId: "acc-1",
       name: "Everyday",
@@ -344,7 +376,8 @@ describe("talking to a SimpleFIN server", () => {
       ["acc-2", -128400],
     ]);
     expect(recent.accounts[0].transactions.map((r) => r.externalId)).toEqual(["t2", "t3"]);
-    expect(await source.fetchRecent([], "2026-09-02")).toEqual({ accounts: [] });
+    expect(recent.problems).toEqual([{ bank: "Westpac", kind: "reconnect" }]);
+    expect(await source.fetchRecent([], "2026-09-02")).toEqual({ accounts: [], problems: [] });
     expect(server.requests.length).toBe(before + 1);
   });
 });

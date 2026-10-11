@@ -43,4 +43,6 @@ export const LIVE_SYNC_PROVIDER = {
   plan: "Developer plan",
   price: "A$16 a month",
   connections: 6,
+  /** How long a bank's consent lasts from when it's made (redbark.com/docs/consents). */
+  consentMonths: 12,
 } as const;

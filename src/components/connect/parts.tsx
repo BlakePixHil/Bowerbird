@@ -59,6 +59,7 @@ export function StepRail({
   onPick,
   subs = {},
   complete = false,
+  steps = STEPS.length,
 }: {
   at: StepKey;
   tokenIn?: boolean;
@@ -67,11 +68,13 @@ export function StepRail({
   subs?: Partial<Record<StepKey, string>>;
   /** The step it's at is finished too, so it gets a tick. */
   complete?: boolean;
+  /** Show only the first few steps, as when reconnecting, which ends after the token. */
+  steps?: number;
 }) {
   const now = STEPS.findIndex((step) => step.key === at);
   return (
     <Card as="ol" className={styles.rail} aria-label="Steps to connect live sync">
-      {STEPS.map((step, i) => {
+      {STEPS.slice(0, steps).map((step, i) => {
         const done = i < now || (complete && i === now);
         const current = i === now;
         const sub =
