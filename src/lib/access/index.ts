@@ -152,3 +152,11 @@ export {
   type Paydays,
   type PaydaysSaved,
 } from "./incomes";
+export {
+  changeAccount,
+  ownAccounts,
+  tidyAccountName,
+  type AccountChange,
+  type AccountChanged,
+  type OwnAccount,
+} from "./settings";

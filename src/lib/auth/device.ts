@@ -29,3 +29,11 @@ export function passkeyInsteadLabel(userAgent: string | null): string {
   if (/Macintosh/.test(ua)) return "Use Touch ID instead";
   return "Use your passkey instead";
 }
+
+/** How this device signs in, for "Owner · signs in with Face ID" on Accounts and sharing. */
+export function signInWords(userAgent: string | null): string {
+  const ua = userAgent ?? "";
+  if (/iPhone|iPad/.test(ua)) return "Face ID";
+  if (/Macintosh/.test(ua)) return "Touch ID";
+  return "a passkey";
+}

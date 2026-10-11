@@ -8,12 +8,13 @@ import styles from "./LiveSyncCard.module.css";
 /**
  * The Live bank sync card on Accounts and sharing, from the "Accounts and sharing" board: when the
  * household last synced, Sync now, each bank with how long its consent has left, a way to
- * reconnect when something needs it, and the plan's bank connections in use. Shows only once live
- * sync is connected. Only the person who connected live sync gets the reconnect button.
+ * reconnect when something needs it, and the plan's bank connections in use. Before live sync is
+ * connected, it offers to connect it. Only the person who connected live sync gets the reconnect
+ * button.
  */
-export async function LiveSyncCard() {
+export async function LiveSyncCard({ id }: { id?: string }) {
   const shell = await getShell();
-  if (shell.live.connections === 0) return null;
+  if (shell.live.connections === 0) return <ConnectLiveSync id={id} />;
   const health = await getLiveHealth();
   const label = syncLabel(shell.sync, shell.now, shell.timeZone);
   const banks = health.flatMap((connection) =>
@@ -31,7 +32,7 @@ export async function LiveSyncCard() {
   const stuck = banks.filter((bank) => bank.mine && bank.status === "needs_reconnect");
   const count = shell.live.banks;
   return (
-    <Card as="section" aria-labelledby="live-sync-title" className={styles.card}>
+    <Card as="section" id={id} aria-labelledby="live-sync-title" className={styles.card}>
       <div className={styles.head}>
         <Tile icon="sync" />
         <div className="grow">
@@ -118,6 +119,30 @@ export async function LiveSyncCard() {
           </span>
         )}
       </div>
+    </Card>
+  );
+}
+
+/** Before live sync is connected: what it is, what it costs and who it's paid to, and Connect. */
+function ConnectLiveSync({ id }: { id?: string }) {
+  return (
+    <Card as="section" id={id} aria-labelledby="live-sync-title" className={styles.card}>
+      <div className={styles.head}>
+        <Tile icon="sync" />
+        <div className="grow">
+          <h2 id="live-sync-title" className={styles.title}>
+            Live bank sync
+          </h2>
+          <p className="muted small">Optional · not connected</p>
+        </div>
+      </div>
+      <p className={cx("small sub", styles.offer)}>
+        Brings transactions in by itself, once a day and whenever you open the app. It&apos;s{" "}
+        {P.price}, paid to {P.name}, not to us. Importing files is free and always works.
+      </p>
+      <ButtonLink href="/connect" icon="sync" className={styles.connect}>
+        Connect live sync
+      </ButtonLink>
     </Card>
   );
 }

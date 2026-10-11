@@ -25,7 +25,7 @@ export type NewFileAccount = {
   isJoint: boolean;
 };
 
-export const ACCOUNT_NAME_MAX = 60;
+export { ACCOUNT_NAME_MAX } from "@/lib/access/limits";
 
 /** Where the rows go: an account the person can import into, or a new file-only account. */
 export type ImportTarget = { accountId: string } | { newAccount: NewFileAccount };

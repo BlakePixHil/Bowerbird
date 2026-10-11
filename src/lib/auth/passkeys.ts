@@ -7,9 +7,9 @@ import {
   type RegistrationResponseJSON,
 } from "@simplewebauthn/server";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import type { Db } from "@/lib/db";
-import { passkeys } from "@/lib/db/schema";
+import { passkeys, users } from "@/lib/db/schema";
 import type { RelyingParty } from "./relying-party";
 
 export type { AuthenticationResponseJSON, RegistrationResponseJSON };
@@ -147,4 +147,30 @@ export function passkeyList(db: Db, userId: string) {
     .from(passkeys)
     .where(eq(passkeys.userId, userId))
     .orderBy(asc(passkeys.createdAt));
+}
+
+export type PasskeyRemoved = { ok: true } | { ok: false; error: string };
+
+/**
+ * Removes one of a user's passkeys, such as one on a phone they no longer have. The last one
+ * stays, so there's always a way to sign in. The user's row is locked while it counts, so two
+ * removals at once can't take both of the last two.
+ */
+export async function removePasskey(db: Db, userId: string, id: string): Promise<PasskeyRemoved> {
+  return db.transaction(async (tx) => {
+    await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for("update");
+    const keys = await tx
+      .select({ id: passkeys.id })
+      .from(passkeys)
+      .where(eq(passkeys.userId, userId));
+    if (!keys.some((key) => key.id === id))
+      return { ok: false, error: "That passkey is already gone." };
+    if (keys.length === 1)
+      return {
+        ok: false,
+        error: "That's your only passkey, so it stays. Add one on another device first.",
+      };
+    await tx.delete(passkeys).where(and(eq(passkeys.id, id), eq(passkeys.userId, userId)));
+    return { ok: true };
+  });
 }
