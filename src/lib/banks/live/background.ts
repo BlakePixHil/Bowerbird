@@ -3,6 +3,7 @@ import { after } from "next/server";
 import type { Viewer } from "@/lib/access";
 import type { Db } from "@/lib/db";
 import { connections } from "@/lib/db/schema";
+import { syncIsDue } from "./daily";
 import { claimSyncLease, runFirstSync, unfinishedFirstSyncs } from "./first-sync";
 
 /**
@@ -48,7 +49,11 @@ export async function resumeFirstSyncs(db: Db, viewer: Viewer): Promise<boolean>
   return started;
 }
 
-/** The household's live sync at a glance, for the header's sync slot. */
+/**
+ * The household's live sync at a glance, for the header's sync slot and the Live bank sync card:
+ * when it last synced, whether a sync is running, whether opening the app should start one now,
+ * and, with one connection, how many bank connections the provider says are in use.
+ */
 export async function liveSyncSummary(db: Db, viewer: Viewer, now = new Date()) {
   const [row] = await db
     .select({
@@ -58,12 +63,21 @@ export async function liveSyncSummary(db: Db, viewer: Viewer, now = new Date()) 
         sql<number>`count(*) filter (where ${connections.syncLeaseUntil} > ${now.toISOString()})`.mapWith(
           Number,
         ),
+      // With more than one connection it's not clear which plan the line is about, so none.
+      banks: sql<
+        number | null
+      >`case when count(*) = 1 then max(${connections.bankCount}) end`.mapWith((v) =>
+        v === null ? null : Number(v),
+      ),
     })
     .from(connections)
     .where(eq(connections.householdId, viewer.householdId));
+  const total = row?.connections ?? 0;
   return {
-    connections: row?.connections ?? 0,
+    connections: total,
     lastSyncedAt: row?.lastSyncedAt ?? null,
     running: (row?.running ?? 0) > 0,
+    due: total > 0 && (await syncIsDue(db, viewer, now)),
+    banks: row?.banks ?? null,
   };
 }

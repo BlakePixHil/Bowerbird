@@ -5,5 +5,6 @@ export {
   type SourceAccountList,
   type SourceBalance,
   type SourceErrorKind,
+  type SourceRecent,
   type SourceTransaction,
 } from "./source";

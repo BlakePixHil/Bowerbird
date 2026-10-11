@@ -1,0 +1,1 @@
+ALTER TABLE "connections" ADD COLUMN "sync_tried_at" timestamp with time zone;

@@ -5,7 +5,7 @@ import { accounts, balances, connections, households, transactions } from "@/lib
 import { addDays, todayIn, type PlainDate } from "@/lib/money";
 import { sortTransactions, type SortingRow } from "@/lib/sorting";
 import type { BankSource } from "../source";
-import { openConnection, recordProblem, type LiveOptions } from "./open";
+import { openConnection, recordProblem, type LiveOptions, type OpenConnection } from "./open";
 import { MAX_HISTORY_DAYS, WINDOW_DAYS, type FirstSyncProgress, type SyncAccount } from "./shapes";
 
 /**
@@ -135,6 +135,15 @@ export async function claimSyncLease(
   connectionId: string,
   now = new Date(),
 ): Promise<Date | null> {
+  return claim(db, connectionId, now, viewer);
+}
+
+/** Takes any connection's lease, for the daily job. Null when another sync holds it. */
+export async function claimLeaseForSync(db: Db, connectionId: string, now = new Date()) {
+  return claim(db, connectionId, now, null);
+}
+
+async function claim(db: Db, connectionId: string, now: Date, viewer: Viewer | null) {
   const until = new Date(now.getTime() + LEASE_MS);
   const [row] = await db
     .update(connections)
@@ -142,8 +151,8 @@ export async function claimSyncLease(
     .where(
       and(
         eq(connections.id, connectionId),
-        eq(connections.memberId, viewer.memberId),
-        eq(connections.householdId, viewer.householdId),
+        viewer ? eq(connections.memberId, viewer.memberId) : undefined,
+        viewer ? eq(connections.householdId, viewer.householdId) : undefined,
         or(isNull(connections.syncLeaseUntil), lt(connections.syncLeaseUntil, now)),
       ),
     )
@@ -162,7 +171,8 @@ async function renewLease(db: Db, connectionId: string, lease: Date, now: Date) 
   return row ? until : null;
 }
 
-async function releaseLease(db: Db, connectionId: string, lease: Date) {
+/** Lets go of a lease this sync holds, so the next sync can start straight away. */
+export async function releaseLease(db: Db, connectionId: string, lease: Date) {
   await db
     .update(connections)
     .set({ syncLeaseUntil: null })
@@ -274,6 +284,22 @@ async function syncWindow(
   });
 }
 
+/** Saves an account's balance for the day the bank gave it, replacing that day's if it changed. */
+export async function saveBalance(
+  db: Db,
+  accountId: string,
+  balance: { date: PlainDate; balanceCents: number },
+) {
+  await db
+    .insert(balances)
+    .values({ accountId, date: balance.date, balanceCents: balance.balanceCents })
+    .onConflictDoUpdate({
+      target: [balances.accountId, balances.date],
+      set: { balanceCents: balance.balanceCents },
+      setWhere: sql`${balances.balanceCents} <> excluded.balance_cents`,
+    });
+}
+
 /** Once every account's history is in: saves the latest balances and marks the sync done. */
 async function finish(db: Db, connectionId: string, source: BankSource, now: Date) {
   const list = await source.listAccounts();
@@ -285,14 +311,7 @@ async function finish(db: Db, connectionId: string, source: BankSource, now: Dat
   await db.transaction(async (tx) => {
     for (const account of list.accounts) {
       const accountId = ids.get(account.externalId);
-      if (!accountId) continue;
-      await tx
-        .insert(balances)
-        .values({ accountId, date: account.date, balanceCents: account.balanceCents })
-        .onConflictDoUpdate({
-          target: [balances.accountId, balances.date],
-          set: { balanceCents: account.balanceCents },
-        });
+      if (accountId) await saveBalance(tx, accountId, account);
     }
     await tx
       .update(connections)
@@ -317,6 +336,68 @@ async function needsFinish(db: Db, connectionId: string): Promise<boolean> {
   return !row?.lastSyncedAt || row.lastSyncedAt < latest.at;
 }
 
+/** Whether a connection's first sync still has work: an account's history, or the finish. */
+export async function firstSyncPending(db: Db, connectionId: string): Promise<boolean> {
+  const [unsynced] = await db
+    .select({ id: accounts.id })
+    .from(accounts)
+    .where(
+      and(
+        eq(accounts.connectionId, connectionId),
+        eq(accounts.archived, false),
+        isNull(accounts.historySyncedAt),
+      ),
+    )
+    .limit(1);
+  return unsynced !== undefined || (await needsFinish(db, connectionId));
+}
+
+/** Marks the start of a sync: when it was tried, and no problem showing while it runs. */
+export async function startRun(
+  db: Db,
+  connectionId: string,
+  now: Date,
+  status: OpenConnection["status"],
+) {
+  await db
+    .update(connections)
+    .set({
+      syncTriedAt: now,
+      ...(status === "ok" ? {} : { status: "ok" as const, lastError: null }),
+    })
+    .where(eq(connections.id, connectionId));
+}
+
+/** A sync's lease, kept current as it's renewed, and how many windows it's done. */
+export type RunState = { lease: Date | null; windows: number };
+
+/**
+ * Brings in first-sync windows until every account is in (then saves balances and marks it synced)
+ * or the time budget is used. At least one window runs. Throws what the source throws.
+ */
+export async function firstSyncWindows(
+  db: Db,
+  open: OpenConnection,
+  run: RunState,
+  startedAt: Date,
+  budgetMs: number,
+  options: LiveOptions,
+): Promise<boolean> {
+  for (;;) {
+    const now = clock(options);
+    if (run.windows > 0 && now.getTime() - startedAt.getTime() >= budgetMs) return false;
+    run.lease = run.lease && (await renewLease(db, open.id, run.lease, now));
+    if (!run.lease) return false;
+    const account = await nextAccount(db, open.id);
+    if (!account) {
+      if (await needsFinish(db, open.id)) await finish(db, open.id, open.source, now);
+      return true;
+    }
+    await syncWindow(db, open.source, account, todayIn(open.timeZone, now), now);
+    run.windows++;
+  }
+}
+
 export type FirstSyncRun =
   /** Another sync is working on this connection, or it isn't the viewer's. */
   | { ran: false }
@@ -336,41 +417,29 @@ export async function runFirstSync(
   options: LiveOptions & { lease?: Date; budgetMs?: number } = {},
 ): Promise<FirstSyncRun> {
   const startedAt = clock(options);
-  let lease = options.lease ?? (await claimSyncLease(db, viewer, connectionId, startedAt));
+  const lease = options.lease ?? (await claimSyncLease(db, viewer, connectionId, startedAt));
   if (!lease) return { ran: false };
-  const budget = options.budgetMs ?? 30_000;
-  let windows = 0;
+  const run: RunState = { lease, windows: 0 };
   try {
     const open = await openConnection(db, viewer, connectionId, options);
     if (!open) return { ran: false };
-    if (open.status !== "ok")
-      await db
-        .update(connections)
-        .set({ status: "ok", lastError: null })
-        .where(eq(connections.id, connectionId));
-    for (;;) {
-      const now = clock(options);
-      if (windows > 0 && now.getTime() - startedAt.getTime() >= budget)
-        return { ran: true, windows, finished: false, problem: false };
-      lease = await renewLease(db, connectionId, lease, now);
-      if (!lease) return { ran: true, windows, finished: false, problem: false };
-      const account = await nextAccount(db, connectionId);
-      if (!account) {
-        if (await needsFinish(db, connectionId)) await finish(db, connectionId, open.source, now);
-        return { ran: true, windows, finished: true, problem: false };
-      }
-      await syncWindow(db, open.source, account, todayIn(open.timeZone, now), now);
-      windows++;
-    }
+    await startRun(db, connectionId, startedAt, open.status);
+    const budget = options.budgetMs ?? 30_000;
+    const finished = await firstSyncWindows(db, open, run, startedAt, budget, options);
+    return { ran: true, windows: run.windows, finished, problem: false };
   } catch (error) {
-    // Only the error's name and code: messages from the database could quote bank data.
-    const { name, code } = error as { name?: string; code?: string };
-    console.error("First sync stopped", name, code ?? "");
-    await recordProblem(db, connectionId, error);
-    return { ran: true, windows, finished: false, problem: true };
+    await stopped(db, connectionId, error);
+    return { ran: true, windows: run.windows, finished: false, problem: true };
   } finally {
-    if (lease) await releaseLease(db, connectionId, lease);
+    if (run.lease) await releaseLease(db, connectionId, run.lease);
   }
+}
+
+/** Saves why a sync stopped. Logs only the error's name and code: messages could quote bank data. */
+export async function stopped(db: Db, connectionId: string, error: unknown) {
+  const { name, code } = error as { name?: string; code?: string };
+  console.error("Live sync stopped", name, code ?? "");
+  await recordProblem(db, connectionId, error);
 }
 
 /**

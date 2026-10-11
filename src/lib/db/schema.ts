@@ -196,6 +196,8 @@ export const connections = pgTable(
     bankCount: smallint(),
     /** A sync holds this lease while it runs, so the same connection never syncs twice at once. */
     syncLeaseUntil: timestamp({ withTimezone: true }),
+    /** When a sync last started, whether it worked or not. Opening the app syncs at most hourly. */
+    syncTriedAt: timestamp({ withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [index("connections_member_idx").on(t.memberId)],

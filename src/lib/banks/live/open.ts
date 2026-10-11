@@ -34,6 +34,27 @@ export async function openConnection(
   connectionId: string,
   options: LiveOptions = {},
 ): Promise<OpenConnection | null> {
+  return open(db, connectionId, viewer, options);
+}
+
+/**
+ * Any live sync connection, opened, for syncing it. Only for the daily job and for code that has
+ * already checked the connection is in the viewer's household. Null if there's no such connection.
+ */
+export async function openConnectionForSync(
+  db: Db,
+  connectionId: string,
+  options: LiveOptions = {},
+): Promise<OpenConnection | null> {
+  return open(db, connectionId, null, options);
+}
+
+async function open(
+  db: Db,
+  connectionId: string,
+  viewer: Viewer | null,
+  options: LiveOptions,
+): Promise<OpenConnection | null> {
   if (!/^[0-9a-f-]{36}$/i.test(connectionId)) return null;
   const [row] = await db
     .select({
@@ -48,8 +69,8 @@ export async function openConnection(
     .where(
       and(
         eq(connections.id, connectionId),
-        eq(connections.memberId, viewer.memberId),
-        eq(connections.householdId, viewer.householdId),
+        viewer ? eq(connections.memberId, viewer.memberId) : undefined,
+        viewer ? eq(connections.householdId, viewer.householdId) : undefined,
       ),
     );
   if (!row || row.kind !== "simplefin") return null;
