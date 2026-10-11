@@ -33,13 +33,18 @@ export default async function AccountsPage() {
         icon="bank"
         title="No accounts yet"
         action={
-          <ButtonLink href="/import" icon="upload" variant="primary">
-            Import a bank file
-          </ButtonLink>
+          <>
+            <ButtonLink href="/import" icon="upload" variant="primary">
+              Import a bank file
+            </ButtonLink>
+            <ButtonLink href="/connect" icon="sync">
+              Connect live sync
+            </ButtonLink>
+          </>
         }
       >
-        Import a file from your bank to add your first account. The app only reads your balances and
-        transactions. It never moves money.
+        Import a file from your bank, or connect live sync, to add your first account. The app only
+        reads your balances and transactions. It never moves money.
       </EmptyState>
       <Card as="section" aria-labelledby="passkeys-title" className={styles.passkeys}>
         <div>

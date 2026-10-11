@@ -1,0 +1,569 @@
+/* Connect live sync, from the "Live sync 1: Paste the setup token" and "Desktop: Connect live
+   sync" boards. Both screens are drawn; the phone one shows below 760px. */
+
+.phone {
+  display: none;
+}
+
+.desktop {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 760px) {
+  .phone {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .desktop {
+    display: none;
+  }
+}
+
+.block {
+  display: block;
+}
+
+.strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.banner {
+  margin: 0;
+}
+
+/* Phone ------------------------------------------------------------------ */
+
+.phoneBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 44px;
+  margin-left: -12px;
+}
+
+.progress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: -4px;
+}
+
+.progress > span {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--track);
+}
+
+.progress > .progressOn {
+  background: var(--accent);
+}
+
+.intro {
+  margin-top: 10px;
+}
+
+.lead {
+  margin: 8px 0 0;
+  font-size: 14.5px;
+  text-wrap: pretty;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  margin: 4px 0 0;
+  padding: 16px 16px 18px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--raise);
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.stepRail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stepNum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-2);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  flex: none;
+}
+
+.stepNumDone {
+  border-color: transparent;
+  background: var(--accent-btn);
+  color: #ffffff;
+}
+
+.stepNumDone svg {
+  stroke-width: 2.4;
+}
+
+.stepLine {
+  flex: 1 1 auto;
+  width: 1.5px;
+  margin: 6px 0;
+  background: var(--line-2);
+}
+
+.stepBody {
+  min-width: 0;
+  padding: 2px 0 20px;
+}
+
+.stepLast {
+  padding-bottom: 0;
+}
+
+.stepTitle {
+  display: block;
+  font-weight: 600;
+}
+
+.stepText {
+  margin: 4px 0 0;
+  text-wrap: pretty;
+}
+
+.stepButton {
+  margin-top: 12px;
+}
+
+.phoneField {
+  margin-top: 10px;
+}
+
+.keeps {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.keeps p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.keepsIcon {
+  margin-top: 1px;
+  color: var(--text-2);
+}
+
+.phoneActions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+/* The setup token box ------------------------------------------------------ */
+
+.tokenField {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 4px 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line-2);
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+
+.tokenField:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tokenGood {
+  border-color: var(--good);
+}
+
+.tokenBad {
+  border-color: var(--crit);
+}
+
+.tokenField input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.tokenField input::placeholder {
+  color: var(--text-3);
+}
+
+.tokenField .masked {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
+.paste {
+  height: 36px;
+  padding: 0 12px;
+}
+
+.clear {
+  width: 36px;
+  height: 36px;
+}
+
+.tokenOk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 10px;
+}
+
+.problem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 0;
+  color: var(--crit-ink);
+  text-wrap: pretty;
+}
+
+.problem > svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+/* Desktop ---------------------------------------------------------------- */
+
+.rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+}
+
+.railItem {
+  display: flex;
+  min-width: 0;
+}
+
+.railStep {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px 12px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.railStep {
+  cursor: pointer;
+}
+
+button.railStep:hover:not(.railNow) {
+  background: var(--surface-2);
+}
+
+.railNow {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+
+.railBar {
+  display: block;
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--track);
+}
+
+.railBarOn {
+  background: var(--accent);
+}
+
+.railHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.railNum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-2);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.numDone {
+  border-color: transparent;
+  background: var(--accent-btn);
+  color: #ffffff;
+}
+
+.numDone svg {
+  stroke-width: 2.4;
+}
+
+.numNow {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+}
+
+.numLater {
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+
+.railTitle {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.railTitleLater {
+  color: var(--text-2);
+}
+
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.main {
+  display: flex;
+  flex: 4 1 760px;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.aside {
+  display: flex;
+  flex: 1 1 280px;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.section {
+  padding: 20px;
+}
+
+.sectionTitle {
+  font-size: 17px;
+}
+
+.sectionText {
+  max-width: 620px;
+  margin: 6px 0 0;
+  text-wrap: pretty;
+}
+
+.how {
+  margin-top: 16px;
+  padding: 14px 16px;
+}
+
+.howList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 12px 16px;
+}
+
+.numbered {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.numbered li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-wrap: pretty;
+}
+
+.numberedNum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text-2);
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.tokenActions {
+  margin-top: 22px;
+}
+
+.tokenLabel {
+  display: block;
+  margin-top: 18px;
+  font-weight: 500;
+}
+
+.desktopField {
+  max-width: 560px;
+  margin-top: 8px;
+}
+
+.side {
+  padding: 16px 18px;
+}
+
+.iconHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.iconHead > svg {
+  color: var(--text-2);
+}
+
+.price {
+  margin-top: 14px;
+}
+
+.per {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.sideText {
+  margin: 6px 0 0;
+  text-wrap: pretty;
+}
+
+.side p {
+  text-wrap: pretty;
+}
+
+.sideDivider {
+  margin: 14px 0;
+}
+
+.sideLink {
+  margin-top: 8px;
+}
+
+.keepsList {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.keepsList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.keepsList li + li {
+  border-top: 1px solid var(--line);
+}
+
+.keepsList svg {
+  margin-top: 2px;
+  color: var(--text-3);
+  flex: none;
+}
+
+.keepsList li:last-child {
+  padding-bottom: 0;
+}
+
+.consent {
+  padding: 14px 16px;
+}
+
+.consent .iconHead {
+  gap: 8px;
+}
+
+.consent p {
+  margin: 8px 0 0;
+  text-wrap: pretty;
+}
+
+.consentList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.consentList .numberedNum {
+  width: 18px;
+  height: 18px;
+  color: var(--text-3);
+  font-size: 10px;
+}
