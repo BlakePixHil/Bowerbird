@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { LiveSyncCard } from "@/components/accounts/LiveSyncCard";
+import { payHeadline } from "@/components/paydays/paydays";
 import { getShell, PageHeader } from "@/components/shell";
 import { AddPasskeyButton, SignOutButton } from "@/components/auth/AccountActions";
 import { ButtonLink, Card, EmptyState, ListRow, Pill, Tag, Tile } from "@/components/ui";
-import { viewerOf, visibleAccounts } from "@/lib/access";
+import { paydaysOf, viewerOf, visibleAccounts } from "@/lib/access";
 import { requireMember } from "@/lib/auth";
 import { passkeyList } from "@/lib/auth/passkeys";
 import { getDb } from "@/lib/db";
-import { formatShortDate, todayIn } from "@/lib/money";
+import { formatShortDate, mainIncome, paydayAfter, todayIn } from "@/lib/money";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = { title: "Accounts and sharing" };
@@ -16,10 +17,12 @@ export default async function AccountsPage() {
   const shell = await getShell();
   const me = await requireMember();
   const db = getDb();
-  const [keys, seen] = await Promise.all([
+  const [keys, seen, paydays] = await Promise.all([
     passkeyList(db, me.user.id),
     visibleAccounts(db, viewerOf(me)),
+    paydaysOf(db, viewerOf(me)),
   ]);
+  const pay = mainIncome(paydays.incomes);
   const hasAccounts = seen.some((account) => account.access !== "hidden" && !account.archived);
   const day = (at: Date) => formatShortDate(todayIn(shell.timeZone, at));
   return (
@@ -56,6 +59,23 @@ export default async function AccountsPage() {
           only reads your balances and transactions. It never moves money.
         </EmptyState>
       )}
+      <Card as="section" aria-labelledby="pay-title" className={styles.passkeys}>
+        <div className={styles.row}>
+          <div>
+            <h2 id="pay-title" className="h2">
+              When you&apos;re paid
+            </h2>
+            <p className={styles.text}>
+              {pay
+                ? `${payHeadline({ amountCents: pay.amountCents, accountName: null, schedule: pay })}, next ${formatShortDate(paydayAfter(pay, shell.today))}.`
+                : "Not set yet. Until payday and your budgets line up with your pay once it is."}
+            </p>
+          </div>
+          <ButtonLink href="/paydays" icon="calendar">
+            {pay ? "Change" : "Set your payday"}
+          </ButtonLink>
+        </div>
+      </Card>
       <Card as="section" aria-labelledby="passkeys-title" className={styles.passkeys}>
         <div>
           <h2 id="passkeys-title" className="h2">

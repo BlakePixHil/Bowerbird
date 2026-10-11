@@ -20,3 +20,9 @@ export const VIEW_NAME_MAX = 40;
 
 /** How many views one person can save. They sit with the chips at the top of Activity. */
 export const VIEWS_MAX = 8;
+
+/** The longest an income's name can be, such as "Your pay" or "Weekend shifts". */
+export const INCOME_NAME_MAX = 40;
+
+/** How many incomes one person can have. */
+export const INCOMES_MAX = 6;

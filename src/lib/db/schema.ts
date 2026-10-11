@@ -72,6 +72,11 @@ export const budgetPeriod = pgEnum("budget_period", [
   "yearly",
   "custom",
 ]);
+/**
+ * How a person's new budgets run, from "How should budgets run?": calendar months, from one
+ * payday to the next, or Monday to Sunday.
+ */
+export const budgetsRun = pgEnum("budgets_run", ["monthly", "payday", "weekly"]);
 /** How often an income arrives. */
 export const payFrequency = pgEnum("pay_frequency", [
   "weekly",
@@ -113,6 +118,8 @@ export const members = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     role: memberRole().notNull(),
     displayName: text().notNull(),
+    /** The period new budgets start with. Each budget can still have its own. */
+    budgetsRun: budgetsRun().notNull().default("monthly"),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("members_household_user_key").on(t.householdId, t.userId)],
@@ -493,7 +500,10 @@ export const incomes = pgTable(
     amountCents: cents().notNull(),
     accountId: uuid().references(() => accounts.id, { onDelete: "set null" }),
     frequency: payFrequency().notNull(),
-    /** A known payday. Weekly, fortnightly and four-weekly count from it; monthly uses its day. */
+    /**
+     * A known payday. Weekly, fortnightly and four-weekly count from it; monthly and twice-monthly
+     * use its day of the month, so it's kept in a month that has that day (31 is the last day).
+     */
     anchorDate: date({ mode: "string" }).notNull(),
     /** The second day of the month for twice-monthly pay (the first comes from anchorDate). */
     secondDay: smallint(),

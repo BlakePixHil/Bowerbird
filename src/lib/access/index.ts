@@ -109,3 +109,16 @@ export {
   type SavedView,
   type ViewSaved,
 } from "./views";
+export {
+  BUDGETS_RUN,
+  incomeProblem,
+  paydaysOf,
+  paySuggestions,
+  savePaydays,
+  tidyIncomeName,
+  type BudgetsRun,
+  type Income,
+  type IncomeDraft,
+  type Paydays,
+  type PaydaysSaved,
+} from "./incomes";
