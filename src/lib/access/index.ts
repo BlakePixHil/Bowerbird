@@ -29,3 +29,16 @@ export {
   type SeenTransaction,
   type TransactionFilters,
 } from "./queries";
+export {
+  ACTIVITY_PAGE_ROWS,
+  activityCounts,
+  activityPage,
+  countActivity,
+  dailySpending,
+  type ActivityCategory,
+  type ActivityCounts,
+  type ActivityFilters,
+  type ActivityPage,
+  type ActivityRow,
+  type DailySpending,
+} from "./activity";

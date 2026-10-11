@@ -15,3 +15,13 @@ export {
   todayIn,
   type PlainDate,
 } from "./dates";
+export {
+  againstUsual,
+  MIN_USUAL_WEEKS,
+  spentBy,
+  USUAL_WEEKS,
+  weekSpending,
+  type AgainstUsual,
+  type DaySpend,
+  type WeekSpending,
+} from "./spending";
