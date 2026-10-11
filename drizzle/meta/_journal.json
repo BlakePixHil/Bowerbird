@@ -85,6 +85,13 @@
       "when": 1791705300025,
       "tag": "0011_applied_changes",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791707360593,
+      "tag": "0012_first_run",
+      "breakpoints": true
     }
   ]
 }

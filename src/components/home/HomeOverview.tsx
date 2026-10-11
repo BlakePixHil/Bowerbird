@@ -18,11 +18,13 @@ import {
   cx,
   Divider,
   Icon,
+  Money,
   Pill,
   Tag,
   TextLink,
   Tile,
   Well,
+  type IconName,
 } from "@/components/ui";
 import type { ActivityRow, BudgetProgress, InOut } from "@/lib/access";
 import type { PlainDate } from "@/lib/money";
@@ -53,8 +55,19 @@ export type HomeData = {
   people: People;
   /** The first-week state: set until there are transactions and budgets to show. */
   setup: SetupFacts | null;
+  /** The accounts brought in, with their newest balance, for desktop's first week. */
+  accounts: readonly HomeAccount[];
   /** "Blake", for "You're set, Blake". */
   firstName: string;
+};
+
+/** One account on desktop's first week: "Everyday Access, Yours · Harbour Bank, $2,184". */
+export type HomeAccount = {
+  id: string;
+  name: string;
+  meta: string;
+  icon: IconName;
+  balanceCents: number | null;
 };
 
 /** How many transactions Latest shows on the phone. */
@@ -255,7 +268,7 @@ function SetupCard({ facts, firstName }: { facts: SetupFacts; firstName: string 
     <Card as="section" className={styles.card} aria-labelledby="home-setup">
       <div className={styles.cardTop}>
         <span className={cx("eyebrow", styles.eyebrow)}>Setup</span>
-        {firstSteps.every((step) => step.done) && <Pill tone="good">First steps done</Pill>}
+        {firstSteps.every((step) => step.done) && <Pill tone="good">All 4 steps done</Pill>}
       </div>
       <h2 id="home-setup" className={cx("h1", styles.setupTitle)}>
         {ready ? `You're set, ${firstName}` : `Welcome, ${firstName}`}
@@ -369,12 +382,51 @@ function FillsIn({ facts }: { facts: SetupFacts }) {
   );
 }
 
-/** Home in the first week: what's ready, what's left to set up, and the newest transactions. */
+/** Desktop's first week: each account brought in and its balance, beside the checklist. */
+function YourAccounts({ accounts }: { accounts: readonly HomeAccount[] }) {
+  return (
+    <Card
+      as="section"
+      className={cx(styles.listCard, styles.accountsCard)}
+      aria-labelledby="home-accounts"
+    >
+      <div className={styles.listHead}>
+        <h2 id="home-accounts" className="h2">
+          Your accounts
+        </h2>
+        <TextLink href="/accounts">Who sees what</TextLink>
+      </div>
+      <ul className={styles.rows}>
+        {accounts.map((account) => (
+          <li key={account.id} className={styles.row}>
+            <Tile icon={account.icon} size="sm" />
+            <span className="grow">
+              <span className={cx("ellipsis", styles.rowName, styles.block)}>{account.name}</span>
+              <span className={cx("small muted ellipsis", styles.block)}>{account.meta}</span>
+            </span>
+            {account.balanceCents !== null && (
+              <Money cents={account.balanceCents} decimals="never" className={styles.rowAmount} />
+            )}
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
+/**
+ * Home in the first week, step 4 of the first run: what's ready, what's left to set up, and the
+ * newest transactions. Desktop spreads it out as on "Desktop: First run", with the accounts beside
+ * the checklist.
+ */
 function FirstWeek({ data, facts }: { data: HomeData; facts: SetupFacts }) {
   return (
     <>
       <SetupCard facts={facts} firstName={data.firstName} />
-      <Checklist facts={facts} />
+      <div className={styles.firstPair}>
+        <Checklist facts={facts} />
+        {data.accounts.length > 0 && <YourAccounts accounts={data.accounts} />}
+      </div>
       <FillsIn facts={facts} />
       <Latest data={data} check />
     </>
@@ -390,7 +442,7 @@ function FirstWeek({ data, facts }: { data: HomeData; facts: SetupFacts }) {
 export function HomeOverview({ data }: { data: HomeData }) {
   if (data.setup)
     return (
-      <div className={styles.page}>
+      <div className={cx(styles.page, styles.firstWeek)}>
         <FirstWeek data={data} facts={data.setup} />
       </div>
     );

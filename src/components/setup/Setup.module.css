@@ -1,0 +1,733 @@
+/* The first run, from the boards "First run 1" to "First run 3" and "Desktop: First run". */
+
+.page {
+  min-height: 100dvh;
+}
+
+.frame {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 32px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Desktop's top line: the app's name, then the promise and who's setting up. */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  min-height: 44px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brandName {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.topRight {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.me {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.me > span:last-child {
+  font-weight: 500;
+}
+
+/* The phone's top bar and progress line. */
+.phoneBar,
+.progress {
+  display: none;
+}
+
+.phoneBar {
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  margin: 0 -12px;
+}
+
+.spacer {
+  width: 44px;
+}
+
+.of {
+  font-weight: 500;
+}
+
+.progress,
+.railBars {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.progress > span,
+.railBars > span {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--track);
+}
+
+.progress > .on,
+.railBars > .on {
+  background: var(--accent);
+}
+
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px 40px;
+  margin-top: 8px;
+}
+
+/* The step rail. */
+.rail {
+  flex: 1 1 240px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.railHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px;
+  color: var(--text-3);
+}
+
+.railBars {
+  display: grid;
+  padding: 0 10px;
+}
+
+.railSteps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.railSteps > li {
+  display: flex;
+  flex: 1 1 150px;
+  min-width: 0;
+}
+
+.railStep {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 58px;
+  padding: 10px;
+  border-radius: 10px;
+  color: var(--text-2);
+  text-decoration: none;
+}
+
+a.railStep {
+  color: var(--text);
+}
+
+.railNow {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+@media (hover: hover) {
+  a.railStep:hover {
+    background: var(--surface-2);
+  }
+}
+
+.num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.num svg {
+  stroke-width: 2.4;
+}
+
+.done {
+  background: var(--accent-btn);
+  color: #ffffff;
+}
+
+.now {
+  border: 2px solid var(--accent);
+  color: var(--accent-ink);
+}
+
+.later {
+  border: 1.5px solid var(--line-2);
+  color: var(--text-3);
+}
+
+.railTitle {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.railSub {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-3);
+  line-height: 1.3;
+}
+
+/* The step itself. */
+.main {
+  flex: 999 1 600px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* A step's own content under its title, filling the phone's screen so Continue sits at the foot. */
+.body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.heading .mark {
+  display: none;
+}
+
+.stepLine {
+  margin: 0;
+  color: var(--text-3);
+}
+
+.title {
+  margin-top: 6px;
+}
+
+.intro {
+  margin: 8px 0 0;
+  max-width: 620px;
+  font-size: 14px;
+  text-wrap: pretty;
+}
+
+/* "Your transactions are in", over step 3. */
+.main .inPill {
+  align-self: flex-start;
+  height: auto;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  white-space: normal;
+}
+
+/* Back and Continue under a step on desktop; just Continue on a phone. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.actionsEnd {
+  justify-content: flex-end;
+}
+
+.go {
+  min-width: 200px;
+}
+
+.goNote,
+.phoneOnly {
+  display: none;
+}
+
+.problem:empty {
+  display: none;
+}
+
+.problem {
+  margin: 0;
+  color: var(--neg-ink, var(--neg));
+  font-size: 13px;
+}
+
+/* Step 1: Welcome. */
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 18px 20px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--raise);
+}
+
+.fields > * {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.fieldsNote {
+  flex-basis: 100%;
+  margin: -4px 0 0;
+}
+
+.promises {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.promise {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--raise);
+}
+
+.promiseTitle {
+  margin: 0;
+  font-size: 14px;
+}
+
+.promiseText {
+  margin: 4px 0 0;
+  text-wrap: pretty;
+}
+
+/* Step 2: how transactions get in. */
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.option {
+  flex: 1 1 280px;
+  min-width: 0;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--raise);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.option[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.optionTile {
+  color: var(--text-2);
+  background: var(--surface-3);
+}
+
+.option[aria-pressed="true"] .optionTile {
+  color: var(--accent-ink);
+  background: var(--accent-tint);
+}
+
+.optionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.optionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.optionTitle {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+.optionLine {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  text-wrap: pretty;
+}
+
+.optionLine svg {
+  margin-top: 2px;
+  color: var(--text-3);
+}
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  margin-top: 2px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-2);
+}
+
+.radio > span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.option[aria-pressed="true"] .radio {
+  border-color: var(--accent);
+}
+
+.option[aria-pressed="true"] .radio > span {
+  background: var(--accent);
+}
+
+.flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.compare {
+  flex: 3 1 440px;
+  min-width: 0;
+  padding: 16px 20px 8px;
+}
+
+.compareRow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  padding: 11px 0;
+  border-top: 1px solid var(--line);
+  text-wrap: pretty;
+}
+
+.compareHead {
+  align-items: center;
+  min-height: 34px;
+  padding: 0;
+  border-top: 0;
+  margin-top: 10px;
+}
+
+.colHead {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.colHeadOn {
+  color: var(--text);
+}
+
+.cell {
+  color: var(--text-2);
+}
+
+.cellOn {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.corner {
+  visibility: hidden;
+}
+
+.next {
+  flex: 2 1 300px;
+  min-width: 0;
+  padding: 16px 20px;
+}
+
+.nextList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nextList > li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  text-wrap: pretty;
+}
+
+.nextNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 6px;
+  background: var(--surface-3);
+  color: var(--text-2);
+}
+
+.nextDivider {
+  margin: 14px 0 12px;
+}
+
+.trust {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  text-wrap: pretty;
+}
+
+.trust svg {
+  margin-top: 2px;
+  color: var(--text-3);
+}
+
+.hint {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  text-wrap: pretty;
+}
+
+.hint svg {
+  margin-top: 2px;
+  color: var(--accent-ink);
+}
+
+@media (max-width: 760px) {
+  .frame {
+    min-height: 100dvh;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px
+      calc(env(safe-area-inset-bottom, 0px) + 34px);
+    gap: 12px;
+  }
+
+  .top,
+  .rail,
+  .stepLine,
+  .wideOnly {
+    display: none;
+  }
+
+  .phoneBar {
+    display: flex;
+  }
+
+  .progress {
+    display: grid;
+  }
+
+  .layout {
+    flex: 1 1 auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    margin-top: 0;
+  }
+
+  .main,
+  .body {
+    flex: 1 1 auto;
+    gap: 12px;
+  }
+
+  .heading {
+    margin-top: 16px;
+  }
+
+  .heading .mark {
+    display: block;
+    margin: 4px 0 12px;
+  }
+
+  .title {
+    margin-top: 0;
+    font-size: 26px;
+    text-wrap: balance;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: auto;
+    padding-top: 12px;
+    gap: 10px;
+  }
+
+  .actions .back {
+    display: none;
+  }
+
+  .go {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .goNote {
+    display: block;
+    text-align: center;
+  }
+
+  .phoneOnly {
+    display: inline;
+  }
+
+  /* Welcome stacks its two questions with the note under them, then the promises in one card. */
+  .fields {
+    padding: 0;
+    gap: 8px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .fieldsNote {
+    margin: 2px 4px 0;
+  }
+
+  .promises {
+    display: block;
+    padding: 2px 14px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: var(--raise);
+  }
+
+  .promise {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .promise + .promise {
+    border-top: 1px solid var(--line);
+  }
+
+  .promiseTitle {
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  .promiseText {
+    margin-top: 1px;
+  }
+
+  /* How transactions get in: the options stacked, the table without its title. */
+  .options {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .option {
+    flex: none;
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .optionBody {
+    gap: 6px;
+  }
+
+  .flow {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .compare {
+    flex: none;
+    padding: 4px 14px;
+  }
+
+  .compareRow {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+    padding: 9px 0;
+  }
+
+  .compareHead {
+    min-height: 38px;
+    margin-top: 0;
+    padding: 0;
+  }
+
+  .corner {
+    visibility: visible;
+  }
+
+  .colHead svg {
+    display: none;
+  }
+
+  .hint {
+    padding: 12px;
+  }
+}

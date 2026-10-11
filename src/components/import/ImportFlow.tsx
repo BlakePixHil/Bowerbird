@@ -18,6 +18,7 @@ import {
 import { Key } from "@/components/charts/shared";
 import { MAX_FILE_BYTES, TOO_BIG, type ColumnRole } from "@/lib/banks/files";
 import type { ImportCheck, ImportDone, ImportProblem } from "@/lib/banks/imports/shapes";
+import { FIRST_RUN_PATHS } from "@/lib/first-run/rules";
 import { checkFile, importFile } from "./actions";
 import styles from "./Import.module.css";
 import { columnName, count, dateRange, fileSize, notUsed, number, shownSample } from "./labels";
@@ -75,6 +76,10 @@ const OFFLINE = "That didn't reach the app. Check your connection and try again.
 const BLANK: Draft = { name: "", bank: "", kind: "everyday", joint: false };
 const ACCEPT = ".csv,.txt,.ofx,.qfx,.qbo,.qif,text/csv";
 
+/** During the first run: Continue setup goes on to payday, and back goes to step 2. */
+const SETUP_NEXT = FIRST_RUN_PATHS.payday;
+const SETUP_BACK = FIRST_RUN_PATHS.bring;
+
 function formFor({ file, accountId, draft, columns }: Inputs): FormData {
   const form = new FormData();
   if (file) form.set("file", file.file);
@@ -99,6 +104,7 @@ export function ImportFlow({
   recent,
   start,
   todayLabel,
+  inSetup = false,
 }: {
   accounts: readonly AccountChoice[];
   recent: readonly RecentShown[];
@@ -106,6 +112,8 @@ export function ImportFlow({
   start: string | null;
   /** "Sat 10 Oct", for the done screen. */
   todayLabel: string;
+  /** Part of the first run: once a file is in, Continue setup goes on to the next step. */
+  inSetup?: boolean;
 }) {
   const [accountId, setAccountId] = useState(
     start && accounts.some((a) => a.id === start) ? start : (accounts[0]?.id ?? NEW),
@@ -286,10 +294,15 @@ export function ImportFlow({
 
   // Phone -------------------------------------------------------------------
 
+  // Where the phone's back and close buttons go: setup's step 2 during the first run.
+  const away = inSetup
+    ? { href: SETUP_BACK, label: "setup" }
+    : { href: "/accounts", label: "accounts and sharing" };
+
   const phoneChoose = (
     <>
       <div className={styles.phoneBar}>
-        <IconButtonLink icon="arrow-left" label="Back to accounts and sharing" href="/accounts" />
+        <IconButtonLink icon="arrow-left" label={`Back to ${away.label}`} href={away.href} />
         <Pill tone="good">Free, always works</Pill>
       </div>
       <div>
@@ -490,8 +503,8 @@ export function ImportFlow({
       <div className={styles.phoneBar}>
         <IconButtonLink
           icon="close"
-          label="Close and go back to accounts and sharing"
-          href="/accounts"
+          label={`Close and go back to ${away.label}`}
+          href={away.href}
         />
         <span className="muted small">{todayLabel}</span>
       </div>
@@ -520,11 +533,18 @@ export function ImportFlow({
         </span>
       </Well>
       <div className={styles.actionBar}>
-        {done.toCheck > 0 && (
-          <ButtonLink variant="primary" size="lg" block href="/activity">
-            Sort the {number(done.toCheck)}
+        {inSetup ? (
+          <ButtonLink variant="primary" size="lg" block href={SETUP_NEXT}>
+            Continue setup
             <Icon name="chevron-right" size="sm" />
           </ButtonLink>
+        ) : (
+          done.toCheck > 0 && (
+            <ButtonLink variant="primary" size="lg" block href="/activity">
+              Sort the {number(done.toCheck)}
+              <Icon name="chevron-right" size="sm" />
+            </ButtonLink>
+          )
         )}
         <div className={styles.pair}>
           <Button size="lg" onClick={another}>
@@ -672,7 +692,7 @@ export function ImportFlow({
                   />
                 )}
                 {done ? (
-                  <DoneWell done={done} onAnother={another} />
+                  <DoneWell done={done} onAnother={another} inSetup={inSetup} />
                 ) : (
                   <div className={cx(styles.divided, styles.actions)}>
                     {importProblem}
@@ -768,7 +788,15 @@ function EmptyCheck() {
 }
 
 /** The result on desktop, in the check card. */
-function DoneWell({ done, onAnother }: { done: ImportDone; onAnother: () => void }) {
+function DoneWell({
+  done,
+  onAnother,
+  inSetup,
+}: {
+  done: ImportDone;
+  onAnother: () => void;
+  inSetup: boolean;
+}) {
   const skipped =
     done.skipped > 0
       ? ` The ${number(done.skipped)} already here ${done.skipped === 1 ? "was" : "were"} skipped.`
@@ -820,11 +848,18 @@ function DoneWell({ done, onAnother }: { done: ImportDone; onAnother: () => void
         </ul>
       )}
       <div className={styles.actions}>
-        {done.toCheck > 0 && (
-          <ButtonLink variant="primary" href="/activity">
-            Sort the {number(done.toCheck)}
+        {inSetup ? (
+          <ButtonLink variant="primary" href={SETUP_NEXT}>
+            Continue setup
             <Icon name="chevron-right" size="sm" />
           </ButtonLink>
+        ) : (
+          done.toCheck > 0 && (
+            <ButtonLink variant="primary" href="/activity">
+              Sort the {number(done.toCheck)}
+              <Icon name="chevron-right" size="sm" />
+            </ButtonLink>
+          )
         )}
         <Button onClick={onAnother}>Import another file</Button>
         <span className={cx("small muted", styles.actionsNote)}>

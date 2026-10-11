@@ -18,7 +18,8 @@ export default async function FirstSyncPage({
 }) {
   // The frame carries on a sync that stopped part way, so the progress read after it is current.
   await getShell();
-  const viewer = viewerOf(await requireMember());
+  const me = await requireMember();
+  const viewer = viewerOf(me);
   const { connection: id } = await searchParams;
   const progress = typeof id === "string" ? await firstSyncProgress(getDb(), viewer, id) : null;
   if (!progress) notFound();
@@ -37,7 +38,7 @@ export default async function FirstSyncPage({
           </Pill>
         }
       />
-      <FirstSync initial={progress} />
+      <FirstSync initial={progress} inSetup={me.member.setupStep !== null} />
     </>
   );
 }

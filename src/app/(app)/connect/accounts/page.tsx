@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { awayFrom } from "@/components/connect/away";
 import { PickAccounts } from "@/components/connect/PickAccounts";
 import { PhoneTop, StepRail } from "@/components/connect/parts";
 import { getShell, PageHeader } from "@/components/shell";
@@ -21,7 +22,9 @@ export default async function PickAccountsPage({
   searchParams: Promise<{ connection?: string | string[] }>;
 }) {
   await getShell();
-  const viewer = viewerOf(await requireMember());
+  const me = await requireMember();
+  const viewer = viewerOf(me);
+  const inSetup = me.member.setupStep !== null;
   const { connection: id } = await searchParams;
   const db = getDb();
   const connection = typeof id === "string" ? await ownConnection(db, viewer, id) : null;
@@ -52,7 +55,12 @@ export default async function PickAccountsPage({
     return (
       <>
         {header}
-        <PickAccounts connectionId={connection.id} accounts={list.accounts} partner={partner} />
+        <PickAccounts
+          connectionId={connection.id}
+          accounts={list.accounts}
+          partner={partner}
+          inSetup={inSetup}
+        />
       </>
     );
 
@@ -62,7 +70,7 @@ export default async function PickAccountsPage({
       {header}
       <div className={styles.page}>
         <div className={styles.phoneTop}>
-          <PhoneTop step={2} back={{ href: "/accounts", label: "Back to accounts and sharing" }} />
+          <PhoneTop step={2} back={awayFrom(inSetup)} />
         </div>
         <div className={styles.rail}>
           <StepRail at="pick" />

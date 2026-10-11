@@ -4,7 +4,7 @@ import { households, members, passkeys, users } from "@/lib/db/schema";
 import { addStartingCategories } from "@/lib/sorting/categories";
 import type { NewPasskey } from "./passkeys";
 
-/** The household's name until the first-run steps (BUD-41) ask for one. */
+/** The household's name until the first run's Welcome step asks for one. */
 export const FIRST_HOUSEHOLD_NAME = "Our household";
 
 /** True once someone has set the app up. After that, new people only join by invite. */
@@ -15,7 +15,7 @@ export async function hasUsers(db: Db): Promise<boolean> {
 
 /**
  * Creates the first user, their household with its starting categories, them as its Owner, and
- * their passkey, all together.
+ * their passkey, all together. The Owner starts the first run at Welcome.
  * Returns false and saves nothing when someone else already set the app up.
  */
 export async function createOwner(
@@ -38,6 +38,8 @@ export async function createOwner(
       userId: owner.userId,
       role: "owner",
       displayName: owner.name,
+      // Straight on to the first run: welcome, bring in transactions, payday.
+      setupStep: "welcome",
     });
     await tx.insert(passkeys).values({
       userId: owner.userId,

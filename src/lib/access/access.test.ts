@@ -4,6 +4,7 @@ import type { Db } from "@/lib/db";
 import { accounts, balances, households, members, transactions, users } from "@/lib/db/schema";
 import {
   balancesFor,
+  latestBalances,
   scopeFor,
   transactionsFor,
   viewerOf,
@@ -366,5 +367,23 @@ describe("balancesFor", () => {
     expect(
       await balancesFor(db, { memberId: ids.zed, householdId: ids.home }, "household"),
     ).toEqual([]);
+  });
+});
+
+describe("latestBalances", () => {
+  it("gives each seen account's newest balance, and none of the hidden ones", async () => {
+    const newest = await latestBalances(db, olive, "household");
+    expect([...newest.keys()].map((id) => name[id]).sort()).toEqual([
+      "jointShared",
+      "oliveBalanceOnly",
+      "olivePrivate",
+      "oliveShared",
+      "patBalanceOnly",
+      "patShared",
+    ]);
+    expect([...newest.values()].every((cents) => cents >= 200_00)).toBe(true);
+    expect(
+      await latestBalances(db, { memberId: ids.zed, householdId: ids.home }, "household"),
+    ).toEqual(new Map());
   });
 });

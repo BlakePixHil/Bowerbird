@@ -20,6 +20,7 @@ import {
 import { startingVisibility, type LiveAccount, type Visibility } from "@/lib/banks/live/shapes";
 import { bringInAccounts } from "./actions";
 import styles from "./Connect.module.css";
+import { awayFrom } from "./away";
 import { ConsentNote, PhoneTop, StepRail } from "./parts";
 import pick from "./Pick.module.css";
 
@@ -67,11 +68,14 @@ export function PickAccounts({
   connectionId,
   accounts,
   partner,
+  inSetup = false,
 }: {
   connectionId: string;
   accounts: readonly LiveAccount[];
   /** The other member's name, or null while no one else is in the household. */
   partner: string | null;
+  /** Part of the first run, so back goes to setup. */
+  inSetup?: boolean;
 }) {
   const router = useRouter();
   const [busy, startTransition] = useTransition();
@@ -155,7 +159,7 @@ export function PickAccounts({
 
   const phone = (
     <div className={styles.phone}>
-      <PhoneTop step={2} back={{ href: "/accounts", label: "Back to accounts and sharing" }} />
+      <PhoneTop step={2} back={awayFrom(inSetup)} />
       <div className={styles.intro}>
         <h1 className="h1">Pick the accounts to bring in</h1>
         <p className={cx("sub", styles.lead)}>

@@ -118,7 +118,7 @@ export async function finishSetup(response: RegistrationResponseJSON): Promise<F
   });
   if (!created) return { error: SET_UP_ALREADY };
   await startSession(pending.userId);
-  redirect("/");
+  redirect("/start");
 }
 
 /** Sign in, step 1: ask the browser for any passkey it has for this site. */

@@ -5,6 +5,7 @@ import { useId, useState, useTransition } from "react";
 import {
   Avatar,
   Button,
+  ButtonLink,
   Card,
   Chip,
   Divider,
@@ -143,6 +144,8 @@ export function PaydaysEditor({
   person,
   intro,
   submitLabel = "Save",
+  onSaved,
+  back,
 }: {
   today: PlainDate;
   accounts: readonly PayAccount[];
@@ -154,6 +157,10 @@ export function PaydaysEditor({
   /** What the page is for, shown under the title on phones (desktop has it in the header). */
   intro?: string;
   submitLabel?: string;
+  /** What happens once it's saved, in place of staying here: the first run moves on to Home. */
+  onSaved?: () => Promise<void>;
+  /** A Back button beside Save on desktop, for the first run. A phone has its own at the top. */
+  back?: string;
 }) {
   const router = useRouter();
   const [busy, startSaving] = useTransition();
@@ -220,6 +227,7 @@ export function PaydaysEditor({
         })),
       });
       if (!result.ok) return setError(result.error);
+      if (onSaved) return onSaved();
       // Saved in the order listed, so each draft takes its saved id.
       setDrafts((list) =>
         list.map((draft, i) => ({
@@ -283,6 +291,11 @@ export function PaydaysEditor({
       />
 
       <div className={styles.foot}>
+        {back && (
+          <ButtonLink href={back} size="lg" icon="arrow-left" className={styles.footBack}>
+            Back
+          </ButtonLink>
+        )}
         {error && (
           <p role="alert" className={styles.error}>
             <Icon name="alert" size="sm" />

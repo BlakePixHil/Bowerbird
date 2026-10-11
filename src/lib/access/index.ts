@@ -23,6 +23,7 @@ export {
 } from "./accounts";
 export {
   balancesFor,
+  latestBalances,
   transactionsFor,
   type BalanceRange,
   type SeenBalance,

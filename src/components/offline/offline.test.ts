@@ -124,6 +124,8 @@ describe("what's kept for reading offline", () => {
       "/sign-in",
       "/sign-in/email",
       "/setup",
+      "/start",
+      "/start/payday",
       "/connect",
       "/connect/sync",
       "/connect/accounts",

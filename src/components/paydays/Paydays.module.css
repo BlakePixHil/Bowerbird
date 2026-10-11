@@ -403,6 +403,10 @@
   min-width: 160px;
 }
 
+.footBack {
+  margin-right: auto;
+}
+
 .error {
   display: flex;
   align-items: center;
@@ -532,5 +536,9 @@
 
   .save {
     width: 100%;
+  }
+
+  .foot .footBack {
+    display: none;
   }
 }

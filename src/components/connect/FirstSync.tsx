@@ -22,6 +22,7 @@ import type { FirstSyncProgress, SyncAccount } from "@/lib/banks/live/shapes";
 import { formatShortDate } from "@/lib/money";
 import { keepSyncing } from "./actions";
 import styles from "./Connect.module.css";
+import { SETUP_NEXT } from "./away";
 import { ConsentNote, PhoneTop, StepRail } from "./parts";
 import sync from "./Sync.module.css";
 import {
@@ -64,7 +65,14 @@ const NEXT: { icon: IconName; phone: [string, string]; desktop: [string, string]
  * so the person can leave; while this screen is open it asks how far it has got, and starts the
  * next run when one ends with more to do. Drawn for the phone and desktop boards; CSS shows one.
  */
-export function FirstSync({ initial }: { initial: FirstSyncProgress }) {
+export function FirstSync({
+  initial,
+  inSetup = false,
+}: {
+  initial: FirstSyncProgress;
+  /** Part of the first run: Continue setup goes on to payday while the sync carries on. */
+  inSetup?: boolean;
+}) {
   const router = useRouter();
   const [progress, setProgress] = useState(initial);
   const [retrying, startRetry] = useTransition();
@@ -251,12 +259,20 @@ export function FirstSync({ initial }: { initial: FirstSyncProgress }) {
       </Card>
       {planLine}
       <div className={cx(styles.phoneActions, sync.phoneActions)}>
-        <ButtonLink href="/accounts" variant="primary" size="lg" block>
-          Done
-        </ButtonLink>
-        <ButtonLink href="/" size="lg" block>
-          Go to Home
-        </ButtonLink>
+        {inSetup ? (
+          <ButtonLink href={SETUP_NEXT} variant="primary" size="lg" block>
+            Continue setup
+          </ButtonLink>
+        ) : (
+          <>
+            <ButtonLink href="/accounts" variant="primary" size="lg" block>
+              Done
+            </ButtonLink>
+            <ButtonLink href="/" size="lg" block>
+              Go to Home
+            </ButtonLink>
+          </>
+        )}
       </div>
     </div>
   );
@@ -362,10 +378,18 @@ export function FirstSync({ initial }: { initial: FirstSyncProgress }) {
             </Well>
             <div className={styles.cardActions}>
               <ButtonLink href={pickHref}>Back</ButtonLink>
-              <ButtonLink href="/">Go to Home</ButtonLink>
-              <ButtonLink href="/accounts" variant="primary">
-                Done, go to Accounts and sharing
-              </ButtonLink>
+              {inSetup ? (
+                <ButtonLink href={SETUP_NEXT} variant="primary">
+                  Continue setup
+                </ButtonLink>
+              ) : (
+                <>
+                  <ButtonLink href="/">Go to Home</ButtonLink>
+                  <ButtonLink href="/accounts" variant="primary">
+                    Done, go to Accounts and sharing
+                  </ButtonLink>
+                </>
+              )}
             </div>
           </Card>
         </div>

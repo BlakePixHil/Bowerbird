@@ -90,3 +90,27 @@ export async function balancesFor(
     .orderBy(asc(balances.date), asc(balances.accountId));
   return rows.map((row) => ({ ...row, whose: seen.get(row.accountId)! }));
 }
+
+/** Each account's newest balance in one view, by account. Accounts with none are left out. */
+export async function latestBalances(
+  db: Db,
+  viewer: Viewer,
+  view: View,
+): Promise<Map<string, number>> {
+  const { accounts } = await scopeFor(db, viewer, view);
+  if (accounts.length === 0) return new Map();
+  const rows = await db
+    .selectDistinctOn([balances.accountId], {
+      accountId: balances.accountId,
+      balanceCents: balances.balanceCents,
+    })
+    .from(balances)
+    .where(
+      inArray(
+        balances.accountId,
+        accounts.map((account) => account.id),
+      ),
+    )
+    .orderBy(balances.accountId, desc(balances.date));
+  return new Map(rows.map((row) => [row.accountId, row.balanceCents]));
+}

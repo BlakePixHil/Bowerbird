@@ -18,7 +18,8 @@ export default async function ImportPage({
   searchParams: Promise<{ account?: string | string[] }>;
 }) {
   const shell = await getShell();
-  const viewer = viewerOf(await requireMember());
+  const me = await requireMember();
+  const viewer = viewerOf(me);
   const db = getDb();
   const [mine, recent, params] = await Promise.all([
     importableAccounts(db, viewer),
@@ -61,6 +62,7 @@ export default async function ImportPage({
         recent={shown}
         start={typeof params.account === "string" ? params.account : null}
         todayLabel={formatShortDate(shell.today)}
+        inSetup={me.member.setupStep !== null}
       />
     </>
   );

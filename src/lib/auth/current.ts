@@ -20,6 +20,8 @@ export type SignedIn = {
     installedAt: Date | null;
     /** When they closed or followed Home's one-time prompt to install the app. */
     installPromptDoneAt: Date | null;
+    /** The first-run step they stopped at, or null once setup is finished. */
+    setupStep: "welcome" | "bring" | null;
   };
   household: { id: string; name: string; timezone: string };
 };
@@ -36,6 +38,7 @@ export async function memberFor(db: Db, userId: string): Promise<SignedIn | null
         joinedAt: members.createdAt,
         installedAt: members.installedAt,
         installPromptDoneAt: members.installPromptDoneAt,
+        setupStep: members.setupStep,
       },
       household: { id: households.id, name: households.name, timezone: households.timezone },
     })

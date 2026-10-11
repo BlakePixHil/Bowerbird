@@ -77,6 +77,8 @@ export const budgetPeriod = pgEnum("budget_period", [
  * payday to the next, or Monday to Sunday.
  */
 export const budgetsRun = pgEnum("budgets_run", ["monthly", "payday", "weekly"]);
+/** Where someone is in first-run setup (project 06). The payday step comes once transactions are in. */
+export const setupStep = pgEnum("setup_step", ["welcome", "bring"]);
 /** How often an income arrives. */
 export const payFrequency = pgEnum("pay_frequency", [
   "weekly",
@@ -126,6 +128,8 @@ export const members = pgTable(
     installPromptDoneAt: timestamp({ withTimezone: true }),
     /** When Install the app last emailed them its address, so it can't be sent over and over. */
     appLinkSentAt: timestamp({ withTimezone: true }),
+    /** The first-run step they stopped at, or null once setup is finished (or never needed). */
+    setupStep: setupStep(),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("members_household_user_key").on(t.householdId, t.userId)],

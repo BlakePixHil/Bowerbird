@@ -3,6 +3,7 @@ import { ConnectFlow } from "@/components/connect/ConnectFlow";
 import { getShell, PageHeader } from "@/components/shell";
 import { Pill, Tag } from "@/components/ui";
 import { LIVE_SYNC_PROVIDER } from "@/config/app";
+import { requireMember } from "@/lib/auth";
 import { canEncrypt } from "@/lib/crypto";
 
 export const metadata: Metadata = { title: "Connect live sync" };
@@ -13,6 +14,7 @@ export default async function ConnectPage({
   searchParams: Promise<{ reconnect?: string | string[] }>;
 }) {
   await getShell();
+  const me = await requireMember();
   const { reconnect } = await searchParams;
   const id = typeof reconnect === "string" && reconnect !== "" ? reconnect : undefined;
   return (
@@ -32,7 +34,7 @@ export default async function ConnectPage({
           </>
         }
       />
-      <ConnectFlow ready={canEncrypt()} reconnect={id} />
+      <ConnectFlow ready={canEncrypt()} reconnect={id} inSetup={me.member.setupStep !== null} />
     </>
   );
 }

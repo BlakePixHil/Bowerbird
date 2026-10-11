@@ -686,3 +686,48 @@
 .pendingRow .what:nth-child(2) {
   opacity: 0.62;
 }
+
+/* The first week, step 4 of the first run. Desktop spreads it out as on "Desktop: First run":
+   the tiles in a row, then the checklist with the accounts beside it. */
+.firstWeek {
+  max-width: 1180px;
+  gap: 16px;
+}
+
+.firstWeek .tiles {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+}
+
+.firstPair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.firstPair > :first-child {
+  flex: 3 1 440px;
+}
+
+.firstPair > .accountsCard {
+  flex: 2 1 300px;
+}
+
+@media (max-width: 760px) {
+  .firstWeek,
+  .firstPair {
+    gap: 12px;
+  }
+
+  .firstWeek .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .firstPair > :first-child {
+    flex-basis: 100%;
+  }
+
+  .firstPair > .accountsCard {
+    display: none;
+  }
+}

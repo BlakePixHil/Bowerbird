@@ -2,8 +2,8 @@ import { accessFor } from "@/lib/auth/routes";
 
 /*
  * What the service worker (src/app/sw.ts) keeps for reading offline, shared with the page so both
- * sides agree. Only signed-in pages are kept, never sign-in, setup or the forms that connect a
- * bank, and signing out empties the cache (forgetThisDevice).
+ * sides agree. Only signed-in pages are kept, never sign-in, setup, the first run or the forms that
+ * connect a bank, and signing out empties the cache (forgetThisDevice).
  */
 
 /** The cache of signed-in pages, as they last came from the server. */
@@ -36,10 +36,13 @@ export type KeepPages = {
   since: number | null;
 };
 
-/** Whether a page may be kept: a signed-in page of this app, but none of the bank forms. */
+/** Signed-in pages never kept: the forms that connect a bank, and the first run's steps. */
+const NEVER_KEPT = ["/connect", "/start"];
+
+/** Whether a page may be kept: a signed-in page of this app, but none of `NEVER_KEPT`. */
 export function keepsPage(url: URL, origin: string): boolean {
   if (url.origin !== origin || accessFor(url.pathname) !== "page") return false;
-  return url.pathname !== "/connect" && !url.pathname.startsWith("/connect/");
+  return !NEVER_KEPT.some((path) => url.pathname === path || url.pathname.startsWith(`${path}/`));
 }
 
 /** Only a whole page that came straight back: no redirect to sign in, no error, nothing else. */

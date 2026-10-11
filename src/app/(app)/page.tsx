@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import type { People } from "@/components/activity";
 import { startingPeriod } from "@/components/budgets/budgets";
 import {
@@ -9,6 +10,7 @@ import {
   wholeMonths,
   type HomeData,
 } from "@/components/home";
+import { accountIcon, accountMeta } from "@/components/import/labels";
 import { deviceOf, InstallNudge, kindOf } from "@/components/install";
 import { getShell, PageHeader, SyncWarningBanner } from "@/components/shell";
 import { initialsOf } from "@/components/shell/data";
@@ -16,6 +18,7 @@ import {
   activityCounts,
   activityPage,
   budgetProgress,
+  latestBalances,
   moneyInOut,
   monthlyInOut,
   otherMembers,
@@ -30,8 +33,10 @@ import { showsInstallPrompt } from "@/lib/install";
 import { addDays, addMonths, mainIncome, periodContaining } from "@/lib/money";
 
 export default async function HomePage() {
-  const shell = await getShell();
   const me = await requireMember();
+  // Until the first run is finished, opening the app picks it up where it stopped.
+  if (me.member.setupStep) redirect("/start");
+  const shell = await getShell();
   const viewer = viewerOf(me);
   const db = getDb();
   const today = shell.today;
@@ -48,7 +53,7 @@ export default async function HomePage() {
   const period = periodContaining(today, spec)!;
   // Desktop's Money in, money out: the whole months before this one, from Activity's totals too.
   const thisMonth = `${today.slice(0, 7)}-01`;
-  const [progress, money, latest, sums] = await Promise.all([
+  const [progress, money, latest, sums, balances] = await Promise.all([
     budgetProgress(db, viewer, { spec, period, today, timeZone: shell.timeZone }),
     moneyInOut(db, viewer, "household", { from: period.start, to: today }),
     activityPage(db, viewer, "household", {}, undefined, DESKTOP_LATEST_ROWS),
@@ -56,6 +61,7 @@ export default async function HomePage() {
       from: addMonths(thisMonth, -HOME_MONTHS),
       to: addDays(thisMonth, -1),
     }),
+    latestBalances(db, viewer, "household"),
   ]);
 
   const accounts = seen.flatMap((account) =>
@@ -75,6 +81,15 @@ export default async function HomePage() {
     months: wholeMonths(sums, today, counts.since),
     people,
     firstName: shell.member.name.trim().split(/\s+/)[0] || shell.member.name,
+    accounts: firstWeek
+      ? accounts.map((account) => ({
+          id: account.id,
+          name: account.name,
+          meta: accountMeta(account),
+          icon: accountIcon(account),
+          balanceCents: balances.get(account.id) ?? null,
+        }))
+      : [],
     setup: firstWeek
       ? {
           today,

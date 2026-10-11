@@ -80,6 +80,7 @@ beforeAll(async () => {
       joinedAt: new Date(),
       installedAt: null,
       installPromptDoneAt: null,
+      setupStep: null,
     },
     household: { id: ids.home, name: "Home", timezone: "Australia/Sydney" },
   };

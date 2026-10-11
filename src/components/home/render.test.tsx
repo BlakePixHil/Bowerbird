@@ -102,6 +102,7 @@ const data = (more: Partial<HomeData>): HomeData => ({
   ],
   people: { me: { name: "Olive", initials: "O" }, partner: null },
   setup: null,
+  accounts: [],
   firstName: "Olive",
   ...more,
 });
@@ -166,5 +167,32 @@ describe("Home", () => {
     expect(html).toContain("You&#x27;re set, Olive");
     expect(html).toContain(">Check<");
     expect(html).toContain('href="/activity?show=check"');
+  });
+
+  it("lists the accounts brought in beside the checklist, for desktop", () => {
+    const html = renderToStaticMarkup(
+      <HomeOverview
+        data={data({
+          progress: progress(false),
+          latest: [row({})],
+          setup: facts(12),
+          accounts: [
+            {
+              id: "a1",
+              name: "Everyday Access",
+              meta: "Yours · Harbour Bank",
+              icon: "bank",
+              balanceCents: 2184_50,
+            },
+            { id: "a2", name: "Old Saver", meta: "Yours", icon: "piggy", balanceCents: null },
+          ],
+        })}
+      />,
+    );
+    expect(html).toContain(">Your accounts<");
+    expect(html).toContain('href="/accounts"');
+    expect(html).toContain("Yours · Harbour Bank");
+    expect(html).toContain(">$2,185<");
+    expect(html).toContain(">Old Saver<");
   });
 });

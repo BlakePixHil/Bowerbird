@@ -17,6 +17,7 @@ import {
 import { APP_NAME, LIVE_SYNC_PROVIDER } from "@/config/app";
 import { checkSetupToken } from "@/lib/banks/simplefin/token";
 import { connectLiveSync } from "./actions";
+import { awayFrom } from "./away";
 import styles from "./Connect.module.css";
 import {
   AT_EACH_BANK,
@@ -47,7 +48,16 @@ const CANT_PASTE =
  * component's state until it's sent, and is cleared once it's used. With `reconnect`, the token
  * gives that connection a new access link instead of making a new connection.
  */
-export function ConnectFlow({ ready, reconnect }: { ready: boolean; reconnect?: string }) {
+export function ConnectFlow({
+  ready,
+  reconnect,
+  inSetup = false,
+}: {
+  ready: boolean;
+  reconnect?: string;
+  /** Part of the first run, so back goes to setup. */
+  inSetup?: boolean;
+}) {
   const router = useRouter();
   const [token, setToken] = useState("");
   const [shown, setShown] = useState(false);
@@ -147,7 +157,7 @@ export function ConnectFlow({ ready, reconnect }: { ready: boolean; reconnect?: 
 
   const phone = (
     <div className={styles.phone}>
-      <PhoneTop step={1} back={{ href: "/accounts", label: "Back to accounts and sharing" }} />
+      <PhoneTop step={1} back={awayFrom(inSetup)} />
       <div className={styles.intro}>
         <h1 className="h1">{reconnect ? "Reconnect live sync" : "Connect live sync"}</h1>
         <p className={cx("sub", styles.lead)}>

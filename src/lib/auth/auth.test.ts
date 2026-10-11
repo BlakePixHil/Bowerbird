@@ -49,6 +49,9 @@ describe("who may open what", () => {
     ["/activity", "page"],
     ["/reports/money-in-out", "page"],
     ["/accounts", "page"],
+    // The first run needs a session: only making the passkey, at /setup, is open.
+    ["/start", "page"],
+    ["/start/welcome", "page"],
     ["/signing", "page"],
     ["/sign-in", "public"],
     ["/sign-in/email", "public"],
@@ -196,7 +199,8 @@ describe("with a database", () => {
     expect(await hasUsers(db)).toBe(true);
     expect(await memberFor(db, ownerId)).toMatchObject({
       user: { id: ownerId, name: "Sam" },
-      member: { role: "owner", displayName: "Sam" },
+      // Straight on to the first run.
+      member: { role: "owner", displayName: "Sam", setupStep: "welcome" },
       household: { name: FIRST_HOUSEHOLD_NAME },
     });
     const starting = await db.select({ name: categories.name }).from(categories);
