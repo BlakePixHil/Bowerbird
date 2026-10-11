@@ -2,6 +2,7 @@ export { BarMeter as Meter, StackedBar, type StackPart } from "@/components/ui";
 export { DailyBars } from "./DailyBars";
 export { axisDate, dollars, shortMoney } from "./format";
 export { InOutBars, type InOutMonth } from "./InOutBars";
+export { KeptBars, type KeptMonth } from "./KeptBars";
 export { NetWorthLine, type MonthPoint } from "./NetWorthLine";
 export { ProgressRing } from "./ProgressRing";
 export {

@@ -2,6 +2,7 @@ import {
   and,
   asc,
   count,
+  countDistinct,
   desc,
   eq,
   gt,
@@ -26,6 +27,7 @@ import {
   transactionTags,
 } from "@/lib/db/schema";
 import { parseMoney, type DaySpend, type PlainDate } from "@/lib/money";
+import { partCategory, partCents, partsJoin } from "@/lib/sorting/parts";
 import { countedMoney, isCounted } from "@/lib/sorting/transfers";
 import { scopeFor, type SeenAccount, type View, type Viewer, type Whose } from "./accounts";
 import { partsOf } from "./details";
@@ -416,6 +418,76 @@ export async function monthlyInOut(
     .from(transactions)
     .where(matching(viewer, [...seen.keys()], { from: range.from, to: range.to, transfers: false }))
     .groupBy(month)
+    .orderBy(month);
+}
+
+/** Money out in one category, or with none yet, in one calendar month. */
+export type CategoryMonth = { month: string; categoryId: string | null; out: number };
+
+/**
+ * Money out for each month and category, by `monthlyInOut`'s rules, so a month's categories add up
+ * to its money out. A split row counts in each of its parts.
+ */
+export async function monthlyOutByCategory(
+  db: Db,
+  viewer: Viewer,
+  view: View,
+  range: { from: PlainDate; to: PlainDate },
+): Promise<CategoryMonth[]> {
+  const seen = await fullAccounts(db, viewer, view);
+  if (seen.size === 0) return [];
+  const month = sql<string>`to_char(${transactions.date}, 'YYYY-MM')`;
+  return db
+    .select({
+      month,
+      categoryId: partCategory,
+      out: sql<number>`coalesce(sum(-${partCents}), 0)`.mapWith(Number),
+    })
+    .from(transactions)
+    .leftJoin(splits, partsJoin)
+    .where(
+      and(
+        matching(viewer, [...seen.keys()], { from: range.from, to: range.to, transfers: false }),
+        lt(transactions.amountCents, 0),
+      ),
+    )
+    .groupBy(month, partCategory)
+    .orderBy(month);
+}
+
+/** Money in from one payer in one calendar month: who it's from, how much, and how many times. */
+export type SourceMonth = { month: string; shop: string; cents: number; count: number };
+
+/**
+ * Money in for each month by who it came from, named as Activity names the shop, by
+ * `monthlyInOut`'s rules, so a month's sources add up to its money in.
+ */
+export async function monthlyInBySource(
+  db: Db,
+  viewer: Viewer,
+  view: View,
+  range: { from: PlainDate; to: PlainDate },
+): Promise<SourceMonth[]> {
+  const seen = await fullAccounts(db, viewer, view);
+  if (seen.size === 0) return [];
+  const month = sql<string>`to_char(${transactions.date}, 'YYYY-MM')`;
+  const shop = sql<string>`coalesce(${merchants.displayName}, ${transactions.descriptionRaw})`;
+  return db
+    .select({
+      month,
+      shop,
+      cents: sql<number>`coalesce(sum(${transactions.amountCents}), 0)`.mapWith(Number),
+      count: countDistinct(transactions.id),
+    })
+    .from(transactions)
+    .leftJoin(merchants, eq(merchants.id, transactions.merchantId))
+    .where(
+      and(
+        matching(viewer, [...seen.keys()], { from: range.from, to: range.to, transfers: false }),
+        gt(transactions.amountCents, 0),
+      ),
+    )
+    .groupBy(month, shop)
     .orderBy(month);
 }
 

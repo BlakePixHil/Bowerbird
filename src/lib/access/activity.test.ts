@@ -21,7 +21,9 @@ import {
   countActivity,
   dailySpending,
   moneyInOut,
+  monthlyInBySource,
   monthlyInOut,
+  monthlyOutByCategory,
   type ActivityFilters,
   type ActivityRow,
   type View,
@@ -352,6 +354,47 @@ describe("moneyInOut", () => {
     }
     // Pat's private account and the other household stay out.
     expect(await moneyInOut(db, zed, "household", { from, to: TODAY })).not.toEqual(totals);
+  });
+});
+
+describe("money by category and by source", () => {
+  const range = { from: addDays(TODAY, -130), to: TODAY };
+
+  it("adds each month's categories up to its money out, splits by their parts", async () => {
+    const [months, cats] = await Promise.all([
+      monthlyInOut(db, olive, "household", range),
+      monthlyOutByCategory(db, olive, "household", range),
+    ]);
+    for (const { month, out } of months)
+      expect(sumCents(cats.filter((c) => c.month === month).map((c) => c.out))).toBe(out);
+    const october = new Map(
+      cats.filter((c) => c.month === "2026-10").map((c) => [c.categoryId, c.out]),
+    );
+    // Transfers, the Transfers category and the refund stay out; money with no category is null.
+    expect(october.has(ids.transfers)).toBe(false);
+    expect(october.get(null)).toBeGreaterThan(0);
+    // The split Kmart row counts once, as its two parts.
+    const groceries = (await walk("household", { from: "2026-10-01", to: TODAY }))
+      .flat()
+      .filter((r) => r.amountCents < 0 && (r.category?.id === ids.groceries || r.parts.length > 0));
+    expect(october.get(ids.groceries)).toBe(-sumCents(groceries.map((r) => r.amountCents)));
+  });
+
+  it("adds each month's sources up to its money in, named like Activity", async () => {
+    const [months, sources] = await Promise.all([
+      monthlyInOut(db, olive, "household", range),
+      monthlyInBySource(db, olive, "household", range),
+    ]);
+    for (const { month, in: cameIn } of months)
+      expect(sumCents(sources.filter((s) => s.month === month).map((s) => s.cents))).toBe(cameIn);
+    expect(sources.filter((s) => s.month === "2026-10")).toEqual(
+      expect.arrayContaining([
+        { month: "2026-10", shop: "ACME SALARY", cents: 3260_00, count: 1 },
+        { month: "2026-10", shop: "COLES REFUND", cents: 20_00, count: 1 },
+      ]),
+    );
+    expect(sources.some((s) => s.shop === "TRANSFER FROM EVERYDAY")).toBe(false);
+    expect(await monthlyInBySource(db, zed, "household", range)).toEqual([]);
   });
 });
 

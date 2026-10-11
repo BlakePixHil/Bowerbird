@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { InOutBars } from "./InOutBars";
+import { KeptBars } from "./KeptBars";
 import { ProgressRing } from "./ProgressRing";
 import { RunningTotalChart } from "./RunningTotalChart";
 
@@ -64,6 +65,28 @@ describe("InOutBars", () => {
       /<button[^>]*aria-pressed="true"[^>]*aria-label="Aug 2026: \$11,170 in, \$8,720 out"/,
     );
     expect(out).toMatch(/<button[^>]*aria-pressed="false"/);
+  });
+});
+
+describe("KeptBars", () => {
+  const kept = [
+    { key: "2026-08", label: "AUG", name: "Aug 2026", share: 0.28, kept: 278_000 },
+    { key: "2026-09", label: "SEP", name: "Sep 2026", share: -0.05, kept: -32_600 },
+  ];
+  const out = renderToStaticMarkup(
+    <KeptBars label="Share of pay kept" months={kept} average={0.12} selected="2026-09" />,
+  );
+
+  it("states the average and the picked month, and lists every month", () => {
+    expect(out).toContain('aria-label="Share of pay kept. Average 12%. Sep 2026: −5% kept."');
+    expect(out).toMatch(/Aug 2026<\/td><td[^>]*>\$2,780<\/td><td[^>]*>28%/);
+  });
+
+  it("draws a month that kept nothing in red below the line, with its share", () => {
+    expect(out).toContain("background:var(--out)");
+    expect(out).toContain("background:var(--left)");
+    expect(out).toContain(">−5%<");
+    expect(out).toContain(">Average 12%<");
   });
 });
 
